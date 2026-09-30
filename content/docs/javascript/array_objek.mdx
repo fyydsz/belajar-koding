@@ -1,0 +1,153 @@
+---
+title: Array & Objek
+description: Mengelola data majemuk menggunakan Array, Objek literal, metode transformasi data map/filter, destructuring, serta spread operator di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Array dan Objek di JavaScript
+
+Sebagian besar data dalam aplikasi dunia nyata berbentuk kumpulan nilai majemuk. JavaScript menyediakan dua struktur data utama untuk kebutuhan ini: **Array** untuk sekumpulan data berurutan, dan **Objek** untuk pasangan kunci dan nilai.
+
+## Array
+
+Array adalah struktur data berurutan (*ordered list*) yang dapat menampung berbagai tipe data sekaligus, diakses melalui indeks berbasis angka yang dimulai dari nol (`0`).
+
+```javascript title="array_dasar.js"
+const keranjang = ["Apel", "Jeruk", "Mangga"];
+
+console.log(keranjang[0]); // "Apel"
+console.log(keranjang[2]); // "Mangga"
+console.log(keranjang.length); // 3 (jumlah elemen)
+```
+
+### Metode Dasar Manipulasi Array
+
+| Metode | Deskripsi Aksi | Posisi Modifikasi |
+| :--- | :--- | :--- |
+| `push(item)` | Menambahkan elemen baru | Akhir array |
+| `pop()` | Menghapus dan mengambil elemen | Akhir array |
+| `unshift(item)` | Menambahkan elemen baru | Awal array |
+| `shift()` | Menghapus dan mengambil elemen | Awal array |
+
+```javascript title="metode_array.js"
+const antrean = ["Budi", "Citra"];
+
+antrean.push("Dina");   // ['Budi', 'Citra', 'Dina']
+antrean.unshift("Andi"); // ['Andi', 'Budi', 'Citra', 'Dina']
+
+const diproses = antrean.shift(); // Mengambil 'Andi'
+console.log(`Sedang diproses: ${diproses}`);
+console.log(`Sisa antrean   : ${antrean}`);
+```
+
+### Metode Transformasi: `map`, `filter`, dan `find`
+
+Metode bawaan modern memungkinkan manipulasi data array secara deklaratif tanpa menuliskan perulangan manual:
+
+```javascript title="iterasi_modern.js"
+const angka = [1, 2, 3, 4, 5, 6];
+
+// filter: Menyaring elemen yang memenuhi kriteria
+const bilanganGenap = angka.filter((n) => n % 2 === 0);
+console.log(bilanganGenap); // [2, 4, 6]
+
+// map: Mengubah setiap elemen menjadi bentuk nilai baru
+const kuadrat = angka.map((n) => n * n);
+console.log(kuadrat); // [1, 4, 9, 16, 25, 36]
+
+// find: Menemukan elemen pertama yang cocok
+const nilaiPertama = angka.find((n) => n > 3);
+console.log(nilaiPertama); // 4
+```
+
+## Objek (Object Literals)
+
+Objek digunakan untuk menyimpan data terstruktur dalam bentuk pasangan kunci (*key*) dan nilai (*value*).
+
+```javascript title="objek_dasar.js"
+const profilPengguna = {
+  id: 101,
+  nama: "Fajar Pratama",
+  email: "fajar@example.com",
+  aktif: true
+};
+
+// Mengakses properti menggunakan Dot Notation
+console.log(profilPengguna.nama);
+
+// Mengakses properti menggunakan Bracket Notation (berguna untuk nama kunci dinamis)
+const kunciYangDicari = "email";
+console.log(profilPengguna[kunciYangDicari]);
+
+// Menambah atau memperbarui properti
+profilPengguna.peran = "Administrator";
+profilPengguna.aktif = false;
+```
+
+## Fitur Modern ES6: Destructuring dan Spread
+
+### 1. Destructuring Assignment
+
+Destructuring mengekstrak nilai dari array atau properti dari objek langsung ke dalam variabel terpisah:
+
+```javascript title="destructuring.js"
+// Destructuring Objek
+const buku = {
+  judul: "Pemrograman Web Modern",
+  penulis: "M. Rizal",
+  harga: 120000
+};
+
+const { judul, harga } = buku;
+console.log(`Buku: ${judul}, Harga: Rp ${harga.toLocaleString("id-ID")}`);
+
+// Destructuring Array
+const koordinat = [106.8456, -6.2088];
+const [longitude, latitude] = koordinat;
+console.log(`Garis Bujur: ${longitude}, Garis Lintang: ${latitude}`);
+```
+
+### 2. Spread Operator (`...`)
+
+Operator *spread* menyalin atau menggabungkan isi dari array atau objek tanpa memutasi data asli:
+
+```javascript title="spread_operator.js"
+// Menggabungkan Array
+const timA = ["Andi", "Budi"];
+const timB = ["Citra", "Dedi"];
+const seluruhTim = [...timA, ...timB, "Eko"];
+console.log(seluruhTim); // ['Andi', 'Budi', 'Citra', 'Dedi', 'Eko']
+
+// Menggabungkan dan menimpa properti Objek
+const konfigurasiDasar = { tema: "gelap", bahasa: "id", zoom: 100 };
+const konfigurasiKustom = { ...konfigurasiDasar, zoom: 120 };
+console.log(konfigurasiKustom); // { tema: 'gelap', bahasa: 'id', zoom: 120 }
+```
+
+## Studi Kasus: Pengelolaan Data Transaksi Toko
+
+Berikut implementasi manipulasi data nyata menggunakan kombinasi array of objects, filter, dan reduce:
+
+```javascript title="transaksi_toko.js"
+const daftarProduk = [
+  { id: 1, nama: "Buku Tulis", kategori: "Alat Tulis", harga: 5000, jumlah: 4 },
+  { id: 2, nama: "Pulpen Gel", kategori: "Alat Tulis", harga: 7000, jumlah: 2 },
+  { id: 3, nama: "Tempat Pensil", kategori: "Aksesoris", harga: 25000, jumlah: 1 },
+];
+
+// Menghitung subtotal untuk setiap produk
+const rekapSubtotal = daftarProduk.map((item) => ({
+  nama: item.nama,
+  totalBiaya: item.harga * item.jumlah
+}));
+console.log("Rincian Subtotal:", rekapSubtotal);
+
+// Menghitung total keseluruhan belanja
+const grandTotal = daftarProduk.reduce(
+  (akumulator, item) => akumulator + item.harga * item.jumlah,
+  0
+);
+
+console.log(`Total Tagihan Akhir: Rp ${grandTotal.toLocaleString("id-ID")}`);
+```

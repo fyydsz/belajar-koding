@@ -1,0 +1,124 @@
+---
+title: "Definisi Data: Membuat & Mengubah Tabel"
+description: Mempelajari perintah DDL seperti CREATE TABLE, ALTER TABLE, DROP TABLE, tipe data umum, serta batasan kolom (constraints).
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: Table
+---
+
+# Definisi Data: Membuat dan Mengubah Tabel
+
+*Data Definition Language* (DDL) adalah kumpulan perintah SQL yang berfokus pada perancangan skema dan struktur tabel di dalam basis data. Pada tahap ini, kita mendefinisikan nama tabel, tipe data kolom, serta aturan batasan (*constraints*) untuk menjaga validitas data.
+
+## Tipe Data Dasar SQL
+
+Sebelum membuat tabel, setiap kolom harus ditentukan tipe data yang tepat sesuai kebutuhan penyimpanan:
+
+| Tipe Data | Contoh Format | Penggunaan Ideal |
+| :--- | :--- | :--- |
+| `INTEGER` / `INT` | `10`, `-45`, `1000` | Bilangan bulat untuk ID, umur, atau kuantitas. |
+| `BIGINT` | `9223372036854775807` | Bilangan bulat skala besar (misal saldo rekening atau ID berskala tinggi). |
+| `VARCHAR(n)` | `VARCHAR(100)` | Teks bervariasi dengan batas panjang maksimal $n$ karakter (nama, email, judul). |
+| `TEXT` | Teks tanpa batas spesifik | Deskripsi panjang, catatan, atau artikel konten. |
+| `DECIMAL(p, s)` | `DECIMAL(10, 2)` | Nilai angka desimal presisi tinggi tanpa pembulatan mengambang (keuangan, harga). |
+| `BOOLEAN` | `TRUE` atau `FALSE` | Nilai kebenaran logika dua kondisi (status aktif, verifikasi). |
+| `DATE` | `'2026-09-30'` | Hanya menyimpan tanggal tanpa komponen waktu. |
+| `TIMESTAMP` | `'2026-09-30 14:30:00'` | Menyimpan tanggal lengkap beserta jam, menit, dan detik. |
+
+## Membuat Tabel (`CREATE TABLE`)
+
+Perintah `CREATE TABLE` digunakan untuk mendefinisikan tabel baru beserta kolom dan batasannya.
+
+### Batasan Kolom (Constraints)
+
+Batasan kolom adalah aturan validasi yang diterapkan mesin basis data pada tingkat baris:
+
+- `PRIMARY KEY`: Menandai kolom sebagai identitas unik baris. Nilai otomatis bersifat unik dan tidak boleh `NULL`.
+- `NOT NULL`: Mencegah kolom dari nilai kosong.
+- `UNIQUE`: Menjamin tidak ada dua baris yang memiliki nilai kolom yang sama.
+- `DEFAULT`: Menetapkan nilai bawaan jika pengguna tidak menyertakan nilai pada kolom tersebut.
+- `CHECK`: Memvalidasi kondisi tertentu sebelum data diizinkan masuk ke tabel.
+- `FOREIGN KEY`: Menghubungkan kolom dengan primary key pada tabel lain untuk menjaga integritas relasi.
+
+Berikut contoh pembuatan dua tabel yang saling terhubung: tabel `jurusan` dan tabel `mahasiswa`.
+
+```sql title="buat_tabel.sql"
+-- 1. Membuat tabel induk: jurusan
+CREATE TABLE jurusan (
+    id_jurusan SERIAL PRIMARY KEY,
+    kode_jurusan VARCHAR(10) NOT NULL UNIQUE,
+    nama_jurusan VARCHAR(100) NOT NULL
+);
+
+-- 2. Membuat tabel anak: mahasiswa
+CREATE TABLE mahasiswa (
+    nim VARCHAR(15) PRIMARY KEY,
+    nama_lengkap VARCHAR(150) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    ipk DECIMAL(3, 2) DEFAULT 0.00,
+    semester INT NOT NULL CHECK (semester >= 1 AND semester <= 14),
+    status_aktif BOOLEAN DEFAULT TRUE,
+    tanggal_masuk DATE NOT NULL,
+    id_jurusan INT,
+    
+    -- Menetapkan relasi ke tabel jurusan
+    CONSTRAINT fk_mahasiswa_jurusan
+        FOREIGN KEY (id_jurusan) 
+        REFERENCES jurusan(id_jurusan)
+        ON DELETE RESTRICT
+);
+```
+
+<Callout type="info">
+  Kata kunci `SERIAL` pada PostgreSQL (atau `AUTO_INCREMENT` pada MySQL) secara otomatis menambahkan angka integer berurut setiap kali ada baris baru yang dimasukkan, sehingga kita tidak perlu mengisi kolom ID secara manual.
+</Callout>
+
+## Mengubah Struktur Tabel (`ALTER TABLE`)
+
+Jika tabel sudah berisi data dan kita perlu memperbarui strukturnya tanpa menghapus data yang ada, gunakan perintah `ALTER TABLE`.
+
+### Menambah Kolom Baru
+
+```sql title="tambah_kolom.sql"
+ALTER TABLE mahasiswa
+ADD COLUMN nomor_telepon VARCHAR(20);
+```
+
+### Menghapus Kolom
+
+```sql title="hapus_kolom.sql"
+ALTER TABLE mahasiswa
+DROP COLUMN nomor_telepon;
+```
+
+### Mengubah Tipe Data Kolom
+
+```sql title="ubah_kolom.sql"
+-- Mengubah panjang maksimal kolom nama_lengkap menjadi 200 karakter
+ALTER TABLE mahasiswa
+ALTER COLUMN nama_lengkap TYPE VARCHAR(200);
+```
+
+### Mengubah Nama Kolom atau Tabel
+
+```sql title="rename.sql"
+-- Mengubah nama kolom
+ALTER TABLE mahasiswa
+RENAME COLUMN tanggal_masuk TO terdaftar_sejak;
+
+-- Mengubah nama tabel
+ALTER TABLE mahasiswa
+RENAME TO data_mahasiswa;
+```
+
+## Menghapus Tabel (`DROP TABLE`)
+
+Perintah `DROP TABLE` menghapus seluruh struktur tabel dan seluruh baris data di dalamnya secara permanen dari basis data.
+
+```sql title="hapus_tabel.sql"
+-- Hapus tabel jika tabel tersebut ada di basis data
+DROP TABLE IF EXISTS mahasiswa;
+```
+
+<Callout type="warning">
+  Perintah `DROP TABLE` tidak dapat dibatalkan (*irreversible*). Semua data di dalam tabel akan hilang seketika. Selalu berhati-hati saat mengeksekusi perintah ini pada lingkungan produksi.
+</Callout>

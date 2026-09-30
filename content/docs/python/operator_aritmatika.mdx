@@ -1,0 +1,102 @@
+---
+title: Operator Aritmatika & Penugasan
+description: Memahami operasi matematika, floor division, modulus, perpangkatan, serta operator penugasan majemuk di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Operator Aritmatika dan Penugasan
+
+Operator adalah simbol khusus yang digunakan untuk melakukan operasi pemrosesan data, mulai dari kalkulasi matematika dasar hingga pembaruan nilai variabel.
+
+## Operator Aritmatika
+
+Python menyediakan kumpulan operator matematika bawaan untuk menghitung nilai numerik:
+
+| Operator | Operasi | Contoh Sintaks | Hasil | Keterangan |
+| :---: | :--- | :--- | :--- | :--- |
+| `+` | Penjumlahan | `10 + 4` | `14` | Menjumlahkan dua operan |
+| `-` | Pengurangan | `10 - 4` | `6` | Mengurangkan operan kanan dari kiri |
+| `*` | Perkalian | `10 * 4` | `40` | Mengalikan dua operan |
+| `/` | Pembagian Riil | `10 / 4` | `2.5` | Menghasilkan nilai desimal (`float`) |
+| `//` | Pembagian Bulat | `10 // 4` | `2` | Membagi dan membulatkan ke bawah (*floor division*) |
+| `%` | Modulus | `10 % 4` | `2` | Menghitung sisa pembagian bulat |
+| `**` | Perpangkatan | `10 ** 4` | `10000` | Memangkatkan operan kiri dengan kanan |
+
+```python title="aritmatika.py"
+a = 17
+b = 5
+
+print("Penjumlahan   :", a + b)   # 22
+print("Pembagian riil:", a / b)   # 3.4
+print("Floor division:", a // b)  # 3
+print("Sisa bagi (%) :", a % b)   # 2
+print("Pangkat (**)  :", a ** 2)  # 289
+```
+
+<Callout type="info">
+  Python tidak memiliki operator increment (`++`) atau decrement (`--`) seperti pada C, C++, atau Java. Untuk menambah atau mengurangi nilai sebanyak satu angka, gunakan sintaks penugasan `x += 1` atau `x -= 1`.
+</Callout>
+
+## Prioritas Operator (Precedence)
+
+Ketika beberapa operator berada dalam satu baris ekspresi, Python mengevaluasi perhitungan berdasarkan hierarki urutan operasi matematika standar:
+
+1. Tanda kurung `()` memiliki prioritas tertinggi.
+2. Perpangkatan `**`.
+3. Perkalian `*`, pembagian `/`, floor division `//`, dan modulus `%`.
+4. Penjumlahan `+` dan pengurangan `-`.
+
+```python title="prioritas.py"
+# Tanpa tanda kurung: perkalian dihitung terlebih dahulu (4 * 2 = 8, lalu 10 + 8)
+hasil_a = 10 + 4 * 2
+print(hasil_a)  # 18
+
+# Menggunakan tanda kurung: operasi di dalam kurung dihitung lebih dulu (10 + 4 = 14, lalu 14 * 2)
+hasil_b = (10 + 4) * 2
+print(hasil_b)  # 28
+```
+
+## Operator Penugasan (Assignment)
+
+Operator penugasan dasar menggunakan simbol sama dengan (`=`). Simbol ini menyalin nilai dari sisi kanan ke variabel di sisi kiri.
+
+Selain penugasan dasar, Python menyediakan operator penugasan majemuk (*compound assignment*) untuk memodifikasi nilai variabel yang sudah ada secara efisien:
+
+| Operator | Ekivalen Sintaks | Contoh | Nilai Baru |
+| :---: | :--- | :--- | :--- |
+| `+=` | `x = x + n` | `x += 5` | Nilai `x` bertambah 5 |
+| `-=` | `x = x - n` | `x -= 3` | Nilai `x` berkurang 3 |
+| `*=` | `x = x * n` | `x *= 2` | Nilai `x` dikali 2 |
+| `/=` | `x = x / n` | `x /= 4` | Nilai `x` dibagi 4 |
+| `//=` | `x = x // n` | `x //= 2` | Nilai `x` dibagi bulat 2 |
+| `%=` | `x = x % n` | `x %= 3` | Sisa bagi nilai `x` dengan 3 |
+| `**=` | `x = x ** n` | `x **= 2` | Nilai `x` dipangkatkan 2 |
+
+```python title="penugasan.py"
+saldo = 100000
+
+# Menambah saldo
+saldo += 50000
+print(f"Saldo setelah setor: Rp {saldo}")
+
+# Memotong saldo
+saldo -= 25000
+print(f"Saldo setelah tarik tunai: Rp {saldo}")
+```
+
+## Studi Kasus: Konversi Satuan Waktu
+
+Program berikut mengonversi total durasi dalam detik menjadi format jam, menit, dan sisa detik menggunakan kombinasi operator floor division (`//`) dan modulus (`%`):
+
+```python title="konversi_waktu.py"
+total_detik = int(input("Masukkan total detik: "))
+
+jam = total_detik // 3600
+sisa_setelah_jam = total_detik % 3600
+
+menit = sisa_setelah_jam // 60
+detik = sisa_setelah_jam % 60
+
+print(f"Konversi: {jam} jam, {menit} menit, {detik} detik")
+```

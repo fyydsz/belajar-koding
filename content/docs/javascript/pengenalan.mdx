@@ -1,0 +1,96 @@
+---
+title: Pengenalan & Lingkungan Kerja
+description: Memahami ekosistem JavaScript, cara eksekusi kode di peramban dan Node.js, serta penulisan skrip dasar.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Pengenalan dan Lingkungan Kerja
+
+JavaScript adalah bahasa pemrograman tingkat tinggi yang mengikuti spesifikasi standar ECMAScript. JavaScript awalnya dirancang untuk membuat halaman web menjadi interaktif di sisi peramban (*client-side*). Saat ini, melalui runtime seperti Node.js, JavaScript juga dapat dijalankan di luar peramban untuk membangun aplikasi sisi server (*backend*), perkakas otomatisasi, maupun aplikasi desktop.
+
+## Cara Menjalankan Kode JavaScript
+
+Terdapat beberapa cara umum untuk menjalankan baris instruksi JavaScript selama proses pembelajaran:
+
+### 1. Konsol Pengembang Peramban (Browser DevTools)
+
+Semua peramban web modern (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari) telah dilengkapi mesin JavaScript bawaan.
+
+1. Buka peramban web.
+2. Tekan tombol `F12` atau klik kanan pada halaman web lalu pilih **Inspect**.
+3. Buka tab **Console**.
+4. Ketikkan kode berikut lalu tekan `Enter`:
+
+```javascript
+console.log("Menjalankan JavaScript di konsol peramban.");
+```
+
+### 2. Runtime Node.js di Terminal
+
+Jika Node.js sudah terpasang di komputer, file skrip berekstensi `.js` dapat langsung dieksekusi melalui terminal atau Command Prompt.
+
+Buat file baru bernama `app.js`:
+
+```javascript title="app.js"
+console.log("Menjalankan JavaScript melalui Node.js.");
+```
+
+Buka terminal pada direktori yang sama dan jalankan perintah:
+
+```bash
+node app.js
+```
+
+### 3. Menyisipkan Skrip ke Dokumen HTML
+
+Dalam konteks pengembangan web, kode JavaScript dihubungkan ke dokumen HTML menggunakan elemen `<script>`:
+
+```html title="index.html"
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Belajar JavaScript</title>
+</head>
+<body>
+  <h1>Halaman Web Interaktif</h1>
+
+  <!-- Menghubungkan file skrip eksternal -->
+  <script src="app.js"></script>
+</body>
+</html>
+```
+
+Meletakkan skrip pada file terpisah (`app.js`) lebih disarankan daripada menuliskan skrip langsung di dalam dokumen HTML agar kode lebih rapi dan mudah dirawat.
+
+## Menampilkan Output Melalui Objek Console
+
+Objek `console` menyediakan metode untuk mencetak data dan pesan informasi ke terminal atau panel pengembang:
+
+```javascript title="output.js"
+// Menampilkan pesan standar
+console.log("Pesan informasi standar.");
+
+// Menampilkan pesan peringatan
+console.warn("Peringatan: Nilai konfigurasi belum disetel.");
+
+// Menampilkan pesan galat
+console.error("Galat: Koneksi ke server gagal.");
+```
+
+## Penulisan Komentar
+
+Komentar digunakan untuk memberikan catatan pada kode dan diabaikan sepenuhnya oleh mesin eksekusi JavaScript:
+
+```javascript title="komentar.js"
+// Komentar satu baris: Menjelaskan variabel di bawah
+const batasMaksimal = 100;
+
+/*
+  Komentar multi baris:
+  Blok ini digunakan ketika penjelasan membutuhkan
+  lebih dari satu baris kalimat.
+*/
+const totalData = 50;
+```

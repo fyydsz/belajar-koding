@@ -1,0 +1,12 @@
+{
+  "title": "Dasar-Dasar SQL",
+  "pages": [
+    "pengenalan",
+    "ddl_tabel",
+    "dml_dasar",
+    "dql_select",
+    "sorting_pagination",
+    "agregasi_grouping",
+    "relasi_join"
+  ]
+}

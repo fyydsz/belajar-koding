@@ -1,0 +1,126 @@
+---
+title: Fungsi (Functions)
+description: Memahami deklarasi fungsi, function expression, arrow function, parameter default, nilai kembalian, serta callback function di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Fungsi di JavaScript
+
+Fungsi adalah blok kode modular yang dapat dipanggil berulang kali untuk menjalankan tugas tertentu. Penggunaan fungsi memecah program menjadi bagian-bagian kecil yang terisolasi, memudahkan pemeliharaan, dan mencegah duplikasi kode.
+
+## Tiga Cara Menuliskan Fungsi
+
+JavaScript menyediakan beberapa cara untuk mendeklarasikan fungsi:
+
+### 1. Function Declaration
+
+Bentuk klasik ini dideklarasikan dengan kata kunci `function`. Fungsi yang dibuat dengan cara ini mengalami *hoisting*, artinya fungsi dapat dipanggil sebelum baris deklarasinya di dalam kode:
+
+```javascript title="declaration.js"
+// Pemanggilan sebelum baris deklarasi diperbolehkan
+sapaPengguna("Andi");
+
+function sapaPengguna(nama) {
+  console.log(`Halo, ${nama}! Selamat datang.`);
+}
+```
+
+### 2. Function Expression
+
+Fungsi disimpan sebagai nilai ke dalam variabel. Bentuk ini tidak mengalami *hoisting* penuh, sehingga hanya dapat dipanggil setelah baris deklarasi dieksekusi:
+
+```javascript title="expression.js"
+const hitungLuasPersegi = function (sisi) {
+  return sisi * sisi;
+};
+
+console.log(hitungLuasPersegi(4)); // 16
+```
+
+### 3. Arrow Function (ES6)
+
+Arrow function menawarkan sintaksis yang lebih ringkas menggunakan simbol panah (`=>`). Bentuk ini sangat populer dalam penulisan JavaScript modern:
+
+```javascript title="arrow_function.js"
+// Bentuk standar dengan blok kurung kurawal
+const kalikan = (a, b) => {
+  return a * b;
+};
+
+// Bentuk ringkas: return implisit jika hanya terdiri dari satu ekspresi
+const bagi = (a, b) => a / b;
+
+console.log(kalikan(6, 7)); // 42
+console.log(bagi(20, 4));    // 5
+```
+
+## Parameter dan Argumen
+
+### Default Parameter
+
+Parameter dapat diberikan nilai baku untuk mengantisipasi pemanggilan tanpa menyertakan argumen:
+
+```javascript title="default_param.js"
+function kirimNotifikasi(pesan, pengirim = "Sistem") {
+  console.log(`[${pengirim}]: ${pesan}`);
+}
+
+kirimNotifikasi("Pembaruan selesai."); // [Sistem]: Pembaruan selesai.
+kirimNotifikasi("Ada pesan baru.", "Admin"); // [Admin]: Ada pesan baru.
+```
+
+### Rest Parameter (`...`)
+
+Rest parameter memungkinkan fungsi menerima sejumlah argumen yang tidak terbatas sebagai sebuah array:
+
+```javascript title="rest_parameter.js"
+function jumlahkanSemua(...daftarAngka) {
+  return daftarAngka.reduce((total, angka) => total + angka, 0);
+}
+
+console.log(jumlahkanSemua(10, 20, 30)); // 60
+console.log(jumlahkanSemua(5, 15, 25, 35)); // 80
+```
+
+## Nilai Kembalian (Return Value)
+
+Pernyataan `return` menghentikan eksekusi fungsi dan mengembalikan nilai ke kode pemanggil. Jika sebuah fungsi tidak memiliki pernyataan `return`, fungsi tersebut secara otomatis mengembalikan nilai `undefined`.
+
+### Pola Early Return
+
+Pola *early return* digunakan untuk memvalidasi kondisi di awal fungsi sehingga kode tidak perlu bersarang di dalam banyak blok `if-else`:
+
+```javascript title="early_return.js"
+function prosesPembayaran(nominal, saldoAkun) {
+  if (nominal <= 0) {
+    return "Galat: Nominal transaksi tidak valid.";
+  }
+
+  if (saldoAkun < nominal) {
+    return "Galat: Saldo tidak mencukupi.";
+  }
+
+  const sisaSaldo = saldoAkun - nominal;
+  return `Transaksi berhasil. Sisa saldo: Rp ${sisaSaldo.toLocaleString("id-ID")}`;
+}
+
+console.log(prosesPembayaran(50000, 100000));
+console.log(prosesPembayaran(150000, 100000));
+```
+
+## Fungsi Callback
+
+Fungsi di JavaScript merupakan *first-class citizen*, artinya fungsi dapat disimpan dalam variabel, diteruskan sebagai argumen ke fungsi lain, atau dikembalikan dari fungsi lain. Fungsi yang dikirimkan sebagai argumen ke fungsi lain disebut **callback**:
+
+```javascript title="callback.js"
+function eksekusiOperasi(angka1, angka2, aksiCallback) {
+  return aksiCallback(angka1, angka2);
+}
+
+const hasilTambah = eksekusiOperasi(10, 5, (a, b) => a + b);
+const hasilKali = eksekusiOperasi(10, 5, (a, b) => a * b);
+
+console.log(`Hasil Penjumlahan: ${hasilTambah}`); // 15
+console.log(`Hasil Perkalian  : ${hasilKali}`);   // 50
+```

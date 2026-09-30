@@ -1,0 +1,110 @@
+---
+title: Perulangan (Loops)
+description: Memahami struktur iterasi menggunakan for, while, do-while, pernyataan break-continue, serta perulangan modern for-of dan for-in di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Perulangan di JavaScript
+
+Struktur perulangan (*looping*) digunakan untuk mengeksekusi sekumpulan instruksi secara berulang selama kondisi terminasi belum terpenuhi.
+
+## Perulangan `for` Klasik
+
+Perulangan `for` umum digunakan ketika jumlah iterasi telah ditentukan sebelumnya. Sintaksis `for` memuat tiga bagian dalam tanda kurung: inisialisasi, kondisi evaluasi, dan ekspresi pembaruan:
+
+```javascript title="for_klasik.js"
+for (let i = 1; i <= 5; i++) {
+  console.log(`Iterasi ke-${i}`);
+}
+```
+
+## Perulangan `while`
+
+Perulangan `while` mengevaluasi kondisi sebelum mengeksekusi blok kode. Jika kondisi bernilai `true`, blok kode akan dijalankan:
+
+```javascript title="while_loop.js"
+let hitung = 1;
+
+while (hitung <= 3) {
+  console.log(`Antrean saat ini: ${hitung}`);
+  hitung++; // Pengubah kondisi agar tidak terjadi infinite loop
+}
+```
+
+## Perulangan `do...while`
+
+Berbeda dengan `while`, perulangan `do...while` mengeksekusi blok kode terlebih dahulu sebanyak **minimal satu kali** sebelum memeriksa kondisi evaluasi di bagian akhir:
+
+```javascript title="do_while.js"
+let angka = 10;
+
+do {
+  console.log(`Nilai angka yang dicetak: ${angka}`);
+  angka++;
+} while (angka < 5); // Kondisi false, perulangan berhenti setelah 1 putaran
+```
+
+## Kontrol Alur Iterasi: `break` dan `continue`
+
+- `break`: Menghentikan seluruh proses perulangan dan langsung keluar dari blok loop.
+- `continue`: Melewati sisa baris kode pada putaran saat ini dan langsung melompat ke iterasi berikutnya.
+
+```javascript title="break_continue.js"
+for (let n = 1; n <= 10; n++) {
+  // Lewati angka genap
+  if (n % 2 === 0) {
+    continue;
+  }
+
+  // Berhenti ketika mencapai angka 7
+  if (n === 7) {
+    console.log("Angka 7 tercapai, perulangan dihentikan.");
+    break;
+  }
+
+  console.log(`Angka ganjil terpilih: ${n}`);
+}
+```
+
+## Perulangan Modern: `for...of` dan `for...in`
+
+JavaScript modern menyediakan struktur perulangan yang lebih deklaratif:
+
+### 1. `for...of` untuk Elemen Koleksi (Array dan String)
+
+Pernyataan `for...of` mengiterasi langsung nilai elemen di dalam struktur data *iterable*:
+
+```javascript title="for_of.js"
+const daftarBahasa = ["JavaScript", "Python", "Rust"];
+
+for (const bahasa of daftarBahasa) {
+  console.log(`Bahasa: ${bahasa}`);
+}
+
+// Iterasi karakter string
+const kataKunci = "CODE";
+for (const huruf of kataKunci) {
+  console.log(`Karakter: ${huruf}`);
+}
+```
+
+### 2. `for...in` untuk Kunci Properti Objek
+
+Pernyataan `for...in` mengiterasi nama properti (*keys*) dari suatu objek:
+
+```javascript title="for_in.js"
+const serverConfig = {
+  host: "localhost",
+  port: 8080,
+  secure: true
+};
+
+for (const properti in serverConfig) {
+  console.log(`${properti}: ${serverConfig[properti]}`);
+}
+```
+
+<Callout type="info">
+  Gunakan `for...of` untuk mengakses nilai di dalam Array. Hindari menggunakan `for...in` untuk Array karena `for...in` membaca nama indeks sebagai string dan tidak menjamin urutan eksekusi sekuensial.
+</Callout>

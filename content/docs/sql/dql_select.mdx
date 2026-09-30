@@ -1,0 +1,147 @@
+---
+title: "Mengambil Data: Perintah SELECT & Filter"
+description: Sintaks dasar kueri SELECT, aliasing kolom, penghapusan duplikasi DISTINCT, serta variasi filter kondisi klausa WHERE.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: Search
+---
+
+# Mengambil Data: Perintah SELECT & Filter
+
+*Data Query Language* (DQL) berpusat pada perintah `SELECT`, yaitu instruksi yang paling sering digunakan pengembang aplikasi untuk mengambil, memfilter, dan memformat informasi dari tabel basis data.
+
+## Sintaks Dasar `SELECT`
+
+Bentuk paling sederhana dari instruksi pengambilan data adalah menyebutkan nama kolom yang diinginkan beserta tabel asalnya:
+
+```sql title="select_dasar.sql"
+SELECT nama_lengkap, email, ipk
+FROM mahasiswa;
+```
+
+Jika kita ingin menampilkan seluruh kolom yang ada di dalam tabel, karakter tanda bintang (`*`) dapat digunakan:
+
+```sql title="select_all.sql"
+SELECT * FROM mahasiswa;
+```
+
+<Callout type="info">
+  Gunakan `SELECT *` hanya untuk kebutuhan inspeksi atau pengujian lokal. Pada kode aplikasi produksi, selalu sebutkan nama kolom secara spesifik. Cara ini menghemat alokasi memori server, mempercepat transfer jaringan, dan menjaga performa kueri.
+</Callout>
+
+## Mengubah Label Kolom dengan Alias (`AS`)
+
+Kata kunci `AS` digunakan untuk memberikan nama alias sementara pada kolom hasil kueri tanpa mengubah nama fisik kolom di tabel:
+
+```sql title="alias_kolom.sql"
+SELECT 
+    nama_lengkap AS nama_mahasiswa,
+    ipk AS indeks_prestasi,
+    semester AS tingkat_semester
+FROM mahasiswa;
+```
+
+## Menghilangkan Duplikasi Nilai (`DISTINCT`)
+
+Jika suatu kolom memiliki banyak data berulang dan kita hanya ingin mengetahui variasi nilai unik yang ada, gunakan kata kunci `DISTINCT`:
+
+```sql title="distinct.sql"
+-- Menampilkan daftar jurusan unik yang terisi oleh mahasiswa
+SELECT DISTINCT id_jurusan
+FROM mahasiswa;
+```
+
+## Menyaring Data Menggunakan Klausa `WHERE`
+
+Klausa `WHERE` mengevaluasi setiap baris data berdasarkan kriteria logika tertentu. Baris hanya akan disertakan dalam hasil kueri jika kondisinya bernilai `TRUE`.
+
+### 1. Operator Perbandingan
+
+Operator perbandingan digunakan untuk membandingkan dua nilai ekspresi:
+
+```sql title="perbandingan.sql"
+-- Mahasiswa dengan IPK di atas atau sama dengan 3.50
+SELECT nama_lengkap, ipk
+FROM mahasiswa
+WHERE ipk >= 3.50;
+
+-- Mahasiswa di luar semester 1
+SELECT nama_lengkap, semester
+FROM mahasiswa
+WHERE semester <> 1; -- Dapat juga ditulis !=
+```
+
+### 2. Operator Logika (`AND`, `OR`, `NOT`)
+
+Kita dapat menggabungkan beberapa kondisi secara bersamaan:
+
+```sql title="logika.sql"
+-- Mahasiswa aktif dengan IPK minimal 3.00
+SELECT nama_lengkap, ipk, status_aktif
+FROM mahasiswa
+WHERE status_aktif = TRUE AND ipk >= 3.00;
+
+-- Mahasiswa yang berada di semester 1 atau semester 2
+SELECT nama_lengkap, semester
+FROM mahasiswa
+WHERE semester = 1 OR semester = 2;
+```
+
+### 3. Operator Rentang Nilai (`BETWEEN`)
+
+Operator `BETWEEN` menyaring nilai dalam batas rentang inklusif (termasuk nilai batas awal dan akhir):
+
+```sql title="between.sql"
+-- Mahasiswa dengan IPK antara 3.25 sampai 3.80
+SELECT nama_lengkap, ipk
+FROM mahasiswa
+WHERE ipk BETWEEN 3.25 AND 3.80;
+```
+
+### 4. Operator Himpunan Nilai (`IN`)
+
+Operator `IN` menyederhanakan rangkaian kondisi `OR` yang berulang untuk mencocokkan nilai terhadap suatu daftar pilihan:
+
+```sql title="in.sql"
+-- Memilih mahasiswa yang berada di semester 3, 5, atau 7
+SELECT nama_lengkap, semester
+FROM mahasiswa
+WHERE semester IN (3, 5, 7);
+```
+
+### 5. Pencarian Pola Teks (`LIKE`)
+
+Operator `LIKE` digunakan untuk mencocokkan pola string teks menggunakan karakter pengganti (*wildcards*):
+- `%` : Mewakili nol, satu, atau banyak karakter bebas.
+- `_` : Mewakili tepat satu karakter tunggal.
+
+```sql title="like.sql"
+-- Mencari mahasiswa yang namanya diawali kata 'Ahmad'
+SELECT nama_lengkap, email
+FROM mahasiswa
+WHERE nama_lengkap LIKE 'Ahmad%';
+
+-- Mencari mahasiswa dengan alamat email kampus ac.id
+SELECT nama_lengkap, email
+FROM mahasiswa
+WHERE email LIKE '%@kampus.ac.id';
+```
+
+<Callout type="info">
+  Pada beberapa sistem seperti PostgreSQL, operator `LIKE` bersifat *case-sensitive*. Jika kamu ingin melakukan pencarian tanpa memedulikan huruf besar atau kecil, gunakan operator `ILIKE`.
+</Callout>
+
+### 6. Memeriksa Nilai Kosong (`IS NULL` dan `IS NOT NULL`)
+
+Nilai `NULL` mewakili ketiadaan data, sehingga tidak dapat dibandingkan menggunakan operator matematika biasa seperti `= NULL`. Gunakan `IS NULL` atau `IS NOT NULL`:
+
+```sql title="null_check.sql"
+-- Mahasiswa yang belum memiliki catatan jurusan
+SELECT nama_lengkap, id_jurusan
+FROM mahasiswa
+WHERE id_jurusan IS NULL;
+
+-- Mahasiswa yang sudah terdaftar pada suatu jurusan
+SELECT nama_lengkap, id_jurusan
+FROM mahasiswa
+WHERE id_jurusan IS NOT NULL;
+```

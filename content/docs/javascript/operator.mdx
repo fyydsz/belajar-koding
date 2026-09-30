@@ -1,0 +1,143 @@
+---
+title: Operator
+description: Menguasai operator aritmatika, penugasan, perbandingan strict equality, logika boolean, ternary, serta nullish coalescing di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Operator di JavaScript
+
+Operator adalah simbol khusus yang digunakan untuk memanipulasi, membandingkan, serta mengevaluasi nilai variabel dan ekspresi logika.
+
+## Operator Aritmatika
+
+JavaScript menyediakan operator standar untuk perhitungan matematika:
+
+| Operator | Operasi | Contoh Sintaks | Hasil |
+| :---: | :--- | :--- | :--- |
+| `+` | Penjumlahan | `12 + 4` | `16` |
+| `-` | Pengurangan | `12 - 4` | `8` |
+| `*` | Perkalian | `12 * 4` | `48` |
+| `/` | Pembagian | `12 / 4` | `3` |
+| `%` | Modulus (Sisa Bagi) | `14 % 4` | `2` |
+| `**` | Perpangkatan (ES2016) | `2 ** 4` | `16` |
+
+### Increment dan Decrement
+
+Operator `++` dan `--` digunakan untuk menaikkan atau menurunkan nilai variabel numerik sebesar satu angka:
+
+```javascript title="increment.js"
+let hitungan = 5;
+
+hitungan++; // Nilai bertambah menjadi 6 (postfix)
+console.log(hitungan);
+
+hitungan--; // Nilai berkurang menjadi 5
+console.log(hitungan);
+```
+
+## Operator Penugasan (Assignment)
+
+Operator penugasan memberikan nilai ke sisi kiri operan. Penugasan majemuk menggabungkan operasi aritmatika dengan penyimpanan nilai baru:
+
+```javascript title="penugasan.js"
+let saldo = 50000;
+
+saldo += 20000; // Ekivalen dengan saldo = saldo + 20000 -> 70000
+saldo -= 15000; // Ekivalen dengan saldo = saldo - 15000 -> 55000
+saldo *= 2;     // Ekivalen dengan saldo = saldo * 2     -> 110000
+saldo /= 5;     // Ekivalen dengan saldo = saldo / 5     -> 22000
+```
+
+## Operator Perbandingan: Strict vs Loose
+
+Perbandingan menghasilkan nilai boolean `true` atau `false`. JavaScript memiliki dua mode perbandingan:
+
+### 1. Strict Equality (`===` dan `!==`)
+
+Strict equality membandingkan nilai **sekaligus tipe data** tanpa melakukan konversi otomatis. Selalu gunakan `===` dan `!==` sebagai standar penulisan kode modern:
+
+```javascript title="strict.js"
+console.log(5 === 5);     // true
+console.log(5 === "5");   // false (tipe number vs string)
+console.log(10 !== 7);    // true
+```
+
+### 2. Loose Equality (`==` dan `!=`)
+
+Loose equality melakukan pemaksaan konversi tipe data (*type coercion*) sebelum nilai dibandingkan. Perilaku ini sering kali memicu kesalahan logika yang sulit dideteksi:
+
+```javascript title="loose.js"
+console.log(5 == "5");    // true (string "5" dipaksa menjadi number)
+console.log(0 == false);  // true
+console.log("" == 0);     // true
+```
+
+### Perbandingan Relasional
+
+| Operator | Makna | Contoh | Hasil |
+| :---: | :--- | :--- | :--- |
+| `>` | Lebih besar dari | `10 > 7` | `true` |
+| `<` | Lebih kecil dari | `4 < 2` | `false` |
+| `>=` | Lebih besar atau sama dengan | `5 >= 5` | `true` |
+| `<=` | Lebih kecil atau sama dengan | `8 <= 12` | `true` |
+
+## Operator Logika
+
+Operator logika digunakan untuk menggabungkan beberapa kondisi:
+
+| Operator | Nama | Deskripsi |
+| :---: | :--- | :--- |
+| `&&` | Logika AND | Menghasilkan `true` jika kedua kondisi bernilai benar |
+| `\|\|` | Logika OR | Menghasilkan `true` jika salah satu kondisi bernilai benar |
+| `!` | Logika NOT | Membalik status boolean suatu nilai |
+
+```javascript title="logika.js"
+const usia = 22;
+const memilikiSim = true;
+
+// Evaluasi kedua syarat
+const bolehMengemudi = usia >= 17 && memilikiSim;
+console.log(`Boleh mengemudi: ${bolehMengemudi}`); // true
+```
+
+### Evaluasi Pemutus Arus (Short-Circuit Evaluation)
+
+Operator `&&` dan `||` mengevaluasi ekspresi dari kiri ke kanan dan berhenti begitu hasil akhir sudah dapat dipastikan:
+
+```javascript title="short_circuit.js"
+// Pada &&: jika sisi kiri false, sisi kanan tidak dieksekusi
+const login = false;
+login && console.log("Menampilkan dasbor pengguna.");
+
+// Pada ||: jika sisi kiri bernilai truthy, nilai tersebut langsung diambil
+const namaProfil = "" || "Tamu";
+console.log(`Halo, ${namaProfil}!`); // "Halo, Tamu!"
+```
+
+## Operator Ternary
+
+Operator kondisional ternary menyediakan sintaksis ringkas untuk percabangan dua arah dengan format `kondisi ? ekspresiJikaBenar : ekspresiJikaSalah`:
+
+```javascript title="ternary.js"
+const nilaiUjian = 78;
+const statusKelulusan = nilaiUjian >= 75 ? "LULUS" : "REMEDIAL";
+
+console.log(`Hasil evaluasi: ${statusKelulusan}`);
+```
+
+## Nullish Coalescing Operator (`??`)
+
+Operator `??` mengembalikan nilai sisi kanan hanya apabila nilai sisi kiri bernilai `null` atau `undefined`. Berbeda dengan `||`, operator ini memperlakukan angka `0`, string kosong `""`, dan `false` sebagai nilai yang valid:
+
+```javascript title="nullish.js"
+const stokGudang = 0;
+
+// Menggunakan || (0 dianggap falsy, sehingga keliru mengambil nilai default)
+const stokDenganOr = stokGudang || 10;
+console.log(stokDenganOr); // 10 (salah tafsir)
+
+// Menggunakan ?? (0 diakui sebagai angka sah, bukan null/undefined)
+const stokDenganNullish = stokGudang ?? 10;
+console.log(stokDenganNullish); // 0 (benar)
+```

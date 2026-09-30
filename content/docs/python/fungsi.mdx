@@ -1,0 +1,152 @@
+---
+title: Fungsi (Functions)
+description: Memahami deklarasi fungsi menggunakan kata kunci def, parameter, nilai kembalian return, serta cakupan variabel di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Fungsi (Functions)
+
+Fungsi adalah blok kode terstruktur yang dirancang untuk menjalankan tugas spesifik. Penggunaan fungsi mencegah duplikasi instruksi berulang (*Don't Repeat Yourself* atau DRY), mempermudah pelacakan galat, serta membuat struktur program lebih modular.
+
+## Deklarasi Fungsi Dasar
+
+Fungsi didefinisikan menggunakan kata kunci `def`, diikuti nama fungsi, tanda kurung `()`, dan titik dua (`:`).
+
+```python title="fungsi_dasar.py"
+def cetak_sambutan():
+    print("Selamat datang di sistem inventaris.")
+    print("Silakan pilih menu transaksi.")
+
+# Memanggil fungsi
+cetak_sambutan()
+```
+
+## Parameter dan Argumen
+
+Fungsi dapat menerima input dari luar melalui parameter di dalam tanda kurung saat didefinisikan:
+
+```python title="parameter.py"
+def sapa_pengguna(nama):
+    print(f"Halo, {nama}! Semoga harimu menyenangkan.")
+
+sapa_pengguna("Bambang")
+sapa_pengguna("Sari")
+```
+
+### Nilai Default pada Parameter
+
+Parameter dapat diberikan nilai baku (*default value*). Jika pemanggil fungsi tidak menyertakan argumen tersebut, nilai default akan otomatis digunakan:
+
+```python title="default_parameter.py"
+def hitung_gaji(nama, hari_kerja=20, tarif_harian=150000):
+    total = hari_kerja * tarif_harian
+    print(f"Gaji {nama} ({hari_kerja} hari): Rp {total:,}")
+
+# Menggunakan nilai default
+hitung_gaji("Dedi")
+
+# Menimpa nilai default secara eksplisit
+hitung_gaji("Eko", hari_kerja=22, tarif_harian=175000)
+```
+
+## Nilai Kembalian (Return Value)
+
+Fungsi yang baik umumnya memproses input dan mengembalikan hasil olahan menggunakan kata kunci `return`. Nilai kembalian ini kemudian dapat disimpan ke variabel lain untuk proses berikutnya.
+
+```python title="nilai_kembalian.py"
+def hitung_diskon(harga, persentase):
+    potongan = harga * (persentase / 100)
+    harga_bersih = harga - potongan
+    return harga_bersih
+
+# Nilai dari return disimpan ke dalam variabel
+total_bayar = hitung_diskon(200000, 15)
+print(f"Total yang harus dibayar: Rp {total_bayar:,.0f}")
+```
+
+<Callout type="info">
+  Terdapat perbedaan mendasar antara `print()` dan `return`. Perintah `print()` hanya mencetak teks ke layar konsol dan mengembalikan nilai `None`. Sedangkan `return` memberikan nilai kembali ke kode pemanggil sehingga nilai tersebut dapat digunakan dalam operasi logika atau perhitungan lanjutan.
+</Callout>
+
+### Mengembalikan Beberapa Nilai Sekaligus
+
+Python mengizinkan sebuah fungsi mengembalikan lebih dari satu nilai sekaligus dalam bentuk tuple:
+
+```python title="multi_return.py"
+def analisis_angka(daftar_angka):
+    terkecil = min(daftar_angka)
+    terbesar = max(daftar_angka)
+    total = sum(daftar_angka)
+    return terkecil, terbesar, total
+
+data = [12, 45, 7, 89, 23]
+min_val, max_val, total_val = analisis_angka(data)
+
+print(f"Nilai terkecil: {min_val}")
+print(f"Nilai terbesar: {max_val}")
+print(f"Total jumlah  : {total_val}")
+```
+
+## Cakupan Variabel (Variable Scope)
+
+Variabel yang dideklarasikan di dalam fungsi disebut **variabel lokal**, dan hanya dapat diakses dari dalam fungsi tersebut. Variabel yang dideklarasikan di luar fungsi disebut **variabel global**.
+
+```python title="scope.py"
+nama_instansi = "Universitas Dinamika Bangsa"  # Variabel global
+
+def tampilkan_profil():
+    jurusan = "Sistem Informasi"                # Variabel lokal
+    print(f"Instansi: {nama_instansi}")
+    print(f"Jurusan : {jurusan}")
+
+tampilkan_profil()
+
+# Baris di bawah akan memicu NameError karena jurusan tidak dikenal di luar fungsi
+# print(jurusan)
+```
+
+## Dokumentasi Fungsi (Docstring)
+
+Docstring ditulis menggunakan tiga tanda kutip (`"""`) tepat di baris pertama setelah deklarasi fungsi. Docstring berfungsi sebagai dokumentasi teknis mengenai tujuan fungsi, parameter yang diharapkan, dan nilai kembalian:
+
+```python title="docstring.py"
+def konversi_celcius_ke_fahrenheit(suhu_c):
+    """
+    Mengonversi nilai temperatur dari satuan Celcius ke Fahrenheit.
+
+    Parameter:
+        suhu_c (float): Nilai suhu dalam skala Celcius.
+
+    Return:
+        float: Nilai suhu hasil konversi ke skala Fahrenheit.
+    """
+    return (suhu_c * 9 / 5) + 32
+
+print(konversi_celcius_ke_fahrenheit(30))
+```
+
+## Studi Kasus: Sistem Penilaian Akademik Modular
+
+Berikut implementasi kode yang memisahkan logika penentuan status kelulusan ke dalam fungsi terpisah:
+
+```python title="sistem_nilai.py"
+def hitung_nilai_akhir(tugas, uts, uas):
+    """Menghitung bobot nilai akhir: 30% tugas, 30% UTS, 40% UAS."""
+    return (tugas * 0.3) + (uts * 0.3) + (uas * 0.4)
+
+def tentukan_status(nilai_akhir):
+    """Menentukan status kelulusan berdasarkan nilai ambang 65."""
+    if nilai_akhir >= 65:
+        return "LULUS"
+    return "TIDAK LULUS"
+
+# Simulasi data mahasiswa
+nama_mhs = "Rina"
+skor_akhir = hitung_nilai_akhir(tugas=80, uts=70, uas=75)
+status = tentukan_status(skor_akhir)
+
+print(f"Mahasiswa   : {nama_mhs}")
+print(f"Nilai Akhir : {skor_akhir:.2f}")
+print(f"Status Ujian: {status}")
+```

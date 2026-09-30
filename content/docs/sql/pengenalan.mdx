@@ -1,0 +1,87 @@
+---
+title: Pengenalan Basis Data & SQL
+description: Konsep dasar basis data relasional, anatomi tabel, kunci identitas data, serta klasifikasi perintah SQL.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Pengenalan Basis Data & SQL
+
+Aplikasi modern membutuhkan tempat penyimpanan data yang aman, konsisten, dan dapat diakses bersamaan oleh ribuan pengguna. Sistem manajemen basis data relasional (*Relational Database Management System* atau RDBMS) menjawab kebutuhan ini dengan mengorganisasi data ke dalam tabel-tabel terstruktur yang saling terhubung.
+
+SQL (*Structured Query Language*) adalah bahasa deklaratif yang digunakan untuk mengelola data di dalam RDBMS seperti PostgreSQL, MySQL, MariaDB, SQLite, dan Microsoft SQL Server.
+
+## Mengapa Menggunakan Basis Data Relasional?
+
+Menyimpan data aplikasi dalam berkas teks atau spreadsheet biasa memiliki keterbatasan mendasar:
+
+1. **Integritas dan Validasi Data:** RDBMS menerapkan aturan ketat (tipe data, keunikan nilai, dan validasi relasi) agar data tidak mudah rusak atau inkonsisten.
+2. **Konkurensi dan Transaksi:** Mendukung banyak pengguna membaca dan menulis data secara simultan tanpa konflik data (*race condition*).
+3. **Efisiensi Kueri:** Mesin basis data mengoptimalkan pencarian data pada jutaan baris record menggunakan indeks algoritma pohon (B-Tree).
+4. **Keamanan:** Memiliki sistem hak akses pengguna (*grant/revoke permissions*) bertingkat pada level tabel maupun kolom.
+
+## Anatomi Tabel Relasional
+
+Di dalam basis data relasional, data disimpan dalam bentuk tabel dua dimensi yang terdiri atas baris dan kolom:
+
+| Istilah Relasional | Istilah Praktis | Penjelasan |
+| :--- | :--- | :--- |
+| **Relation** | Tabel (*Table*) | Kumpulan data terstruktur untuk suatu entitas, misalnya tabel `pengguna`. |
+| **Tuple / Record** | Baris (*Row*) | Satu entri data individual yang lengkap dalam sebuah tabel. |
+| **Attribute** | Kolom (*Column/Field*) | Karakteristik atau properti data tertentu, misalnya `email` atau `tanggal_lahir`. |
+| **NULL** | Nilai Kosong | Penanda bahwa nilai atribut pada baris tersebut belum diisi atau tidak diketahui. |
+
+### Kunci Identitas Data (Keys)
+
+Hubungan dan integritas data dijamin melalui dua jenis kunci utama:
+
+- **Primary Key (Kunci Utama):** Kolom unik yang menjadi pengenal mutlak untuk setiap baris di tabel. Nilai Primary Key tidak boleh duplikat dan tidak boleh bernilai `NULL`. Contoh: `id_mahasiswa` atau `nim`.
+- **Foreign Key (Kunci Asing):** Kolom pada suatu tabel yang merujuk ke Primary Key pada tabel lain. Foreign Key memastikan hubungan antar tabel tetap valid, mencegah data rujukan yang terhapus sepihak (*orphaned records*).
+
+## Klasifikasi Perintah SQL
+
+Instruksi SQL dikelompokkan menjadi beberapa kategori fungsional:
+
+### 1. DDL (Data Definition Language)
+Perintah untuk mendefinisikan, mengubah, atau menghapus skema dan struktur objek basis data (tabel, indeks, tampilan).
+- `CREATE`: Membuat tabel atau basis data baru.
+- `ALTER`: Mengubah struktur tabel yang sudah ada (menambah atau menghapus kolom).
+- `DROP`: Menghapus tabel atau basis data secara permanen.
+
+### 2. DML (Data Manipulation Language)
+Perintah untuk mengolah isi data di dalam tabel.
+- `INSERT`: Menambahkan baris data baru ke dalam tabel.
+- `UPDATE`: Memperbarui nilai data pada baris yang sudah ada.
+- `DELETE`: Menghapus baris data tertentu dari tabel.
+
+### 3. DQL (Data Query Language)
+Perintah untuk membaca dan menyaring data dari satu atau beberapa tabel.
+- `SELECT`: Mengambil record data berdasarkan kriteria tertentu.
+
+### 4. DCL & TCL (Control & Transaction)
+- `GRANT` / `REVOKE` (DCL): Mengatur hak akses pengguna basis data.
+- `COMMIT` / `ROLLBACK` (TCL): Mengonfirmasi atau membatalkan rangkaian perubahan data dalam sebuah transaksi basis data.
+
+## Konvensi Sintaksis dan Penulisan Komentar
+
+Meskipun fleksibel, terdapat konvensi penulisan SQL yang dianut komunitas pengembang:
+
+```sql title="aturan_sintaksis.sql"
+-- 1. Komentar satu baris menggunakan tanda dua minus berturut-turut
+
+/*
+   2. Komentar multi baris
+   dapat dituliskan di dalam blok pembuka dan penutup ini.
+*/
+
+-- 3. Kata kunci SQL ditulis dalam HURUF KAPITAL
+-- 4. Nama tabel dan kolom ditulis dalam huruf kecil (snake_case)
+-- 5. Setiap pernyataan diakhiri dengan tanda titik koma (;)
+SELECT nama_lengkap, email
+FROM pengguna
+WHERE status_aktif = TRUE;
+```
+
+<Callout type="info">
+  Setiap instruksi SQL pada umumnya diakhiri dengan tanda titik koma (`;`). Tanda ini memberi tahu mesin RDBMS bahwa satu blok instruksi kueri telah lengkap dan siap dieksekusi.
+</Callout>

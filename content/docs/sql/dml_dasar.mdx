@@ -1,0 +1,120 @@
+---
+title: "Manipulasi Data: Insert, Update, Delete"
+description: Mengelola data tabel menggunakan perintah INSERT INTO, UPDATE, dan DELETE dengan penyaringan kondisi yang aman.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: FilePenLine
+---
+
+# Manipulasi Data: Insert, Update, Delete
+
+*Data Manipulation Language* (DML) mencakup perintah SQL yang digunakan untuk menambah, mengubah, dan menghapus baris data di dalam tabel basis data tanpa mengubah rancangan struktur tabel tersebut.
+
+## Menambah Data Baru (`INSERT INTO`)
+
+Perintah `INSERT INTO` digunakan untuk menyisipkan satu atau beberapa baris data baru ke dalam tabel yang dituju.
+
+### Menyisipkan Satu Baris Data
+
+Praktik terbaik dalam menyisipkan data adalah menuliskan daftar nama kolom secara eksplisit sebelum nilai datanya. Cara ini mencegah terjadinya kesalahan urutan pengisian:
+
+```sql title="insert_tunggal.sql"
+INSERT INTO jurusan (kode_jurusan, nama_jurusan)
+VALUES ('IF', 'Teknik Informatika');
+```
+
+Untuk kolom yang memiliki nilai bawaan (`DEFAULT`) atau kolom nomor otomatis (`SERIAL`), kita tidak perlu menyertakannya dalam daftar kolom:
+
+```sql title="insert_mahasiswa.sql"
+INSERT INTO mahasiswa (
+    nim, 
+    nama_lengkap, 
+    email, 
+    semester, 
+    tanggal_masuk, 
+    id_jurusan
+) VALUES (
+    '230101001', 
+    'Ahmad Fauzi', 
+    'ahmad.fauzi@kampus.ac.id', 
+    3, 
+    '2023-09-01', 
+    1
+);
+```
+
+### Menyisipkan Banyak Baris Sekaligus (Batch Insert)
+
+Kita dapat menambahkan beberapa record dalam satu kali instruksi dengan memisahkan kumpulan nilai menggunakan tanda koma. Pendekatan ini jauh lebih cepat dibandingkan mengeksekusi perintah insert terpisah secara berulang:
+
+```sql title="batch_insert.sql"
+INSERT INTO jurusan (kode_jurusan, nama_jurusan)
+VALUES 
+    ('SI', 'Sistem Informasi'),
+    ('SK', 'Sistem Komputer'),
+    ('TI', 'Teknologi Informasi');
+```
+
+## Memperbarui Data (`UPDATE`)
+
+Perintah `UPDATE` digunakan untuk mengubah nilai data pada baris yang telah ada di dalam tabel.
+
+```sql title="update_data.sql"
+UPDATE mahasiswa
+SET 
+    ipk = 3.75,
+    semester = 4
+WHERE nim = '230101001';
+```
+
+<Callout type="warning">
+  Selalu sertakan klausa `WHERE` pada perintah `UPDATE`. Jika klausa `WHERE` terlewat, mesin basis data akan memperbarui nilai kolom tersebut pada **seluruh baris tabel** tanpa peringatan!
+</Callout>
+
+Contoh jika kita ingin menonaktifkan status mahasiswa yang telah lulus atau cuti:
+
+```sql title="update_kondisi.sql"
+UPDATE mahasiswa
+SET status_aktif = FALSE
+WHERE semester > 12;
+```
+
+## Menghapus Data (`DELETE`)
+
+Perintah `DELETE FROM` digunakan untuk menghapus baris data tertentu berdasarkan kondisi kriteria yang ditentukan.
+
+```sql title="delete_data.sql"
+DELETE FROM mahasiswa
+WHERE nim = '230101001';
+```
+
+Sama halnya dengan `UPDATE`, mengeksekusi `DELETE FROM mahasiswa;` tanpa klausa `WHERE` akan menghapus seluruh data yang berada di tabel tersebut.
+
+### Perbedaan `DELETE` vs `TRUNCATE TABLE`
+
+Ketika kebutuhan kita adalah mengosongkan seluruh isi tabel, terdapat dua opsi perintah dengan karakteristik berbeda:
+
+| Aspek | `DELETE FROM tabel;` | `TRUNCATE TABLE tabel;` |
+| :--- | :--- | :--- |
+| **Kategori Perintah** | DML | DDL |
+| **Penyaringan (`WHERE`)** | Mendukung filter baris tertentu | Tidak mendukung, selalu mengosongkan seluruh tabel |
+| **Kecepatan Eksekusi** | Lebih lambat pada data besar (menghapus baris per baris) | Sangat cepat (mereset alokasi penyimpanan tabel) |
+| **Nilai Kolom Auto-Increment** | Tidak mereset urutan ID nomor otomatis | Mereset urutan nomor otomatis kembali ke angka 1 |
+
+## Pengamanan Transaksi (`TRANSACTION`)
+
+Untuk operasi penting seperti transfer data atau pembaruan multi-tabel, gunakan blok transaksi agar perubahan dapat dibatalkan jika terjadi kesalahan:
+
+```sql title="transaksi.sql"
+BEGIN;
+
+-- Melakukan pembaruan
+UPDATE mahasiswa
+SET semester = semester + 1
+WHERE status_aktif = TRUE;
+
+-- Jika terjadi kesalahan, batalkan seluruh perubahan:
+-- ROLLBACK;
+
+-- Jika data sudah dipastikan benar, simpan secara permanen:
+COMMIT;
+```

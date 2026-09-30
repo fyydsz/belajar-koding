@@ -1,0 +1,136 @@
+---
+title: Variabel & Tipe Data
+description: Memahami deklarasi const, let, perbedaan dengan var, tipe data primitif, template literals, serta konversi tipe data di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Variabel dan Tipe Data
+
+Variabel bertindak sebagai label pengenal yang menyimpan nilai di dalam memori program. JavaScript merupakan bahasa *dynamically typed*, sehingga tipe data suatu variabel dapat ditentukan secara dinamis saat kode dieksekusi.
+
+## Deklarasi Variabel: `const` dan `let`
+
+Standar ECMAScript 2015 (ES6) memperkenalkan kata kunci `const` dan `let` yang memiliki sifat *block-scoped* (hanya berlaku di dalam kurung kurawal tempat variabel tersebut dideklarasikan):
+
+### 1. Kata Kunci `const`
+
+Gunakan `const` untuk mendeklarasikan nilai yang tidak boleh diubah (konstan) sepanjang siklus hidup program:
+
+```javascript title="variabel_const.js"
+const kodeNegara = "ID";
+const batasMaksimal = 100;
+
+// Percobaan penugasan ulang akan menghasilkan galat TypeError
+// kodeNegara = "SG"; // Uncaught TypeError: Assignment to constant variable.
+```
+
+Aturan umum di JavaScript modern: gunakan `const` secara default untuk setiap variabel, kecuali jika nilainya memang harus diubah di baris berikutnya.
+
+### 2. Kata Kunci `let`
+
+Gunakan `let` ketika nilai variabel perlu diperbarui atau dihitung ulang:
+
+```javascript title="variabel_let.js"
+let jumlahPengunjung = 10;
+jumlahPengunjung = 15; // Nilai berhasil diperbarui
+console.log(jumlahPengunjung); // 15
+```
+
+### Mengapa Menghindari `var`?
+
+Sebelum ES6, deklarasi variabel menggunakan `var`. Penggunaan `var` sebaiknya dihindari dalam penulisan kode modern karena memiliki beberapa kelemahan arsitektur:
+
+- Bersifat *function-scoped* atau *global-scoped*, bukan *block-scoped*, sehingga variabel dapat bocor keluar dari blok `if` atau `for`.
+- Mengizinkan deklarasi ulang dengan nama yang sama tanpa memicu galat, sehingga berisiko menimpa data tanpa sengaja.
+- Mengalami *hoisting* parsial (diangkat ke atas dengan nilai awal `undefined`).
+
+## Tipe Data Primitif
+
+JavaScript memiliki beberapa tipe data primitif bawaan:
+
+| Tipe Data | Contoh Nilai | Keterangan |
+| :--- | :--- | :--- |
+| **String** | `"Halo"`, `'Dunia'`, `` `Teks` `` | Sekuens karakter teks |
+| **Number** | `42`, `3.14`, `-10` | Bilangan bulat maupun pecahan (standar IEEE 754) |
+| **Boolean** | `true`, `false` | Nilai kebenaran logika |
+| **Null** | `null` | Ketiadaan nilai yang ditetapkan secara sengaja |
+| **Undefined** | `undefined` | Variabel telah dideklarasikan namun belum diberi nilai |
+| **BigInt** | `9007199254740991n` | Bilangan bulat dengan presisi arbitrer di luar batas aman Number |
+| **Symbol** | `Symbol("id")` | Nilai unik yang tidak dapat diubah, biasa digunakan sebagai kunci objek |
+
+### Memeriksa Tipe Data dengan `typeof`
+
+Operator `typeof` mengembalikan string yang mendeskripsikan tipe data dari operan yang diperiksa:
+
+```javascript title="cek_tipe.js"
+console.log(typeof "Ahmad");    // "string"
+console.log(typeof 2026);       // "number"
+console.log(typeof true);       // "boolean"
+console.log(typeof undefined);  // "undefined"
+console.log(typeof null);       // "object" (perilaku historis bawaan JavaScript)
+```
+
+## Manipulasi String dan Template Literals
+
+Dalam JavaScript modern, penggabungan teks dan ekspresi variabel sangat disarankan menggunakan *template literals* yang diapit karakter *backtick* (`` ` ``):
+
+```javascript title="template_literals.js"
+const namaMahasiswa = "Faisal";
+const semester = 3;
+const ipk = 3.85;
+
+// Template literals menyisipkan variabel atau ekspresi menggunakan ${...}
+const informasi = `Mahasiswa ${namaMahasiswa} (Semester ${semester}) memiliki IPK ${ipk}.`;
+console.log(informasi);
+```
+
+Keunggulan lain dari template literals adalah kemampuannya menampung teks yang terdiri dari beberapa baris tanpa memerlukan karakter *escape* `\n`:
+
+```javascript title="multiline_string.js"
+const struk = `
+Pesanan: Kopi Susu
+Jumlah : 2
+Status : Selesai
+`;
+console.log(struk);
+```
+
+## Konversi Tipe Data (Type Casting)
+
+JavaScript kerap melakukan konversi tipe data otomatis (*type coercion*), yang dapat memicu hasil perhitungan tak terduga jika tidak ditangani secara eksplisit.
+
+### Konversi Implisit (Type Coercion)
+
+```javascript title="coercion.js"
+console.log("5" + 2); // "52" (angka 2 dikonversi otomatis menjadi string)
+console.log("5" - 2); // 3 (string "5" dikonversi otomatis menjadi angka)
+console.log("5" * "2"); // 10
+```
+
+### Konversi Eksplisit
+
+Untuk mencegah inkonsistensi data, lakukan konversi secara sadar menggunakan fungsi bawaan:
+
+```javascript title="konversi_eksplisit.js"
+// Mengonversi string ke angka
+const inputPengguna = "120";
+const nilaiAngka = Number(inputPengguna);
+const nilaiBulat = parseInt("45px", 10); // Menghasilkan 45
+const nilaiDesimal = parseFloat("3.1415"); // Menghasilkan 3.1415
+
+// Mengonversi angka ke string
+const skor = 98;
+const skorTeks = String(skor); // "98"
+const teksMethod = skor.toString(); // "98"
+
+// Mengonversi nilai ke boolean
+console.log(Boolean(1));       // true
+console.log(Boolean(0));       // false
+console.log(Boolean(""));      // false (string kosong)
+console.log(Boolean("Halo"));  // true
+```
+
+<Callout type="warning">
+  Fungsi `Number()` akan menghasilkan nilai khusus `NaN` (*Not-a-Number*) apabila teks yang dikonversi mengandung karakter non-numerik yang tidak valid. Gunakan fungsi `Number.isNaN()` untuk memvalidasi apakah suatu nilai merupakan `NaN`.
+</Callout>

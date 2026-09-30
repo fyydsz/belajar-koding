@@ -1,0 +1,31 @@
+---
+title: Dasar-Dasar SQL
+description: Panduan fundamental Structured Query Language (SQL) untuk perancangan tabel relasional, manipulasi data, kueri analisis, hingga relasi antar entitas.
+icon: Database
+---
+
+# Dasar-Dasar SQL
+
+SQL (*Structured Query Language*) adalah bahasa standar yang digunakan untuk berkomunikasi dengan sistem manajemen basis data relasional (*Relational Database Management System* atau RDBMS). Melalui SQL, kita dapat mendefinisikan struktur data, menyimpan informasi baru, memperbarui catatan yang ada, hingga menarik laporan analitis yang kompleks.
+
+Modul ini disusun secara terstruktur dari konsep dasar basis data, pembuatan tabel (DDL), manipulasi data (DML), pengambilan data dengan penyaringan (DQL), fungsi agregasi, hingga penggabungan beberapa tabel relasional (JOIN).
+
+## Daftar Materi
+
+Pilih topik di bawah ini untuk memulai proses belajar secara bertahap:
+
+<DocsCategory className="grid grid-cols-3" />
+
+## Contoh Kueri Pertama
+
+Berikut contoh perintah SQL sederhana untuk mengambil data nama dan program studi dari tabel mahasiswa yang berstatus aktif:
+
+```sql title="kueri_pertama.sql"
+SELECT nama, program_studi, semester
+FROM mahasiswa
+WHERE status_aktif = TRUE;
+```
+
+<Callout type="info">
+  Meskipun kata kunci SQL bersifat *case-insensitive* (tidak membedakan huruf besar dan kecil), menuliskan kata kunci seperti `SELECT`, `FROM`, dan `WHERE` dengan huruf kapital adalah standar konvensi yang sangat dianjurkan demi memudahkan keterbacaan kode kueri.
+</Callout>

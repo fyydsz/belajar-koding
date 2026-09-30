@@ -1,0 +1,12 @@
+{
+  "title": "Dasar-Dasar JavaScript",
+  "pages": [
+    "pengenalan",
+    "variabel_tipe_data",
+    "operator",
+    "percabangan",
+    "perulangan",
+    "fungsi",
+    "array_objek"
+  ]
+}

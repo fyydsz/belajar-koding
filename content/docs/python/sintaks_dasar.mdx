@@ -1,0 +1,115 @@
+---
+title: Sintaks Dasar & Variabel
+description: Memahami variabel, tipe data primitif, konvensi penamaan, serta operasi input dan output di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Sintaks Dasar dan Variabel
+
+Pemrograman dimulai dari pemahaman terhadap cara menyimpan data, memproses tipe informasi yang berbeda, serta berinteraksi melalui terminal.
+
+## Variabel
+
+Variabel adalah nama pengenal yang merujuk ke suatu lokasi nilai di dalam memori komputer. Di Python, variabel dibuat secara otomatis saat pertama kali diberikan nilai menggunakan operator penugasan (`=`).
+
+```python title="variabel.py"
+nama_pengguna = "Ahmad"
+usia = 20
+tinggi_badan = 172.5
+status_aktif = True
+
+print(nama_pengguna)
+print(usia)
+```
+
+Python menerapkan *dynamic typing*, artinya tipe data variabel ditentukan secara otomatis saat kode dieksekusi tanpa perlu deklarasi tipe secara eksplisit. Selain itu, penamaan variabel bersifat *case-sensitive*, sehingga `skorAkhir` dan `skorakhir` diperlakukan sebagai dua variabel terpisah.
+
+## Tipe Data Primitif
+
+Setiap nilai yang tersimpan di dalam variabel memiliki tipe data tertentu. Tipe data dasar yang paling sering digunakan meliputi:
+
+| Tipe Data | Kode Tipe | Contoh Nilai | Keterangan |
+| :--- | :--- | :--- | :--- |
+| String | `str` | `"Halo"`, `'Python'` | Teks yang diapit tanda kutip tunggal atau ganda |
+| Integer | `int` | `42`, `-7`, `0` | Bilangan bulat positif atau negatif |
+| Float | `float` | `3.14`, `-0.5` | Bilangan pecahan atau desimal |
+| Boolean | `bool` | `True`, `False` | Nilai kebenaran logika |
+
+Untuk memeriksa tipe data dari suatu variabel saat program berjalan, gunakan fungsi bawaan `type()`:
+
+```python title="cek_tipe.py"
+skor = 95
+ipk = 3.85
+bahasa = "Python"
+
+print(type(skor))    # <class 'int'>
+print(type(ipk))     # <class 'float'>
+print(type(bahasa))  # <class 'str'>
+```
+
+## Aturan Penamaan Variabel
+
+Agar kode tetap valid dan mudah dipelihara, penulisan nama variabel harus mematuhi aturan sintaksis serta panduan gaya penulisan PEP 8:
+
+1. Karakter pertama harus berupa huruf alfabet (`a-z`, `A-Z`) atau garis bawah (`_`). Nama variabel tidak boleh diawali dengan angka.
+2. Karakter berikutnya dapat berupa kombinasi huruf, angka, dan garis bawah. Simbol khusus seperti `@`, `-`, `$`, atau spasi tidak diperbolehkan.
+3. Tidak boleh menggunakan kata kunci bawaan (*reserved keywords*) seperti `if`, `for`, `class`, `def`, atau `return`.
+4. Gunakan gaya `snake_case` (kata dipisahkan oleh garis bawah) untuk nama variabel dan fungsi, misalnya `total_harga` atau `nomor_antrean`.
+
+## Menampilkan Output
+
+Fungsi `print()` digunakan untuk mengirimkan data ke layar konsol. Python menyediakan beberapa cara untuk menggabungkan teks dan variabel:
+
+### Pemformatan Menggunakan F-String
+
+Sejak Python 3.6, format string yang disarankan adalah f-string karena lebih ringkas dan mudah dibaca:
+
+```python title="fstring.py"
+nama = "Budi"
+nilai = 88
+
+# F-string menyisipkan variabel langsung di dalam kurung kurawal
+print(f"Mahasiswa {nama} memperoleh nilai {nilai}.")
+```
+
+### Parameter `sep` dan `end`
+
+Fungsi `print()` menerima parameter opsional untuk mengatur pemisah antar nilai (`sep`) dan karakter di akhir cetakan (`end`):
+
+```python title="parameter_print.py"
+# Mengubah pemisah default (spasi) menjadi garis hubung
+print("2026", "09", "27", sep="-")
+
+# Mengubah karakter akhir default (baris baru) agar tetap di baris yang sama
+print("Memproses data", end="... ")
+print("Selesai")
+```
+
+## Menerima Input
+
+Fungsi `input()` membaca teks yang diketikkan pengguna melalui terminal. Nilai kembalian dari fungsi ini selalu bertipe `str`.
+
+```python title="input_teks.py"
+nama = input("Masukkan nama lengkap: ")
+print(f"Selamat datang, {nama}.")
+```
+
+### Konversi Tipe Data (Type Casting)
+
+Jika program membutuhkan input berupa angka untuk operasi perhitungan, nilai string dari `input()` harus dikonversi terlebih dahulu menggunakan fungsi `int()` atau `float()`:
+
+```python title="kalkulasi_sederhana.py"
+print("Perhitungan Luas Persegi Panjang")
+
+panjang = float(input("Masukkan panjang (cm): "))
+lebar = float(input("Masukkan lebar (cm): "))
+
+luas = panjang * lebar
+
+print(f"Luas persegi panjang: {luas:.2f} cm²")
+```
+
+<Callout type="warning">
+  Jika pengguna memasukkan teks huruf ketika program memanggil fungsi `int()` atau `float()`, Python akan memunculkan galat `ValueError`. Pastikan input yang dimasukkan sesuai dengan format angka.
+</Callout>

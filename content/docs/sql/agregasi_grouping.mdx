@@ -1,0 +1,98 @@
+---
+title: "Fungsi Agregasi & Pengelompokan Data"
+description: Menghitung ringkasan statistik menggunakan COUNT, SUM, AVG, MIN, MAX, serta mengelompokkan baris dengan klausa GROUP BY dan HAVING.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: Calculator
+---
+
+# Fungsi Agregasi dan Pengelompokan Data
+
+Fungsi agregasi memproses kumpulan nilai dari beberapa baris data untuk menghasilkan satu nilai ringkasan tunggal. Kemampuan ini menjadi fondasi utama dalam pembuatan laporan ringkasan, metrik statistik, dan dasbor analitis.
+
+## 5 Fungsi Agregasi Standar
+
+SQL menyediakan lima fungsi matematika agregat yang didukung secara universal oleh seluruh RDBMS:
+
+| Fungsi | Kegunaan | Contoh Penggunaan |
+| :--- | :--- | :--- |
+| `COUNT()` | Menghitung total jumlah baris atau data terisi. | `COUNT(*)` atau `COUNT(nim)` |
+| `SUM()` | Menghitung total penjumlahan nilai numerik. | `SUM(total_sks)` |
+| `AVG()` | Menghitung nilai rata-rata dari kolom numerik. | `AVG(ipk)` |
+| `MIN()` | Mencari nilai terendah pada kolom. | `MIN(ipk)` atau `MIN(tanggal_masuk)` |
+| `MAX()` | Mencari nilai tertinggi pada kolom. | `MAX(ipk)` atau `MAX(tanggal_masuk)` |
+
+### Contoh Penggunaan Agregasi Sederhana
+
+```sql title="agregasi_dasar.sql"
+SELECT 
+    COUNT(*) AS total_mahasiswa,
+    ROUND(AVG(ipk), 2) AS rata_rata_ipk,
+    MIN(ipk) AS ipk_terendah,
+    MAX(ipk) AS ipk_tertinggi
+FROM mahasiswa
+WHERE status_aktif = TRUE;
+```
+
+<Callout type="info">
+  Terdapat perbedaan penting antara `COUNT(*)` dan `COUNT(nama_kolom)`. `COUNT(*)` menghitung seluruh baris tanpa terkecuali, sedangkan `COUNT(nama_kolom)` hanya menghitung baris yang nilainya tidak `NULL`.
+</Callout>
+
+## Mengelompokkan Data (`GROUP BY`)
+
+Klausa `GROUP BY` membagi sekumpulan baris menjadi kelompok-kelompok kecil berdasarkan kesamaan nilai pada satu atau beberapa kolom yang ditentukan. Fungsi agregasi kemudian akan dihitung untuk masing-masing kelompok tersebut.
+
+```sql title="group_by.sql"
+-- Menghitung jumlah mahasiswa dan rata-rata IPK untuk setiap jurusan
+SELECT 
+    id_jurusan,
+    COUNT(*) AS jumlah_mahasiswa,
+    ROUND(AVG(ipk), 2) AS rata_rata_ipk
+FROM mahasiswa
+GROUP BY id_jurusan;
+```
+
+### Aturan Kolom Non-Agregat
+
+Setiap kolom yang dicantumkan dalam klausa `SELECT` wajib memenuhi salah satu dari dua syarat berikut:
+1. Kolom tersebut dimasukkan ke dalam klausa `GROUP BY`, atau
+2. Kolom tersebut dibungkus di dalam fungsi agregasi (`COUNT`, `AVG`, `MAX`, dll.).
+
+Jika aturan ini dilanggar, mesin basis data akan memunculkan galat sintaksis karena nilai baris individual tidak dapat dipetakan secara ambigu ke dalam kelompok agregat.
+
+## Menyaring Kelompok Data (`HAVING`)
+
+Klausa `WHERE` tidak dapat digunakan untuk memfilter hasil fungsi agregasi, karena `WHERE` dieksekusi sebelum pengelompokan baris dilakukan. Untuk memfilter hasil agregat setelah dikelompokkan, gunakan klausa `HAVING`.
+
+```sql title="having.sql"
+-- Menampilkan jurusan yang memiliki lebih dari 20 orang mahasiswa
+SELECT 
+    id_jurusan,
+    COUNT(*) AS total_mahasiswa
+FROM mahasiswa
+GROUP BY id_jurusan
+HAVING COUNT(*) > 20;
+```
+
+### Perbedaan Mendasar Antara `WHERE` dan `HAVING`
+
+| Aspek Evaluasi | Klausa `WHERE` | Klausa `HAVING` |
+| :--- | :--- | :--- |
+| **Waktu Eksekusi** | Dijalankan sebelum baris dikelompokkan (`GROUP BY`). | Dijalankan setelah kelompok terbentuk dan agregat dihitung. |
+| **Target Operasi** | Memfilter baris individual tabel. | Memfilter ringkasan kelompok data. |
+| **Dukungan Agregasi** | Tidak dapat memuat fungsi agregat seperti `COUNT()`. | Dirancang khusus untuk mengevaluasi fungsi agregat. |
+
+## Contoh Kueri Terpadu
+
+Berikut contoh kueri lengkap yang menggabungkan seluruh klausa utama dalam urutan eksekusi logis yang benar:
+
+```sql title="kueri_lengkap_agregasi.sql"
+SELECT 
+    semester,
+    COUNT(*) AS jumlah_mahasiswa_aktif,
+    ROUND(AVG(ipk), 2) AS rata_rata_ipk
+FROM mahasiswa
+WHERE status_aktif = TRUE
+GROUP BY semester
+HAVING AVG(ipk) >= 3.00
+ORDER BY semester ASC;
+```

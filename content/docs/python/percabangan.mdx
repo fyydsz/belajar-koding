@@ -1,0 +1,142 @@
+---
+title: Percabangan (If-Else)
+description: Mengontrol alur eksekusi program menggunakan pernyataan if, elif, else, serta operator perbandingan dan logika di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Percabangan (If, Elif, Else)
+
+Struktur kendali percabangan memungkinkan program membuat keputusan dan menjalankan blok instruksi yang berbeda berdasarkan kondisi tertentu. Kondisi tersebut dievaluasi menghasilkan nilai kebenaran boolean, yaitu `True` atau `False`.
+
+## Operator Perbandingan
+
+Operator perbandingan digunakan untuk membandingkan dua nilai dan mengembalikan status boolean:
+
+| Operator | Makna | Contoh Sintaks | Hasil Evaluasi |
+| :---: | :--- | :--- | :--- |
+| `==` | Sama dengan | `10 == 10` | `True` |
+| `!=` | Tidak sama dengan | `10 != 5` | `True` |
+| `>` | Lebih besar dari | `15 > 20` | `False` |
+| `<` | Lebih kecil dari | `7 < 12` | `True` |
+| `>=` | Lebih besar atau sama dengan | `10 >= 10` | `True` |
+| `<=` | Lebih kecil atau sama dengan | `8 <= 5` | `False` |
+
+## Pernyataan `if`
+
+Pernyataan `if` mengeksekusi satu blok kode hanya jika kondisi yang diuji bernilai `True`.
+
+```python title="if_tunggal.py"
+total_belanja = 120000
+
+if total_belanja >= 100000:
+    print("Selamat, Anda mendapatkan kupon undian.")
+
+print("Terima kasih telah berbelanja.")
+```
+
+Python menandai cakupan blok kode menggunakan indentasi (umumnya 4 spasi). Baris kode yang memiliki kedalaman indentasi yang sama dianggap berada dalam satu blok eksekusi.
+
+## Pernyataan `if-else`
+
+Pernyataan `else` menangani alur alternatif ketika kondisi pada `if` bernilai `False`:
+
+```python title="if_else.py"
+nilai_ujian = 65
+
+if nilai_ujian >= 70:
+    print("Status: Lulus evaluasi.")
+else:
+    print("Status: Wajib mengikuti ujian remedial.")
+```
+
+## Pernyataan `if-elif-else`
+
+Untuk menguji lebih dari dua kemungkinan kondisi secara berurutan, gunakan klausul `elif` (singkatan dari *else if*). Python memeriksa kondisi dari atas ke bawah dan langsung keluar dari struktur percabangan begitu satu kondisi pertama terpenuhi:
+
+```python title="kategori_nilai.py"
+skor = 83
+
+if skor >= 85:
+    predikat = "A"
+elif skor >= 75:
+    predikat = "B"
+elif skor >= 65:
+    predikat = "C"
+elif skor >= 50:
+    predikat = "D"
+else:
+    predikat = "E"
+
+print(f"Skor: {skor}, Predikat: {predikat}")
+```
+
+## Operator Logika
+
+Operator logika menggabungkan dua atau lebih ekspresi boolean:
+
+| Operator | Aturan Evaluasi | Contoh |
+| :--- | :--- | :--- |
+| `and` | Bernilai `True` jika semua kondisi bernilai `True` | `(usia >= 17) and (punya_sim == True)` |
+| `or` | Bernilai `True` jika setidaknya satu kondisi bernilai `True` | `(hari == "Sabtu") or (hari == "Minggu")` |
+| `not` | Membalik nilai boolean (`True` menjadi `False`, dan sebaliknya) | `not False` (menghasilkan `True`) |
+
+```python title="operator_logika.py"
+kehadiran_persen = 80
+nilai_tugas = 75
+bebas_tanggungan = True
+
+# Semua kondisi harus bernilai True
+memenuhi_syarat = (kehadiran_persen >= 75) and (nilai_tugas >= 70) and bebas_tanggungan
+
+if memenuhi_syarat:
+    print("Mahasiswa berhak mengikuti ujian akhir semester.")
+else:
+    print("Mahasiswa belum memenuhi persyaratan administrasi ujian.")
+```
+
+## Percabangan Bersarang (Nested If)
+
+Blok percabangan dapat ditempatkan di dalam percabangan lain untuk menangani verifikasi kondisi berlapis:
+
+```python title="verifikasi_akses.py"
+kartu_akses = True
+kode_keamanan = 1234
+
+if kartu_akses:
+    if kode_keamanan == 1234:
+        print("Pintu terbuka. Selamat datang.")
+    else:
+        print("Akses ditolak: PIN keamanan salah.")
+else:
+    print("Akses ditolak: Kartu identitas tidak terdeteksi.")
+```
+
+## Studi Kasus: Kalkulasi Tarif Parkir
+
+Program berikut menghitung biaya parkir kendaraan berdasarkan jenis transportasi dan durasi waktu parkir:
+
+```python title="tarif_parkir.py"
+jenis_kendaraan = input("Jenis kendaraan (motor/mobil): ").strip().lower()
+durasi_jam = int(input("Durasi parkir (jam): "))
+
+if jenis_kendaraan == "motor":
+    tarif_awal = 2000
+    tarif_per_jam = 1000
+elif jenis_kendaraan == "mobil":
+    tarif_awal = 5000
+    tarif_per_jam = 2000
+else:
+    tarif_awal = 0
+    tarif_per_jam = 0
+
+if tarif_awal == 0:
+    print("Jenis kendaraan tidak terdaftar dalam sistem.")
+else:
+    if durasi_jam <= 1:
+        total_biaya = tarif_awal
+    else:
+        total_biaya = tarif_awal + (durasi_jam - 1) * tarif_per_jam
+
+    print(f"Total biaya parkir untuk {durasi_jam} jam: Rp {total_biaya:,}")
+```

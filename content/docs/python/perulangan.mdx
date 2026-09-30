@@ -1,0 +1,130 @@
+---
+title: Perulangan (For & While)
+description: Memahami konsep iterasi menggunakan perulangan while, for, range, pernyataan break, continue, serta nested loop di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Perulangan (For dan While)
+
+Perulangan (*looping*) digunakan untuk mengeksekusi sekumpulan instruksi secara berulang selama kondisi tertentu terpenuhi atau sampai semua elemen dalam suatu sekuens selesai diproses. Python menyediakan dua jenis struktur perulangan utama: `while` dan `for`.
+
+## Perulangan While
+
+Perulangan `while` mengeksekusi blok kode selama kondisi pengujian bernilai `True`. Bentuk ini cocok digunakan ketika jumlah iterasi belum diketahui secara pasti dan bergantung pada perubahan kondisi tertentu saat program berjalan.
+
+```python title="while_dasar.py"
+hitung = 1
+
+while hitung <= 5:
+    print(f"Iterasi ke-{hitung}")
+    hitung += 1  # Variabel pengontrol diubah agar loop memiliki titik henti
+```
+
+<Callout type="warning">
+  Pastikan ada instruksi di dalam blok perulangan yang mengubah nilai variabel kondisi. Jika kondisi selalu bernilai `True`, program akan terjebak dalam *infinite loop* (perulangan tanpa henti) dan membebani memori sistem.
+</Callout>
+
+### Contoh Input Interaktif dengan While
+
+Perulangan `while` sering dipakai untuk memvalidasi masukan pengguna hingga data yang diketikkan benar:
+
+```python title="validasi_input.py"
+pin_rahasia = "1234"
+percobaan = 0
+
+while True:
+    input_pin = input("Masukkan PIN 4 digit: ")
+    percobaan += 1
+
+    if input_pin == pin_rahasia:
+        print(f"PIN benar setelah {percobaan} kali percobaan.")
+        break
+    else:
+        print("PIN salah, silakan coba lagi.")
+```
+
+## Perulangan For
+
+Perulangan `for` di Python dirancang untuk mengiterasi elemen-elemen dari suatu sekuens (seperti rentang angka, string, atau daftar item). Bentuk ini umum digunakan ketika batas awal dan akhir iterasi sudah diketahui sebelumnya.
+
+### Menggunakan Fungsi `range()`
+
+Fungsi bawaan `range()` membangkitkan deret bilangan dengan parameter `range(start, stop, step)`:
+
+- `start`: Nilai awal deret (default bernilai 0 jika diabaikan).
+- `stop`: Batas akhir (iterasi berhenti tepat sebelum mencapai nilai ini).
+- `step`: Interval selisih kenaikan atau penurunan (default bernilai 1).
+
+```python title="for_range.py"
+# Iterasi dari 0 hingga 4
+for angka in range(5):
+    print(f"Angka: {angka}")
+
+# Iterasi dari 1 hingga 5
+for n in range(1, 6):
+    print(f"Nilai: {n}")
+
+# Iterasi bilangan genap dari 2 sampai 10 dengan kelipatan 2
+for genap in range(2, 11, 2):
+    print(f"Bilangan genap: {genap}")
+```
+
+### Iterasi Karakter String
+
+String di Python merupakan sekuens karakter, sehingga dapat langsung diiterasi menggunakan `for`:
+
+```python title="iterasi_string.py"
+kode = "PY3"
+for huruf in kode:
+    print(f"Karakter: {huruf}")
+```
+
+## Kontrol Alur Iterasi: Break dan Continue
+
+Python menyediakan dua kata kunci untuk memodifikasi alur normal perulangan:
+
+1. `break`: Menghentikan seluruh proses perulangan seketika dan langsung keluar dari blok loop.
+2. `continue`: Melewatkan sisa instruksi pada putaran saat ini dan langsung melompat ke iterasi berikutnya.
+
+```python title="break_continue.py"
+print("Pemeriksaan daftar angka:")
+
+for i in range(1, 10):
+    if i == 5:
+        print("Nilai 5 ditemukan. Perulangan dihentikan.")
+        break
+    if i % 2 == 0:
+        continue  # Lewati bilangan genap
+    print(f"Angka ganjil yang diproses: {i}")
+```
+
+## Klausul Else pada Perulangan
+
+Python memiliki fitur unik yaitu klausul `else` yang dipasangkan langsung dengan blok `for` atau `while`. Blok `else` ini hanya akan dieksekusi apabila perulangan selesai secara wajar tanpa terinterupsi oleh pernyataan `break`:
+
+```python title="loop_else.py"
+target = 8
+daftar_angka = range(1, 6)
+
+for angka in daftar_angka:
+    if angka == target:
+        print(f"Target {target} ditemukan.")
+        break
+else:
+    print(f"Target {target} tidak ditemukan di dalam rentang data.")
+```
+
+## Perulangan Bersarang (Nested Loop)
+
+Perulangan dapat ditempatkan di dalam perulangan lain untuk memproses data berbentuk matriks, tabel dua dimensi, atau pola baris dan kolom:
+
+```python title="tabel_perkalian.py"
+print("Tabel Perkalian 1 sampai 3:")
+
+for baris in range(1, 4):
+    for kolom in range(1, 4):
+        hasil = baris * kolom
+        print(f"{baris}x{kolom}={hasil}", end="\t")
+    print()  # Baris baru setiap satu iterasi luar selesai
+```

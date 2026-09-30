@@ -1,0 +1,91 @@
+---
+title: Mengatasi MySQL Crash di XAMPP Tanpa Kehilangan Database
+description: Solusi praktis dan aman memperbaiki MySQL yang gagal start atau shutdown unexpectedly di XAMPP tanpa menghapus data lama.
+date: 2026-09-30
+author: Fyy
+---
+
+Pesan galat yang paling sering muncul saat MySQL di XAMPP mendadak berhenti adalah:
+
+```text
+Error: MySQL shutdown unexpectedly.
+This may be due to a blocked port, missing dependencies, 
+improper privileges, a crash, or a shutdown by another tool.
+```
+
+Masalah ini umumnya dipicu oleh dua penyebab: port 3306 sedang digunakan aplikasi lain, atau file transaksi InnoDB mengalami kerusakan (corrupt) karena komputer mati tiba-tiba saat MySQL masih berjalan.
+
+Berikut urutan diagnosis dan perbaikan yang aman tanpa menghapus database yang sudah ada.
+
+## Periksa Konflik Port 3306
+
+Langkah pertama adalah memastikan port default 3306 tidak dipakai oleh aplikasi lain (seperti instalasi MySQL mandiri, MariaDB service, atau aplikasi database lokal lainnya).
+
+Buka PowerShell atau Command Prompt, lalu jalankan:
+
+```powershell
+netstat -ano | findstr :3306
+```
+
+Jika muncul baris dengan status `LISTENING`, perhatikan angka pada kolom paling kanan (PID / Process ID).
+
+Langkah mematikan proses penghalang:
+
+1. Buka **Task Manager** (`Ctrl + Shift + Esc`).
+2. Masuk ke tab **Details**, lalu urutkan berdasarkan kolom **PID**.
+3. Cari PID yang muncul dari hasil netstat tadi.
+4. Jika proses tersebut adalah service database lain yang tidak sengaja berjalan, klik kanan dan pilih **End task**.
+5. Buka kembali XAMPP Control Panel dan klik **Start** pada modul MySQL.
+
+Jika port 3306 sudah bersih tetapi MySQL masih langsung mati dan menampilkan teks merah, masalahnya berada pada integritas file di folder penyimpanan data.
+
+## Pemulihan Folder Data Menggunakan Folder Backup
+
+Banyak panduan daring menyarankan untuk langsung menghapus seluruh folder `data`. Jangan lakukan hal ini, karena semua tabel dan record proyek lokal Anda akan ikut terhapus permanen.
+
+Gunakan metode perbaikan berbasis folder cadangan (`backup`) bawaan XAMPP:
+
+### Hentikan XAMPP Sepenuhnya [step]
+
+Tutup XAMPP Control Panel. Pastikan aplikasi benar-benar keluar (klik **Quit**, bukan hanya menutup jendela ke system tray).
+
+### Amankan Folder Data Lama [step]
+
+1. Buka File Explorer dan tuju direktori instalasi XAMPP, biasanya berada di `C:\xampp\mysql`.
+2. Ubah nama folder `data` menjadi `data_old`. Folder ini berfungsi sebagai arsip cadangan database Anda.
+
+### Siapkan Folder Data Baru [step]
+
+Buat folder kosong baru di dalam `C:\xampp\mysql`, lalu beri nama `data`.
+
+### Salin Berkas Dasar dari Folder Backup [step]
+
+Buka folder `C:\xampp\mysql\backup`. Salin semua file dan subfolder di dalamnya, lalu tempel (*paste*) ke dalam folder `data` baru yang baru saja Anda buat pada Langkah 3.
+
+### Pindahkan Database Proyek Anda [step]
+
+Buka kembali folder `data_old`. Salin folder database proyek milik Anda (misalnya folder `db_toko`, `portal_berita`, atau nama database aplikasi yang pernah Anda buat), lalu tempel ke folder `data` baru.
+
+> **Peringatan penting:** Jangan menyalin empat folder sistem bawaan dari `data_old`: `mysql`, `performance_schema`, `phpmyadmin`, dan `test`. Biarkan folder-folder ini menggunakan versi bersih dari folder `backup`.
+
+### Salin File Kamus Data (ibdata1) [step]
+
+Di dalam folder `data_old`, cari berkas bernama `ibdata1`. Salin berkas ini dan tempel ke folder `data` yang baru. 
+
+Pilih opsi **Replace the file in the destination** saat muncul dialog konfirmasi.
+
+Berkas `ibdata1` menyimpan kamus data dan struktur tabel mesin InnoDB. Tanpa file ini dari `data_old`, tabel-tabel pada database proyek Anda akan berstatus *in use* atau gagal terbaca di phpMyAdmin.
+
+### Jalankan Kembali MySQL [step]
+
+Buka kembali XAMPP Control Panel, lalu klik tombol **Start** pada MySQL. Indikator modul akan berubah menjadi hijau dan nomor port akan muncul kembali secara stabil.
+
+## Pengecekan Tambahan Melalui mysql_error.log
+
+Jika MySQL masih menolak berjalan setelah melakukan langkah pemulihan di atas, periksa log galat resmi untuk melihat penyebab pasti dari engine MySQL:
+
+1. Pada modul MySQL di XAMPP Control Panel, klik tombol **Logs**.
+2. Pilih berkas **mysql_error.log**.
+3. Gulir ke baris paling akhir file tersebut.
+
+Pesan di baris-baris terakhir akan menunjukkan akar masalah sebenarnya, seperti kendala perizinan folder di Windows (*file permission*), konfigurasi memori buffer pool di file `my.ini` yang terlalu besar, atau lokasi direktori database yang tidak sesuai konfigurasi.

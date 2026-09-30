@@ -1,0 +1,27 @@
+{
+  "name": "belajar-koding-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "@types/uuid": "^11.0.0",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.3",
+    "elysia": "^1.2.10",
+    "postgres": "^3.4.5",
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "drizzle-kit": "^0.30.5"
+  }
+}

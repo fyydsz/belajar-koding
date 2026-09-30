@@ -1,0 +1,109 @@
+---
+title: "Relasi & Penggabungan Tabel (JOIN)"
+description: Menghubungkan data lintas entitas relasional menggunakan INNER JOIN, LEFT JOIN, dan RIGHT JOIN.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: GitMerge
+---
+
+# Relasi dan Penggabungan Tabel (JOIN)
+
+Dalam perancangan basis data relasional yang baik, data dinormalisasi dan dipecah ke dalam tabel-tabel terpisah untuk menghindari duplikasi data. Sebagai contoh, informasi program studi disimpan di tabel `jurusan`, sementara biodata disimpan di tabel `mahasiswa`.
+
+Klausa `JOIN` digunakan untuk merekonstruksi dan menyatukan kembali baris-baris data dari dua tabel atau lebih berdasarkan kecocokan kolom kunci (*key column*).
+
+## Menyiapkan Data Relasi
+
+Sebagai referensi kueri pada materi ini, kita mengacu pada relasi antara tabel `jurusan` (induk) dan tabel `mahasiswa` (anak):
+
+- Kolom Primary Key: `jurusan.id_jurusan`
+- Kolom Foreign Key: `mahasiswa.id_jurusan`
+
+## 1. `INNER JOIN`
+
+`INNER JOIN` hanya mengembalikan baris yang memiliki nilai kecocokan di kedua tabel. Jika ada baris mahasiswa yang belum memiliki jurusan, atau ada jurusan yang belum memiliki mahasiswa, baris tersebut tidak akan ditampilkan.
+
+```sql title="inner_join.sql"
+SELECT 
+    m.nim,
+    m.nama_lengkap,
+    j.nama_jurusan
+FROM mahasiswa AS m
+INNER JOIN jurusan AS j 
+    ON m.id_jurusan = j.id_jurusan;
+```
+
+<Callout type="info">
+  Memberikan alias singkat pada tabel (seperti `m` untuk `mahasiswa` dan `j` untuk `jurusan`) mempermudah penulisan referensi kolom dan mencegah ambiguitas jika kedua tabel memiliki nama kolom yang identik.
+</Callout>
+
+## 2. `LEFT JOIN` (Left Outer Join)
+
+`LEFT JOIN` mengambil **seluruh baris dari tabel sisi kiri** (tabel pertama yang disebut di klausa `FROM`), lalu mencocokkannya dengan baris dari tabel sisi kanan.
+
+Jika baris pada tabel kiri tidak memiliki pasangan yang cocok di tabel kanan, kolom dari tabel kanan akan otomatis diisi dengan nilai `NULL`:
+
+```sql title="left_join.sql"
+-- Mengambil seluruh mahasiswa, termasuk yang belum ditentukan jurusannya
+SELECT 
+    m.nim,
+    m.nama_lengkap,
+    j.nama_jurusan
+FROM mahasiswa AS m
+LEFT JOIN jurusan AS j 
+    ON m.id_jurusan = j.id_jurusan;
+```
+
+### Menemukan Data yang Tidak Berelasi
+
+Pola `LEFT JOIN` yang dipadukan dengan klausa `WHERE ... IS NULL` adalah teknik populer untuk mendeteksi data yang belum memiliki relasi:
+
+```sql title="cek_tanpa_relasi.sql"
+-- Mencari mahasiswa yang belum terdaftar di jurusan mana pun
+SELECT 
+    m.nim, 
+    m.nama_lengkap
+FROM mahasiswa AS m
+LEFT JOIN jurusan AS j 
+    ON m.id_jurusan = j.id_jurusan
+WHERE j.id_jurusan IS NULL;
+```
+
+## 3. `RIGHT JOIN` (Right Outer Join)
+
+`RIGHT JOIN` merupakan kebalikan dari `LEFT JOIN`. Kueri akan mengambil **seluruh baris dari tabel sisi kanan**, serta mencocokkan data dari tabel sisi kiri.
+
+```sql title="right_join.sql"
+-- Menampilkan semua jurusan, termasuk jurusan baru yang belum memiliki mahasiswa terdaftar
+SELECT 
+    j.nama_jurusan,
+    m.nama_lengkap
+FROM mahasiswa AS m
+RIGHT JOIN jurusan AS j 
+    ON m.id_jurusan = j.id_jurusan;
+```
+
+Sebagian besar praktisi basis data lebih sering menggunakan `LEFT JOIN` secara konsisten dengan menukar posisi tabel di klausa `FROM` agar arah alur baca kueri selalu dari kiri ke kanan.
+
+## Ringkasan Perbedaan Jenis JOIN
+
+| Jenis JOIN | Karakteristik Hasil |
+| :--- | :--- |
+| **`INNER JOIN`** | Hanya baris yang memiliki pasangan cocok di kedua tabel. |
+| **`LEFT JOIN`** | Seluruh baris tabel kiri ditambah data cocok tabel kanan (atau `NULL`). |
+| **`RIGHT JOIN`** | Seluruh baris tabel kanan ditambah data cocok tabel kiri (atau `NULL`). |
+| **`FULL OUTER JOIN`** | Seluruh baris dari kedua tabel, mengisi `NULL` untuk sisi yang tidak cocok. |
+
+## Agregasi Lintas Relasi
+
+Kombinasi `JOIN` dan `GROUP BY` memungkinkan kita menyajikan laporan komprehensif, misalnya menghitung total mahasiswa di setiap program studi:
+
+```sql title="agregasi_join.sql"
+SELECT 
+    j.nama_jurusan,
+    COUNT(m.nim) AS total_mahasiswa
+FROM jurusan AS j
+LEFT JOIN mahasiswa AS m 
+    ON j.id_jurusan = m.id_jurusan
+GROUP BY j.id_jurusan, j.nama_jurusan
+ORDER BY total_mahasiswa DESC;
+```

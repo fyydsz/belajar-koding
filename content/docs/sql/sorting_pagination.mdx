@@ -1,0 +1,110 @@
+---
+title: "Pengurutan & Pembatasan Data"
+description: Mengatur urutan tampilan baris menggunakan ORDER BY (ASC/DESC) serta menerapkan pagination dengan LIMIT dan OFFSET.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: ArrowUpDown
+---
+
+# Pengurutan dan Pembatasan Data
+
+Secara default, RDBMS tidak menjamin baris data dikembalikan dalam urutan tertentu. Jika urutan tidak ditentukan secara eksplisit, urutan baris dapat berubah sewaktu-waktu tergantung cara mesin basis data membaca indeks dan berkas penyimpanan fisik.
+
+Untuk memperoleh data yang teratur dan siap disajikan ke antarmuka pengguna, kita menggunakan klausa `ORDER BY`, `LIMIT`, dan `OFFSET`.
+
+## Mengurutkan Data (`ORDER BY`)
+
+Klausa `ORDER BY` ditempatkan setelah klausa `WHERE` untuk mengurutkan hasil kueri berdasarkan satu atau beberapa kolom.
+
+### Urutan Menaik (`ASC`) dan Menurun (`DESC`)
+
+- `ASC` (*Ascending*): Mengurutkan dari nilai terkecil ke terbesar (A ke Z, 0 ke 9, atau tanggal terlama ke terbaru). Ini merupakan nilai bawaan jika arah urutan tidak dituliskan.
+- `DESC` (*Descending*): Mengurutkan dari nilai terbesar ke terkecil (Z ke A, 9 ke 0, atau tanggal terbaru ke terlama).
+
+```sql title="order_by_dasar.sql"
+-- Menampilkan mahasiswa dengan IPK tertinggi di urutan teratas
+SELECT nim, nama_lengkap, ipk
+FROM mahasiswa
+ORDER BY ipk DESC;
+```
+
+### Mengurutkan Berdasarkan Beberapa Kolom Sekaligus
+
+Kita dapat menyusun kriteria pengurutan bertingkat. Basis data akan mengurutkan berdasarkan kolom pertama terlebih dahulu; jika ditemukan nilai yang identik, kolom berikutnya akan digunakan sebagai penentu urutan sekunder:
+
+```sql title="order_by_multi.sql"
+-- Urutkan berdasarkan semester tertinggi lebih dulu, lalu IPK tertinggi
+SELECT nama_lengkap, semester, ipk
+FROM mahasiswa
+ORDER BY semester DESC, ipk DESC;
+```
+
+### Menentukan Posisi Nilai Kosong (`NULLS FIRST` / `NULLS LAST`)
+
+Pada sistem seperti PostgreSQL, kita dapat mengatur apakah baris yang memiliki nilai `NULL` ditempatkan di posisi paling atas atau paling bawah:
+
+```sql title="order_by_nulls.sql"
+SELECT nama_lengkap, id_jurusan
+FROM mahasiswa
+ORDER BY id_jurusan ASC NULLS LAST;
+```
+
+## Membatasi Jumlah Baris (`LIMIT`)
+
+Klausa `LIMIT` membatasi jumlah maksimal baris yang dikembalikan oleh kueri. Fitur ini sangat berguna untuk menampilkan daftar data teratas (*top records*):
+
+```sql title="limit.sql"
+-- Mengambil 3 mahasiswa dengan peringkat IPK terbaik
+SELECT nama_lengkap, ipk
+FROM mahasiswa
+WHERE status_aktif = TRUE
+ORDER BY ipk DESC
+LIMIT 3;
+```
+
+## Melompati Baris (`OFFSET`)
+
+Klausa `OFFSET` menentukan berapa banyak baris awal yang harus dilewati sebelum hasil mulai dikembalikan ke pengguna:
+
+```sql title="offset.sql"
+-- Mengabaikan 5 baris pertama dan mengambil 5 baris berikutnya
+SELECT nim, nama_lengkap
+FROM mahasiswa
+ORDER BY nim ASC
+LIMIT 5 OFFSET 5;
+```
+
+## Menerapkan Pola Pagination pada Aplikasi Web
+
+Ketika aplikasi menampilkan data dalam bentuk tabel atau kartu bernavigasi halaman, kombinasi `LIMIT` dan `OFFSET` menjadi fondasi utama.
+
+Rumus dasar penentuan nilai offset adalah:
+
+$$
+\text{OFFSET} = (\text{Nomor Halaman} - 1) \times \text{Ukuran Halaman}
+$$
+
+Sebagai contoh, jika sebuah halaman menampilkan 10 baris per halaman:
+
+```sql title="pagination.sql"
+-- Halaman 1 (Baris 1 sampai 10)
+SELECT nim, nama_lengkap, email
+FROM mahasiswa
+ORDER BY nim ASC
+LIMIT 10 OFFSET 0;
+
+-- Halaman 2 (Baris 11 sampai 20)
+SELECT nim, nama_lengkap, email
+FROM mahasiswa
+ORDER BY nim ASC
+LIMIT 10 OFFSET 10;
+
+-- Halaman 3 (Baris 21 sampai 30)
+SELECT nim, nama_lengkap, email
+FROM mahasiswa
+ORDER BY nim ASC
+LIMIT 10 OFFSET 20;
+```
+
+<Callout type="info">
+  Teknik pagination berbasis `OFFSET` sangat praktis untuk data berskala kecil hingga menengah. Untuk tabel berukuran jutaan baris, pendekatan *cursor-based pagination* (memfilter kolom identitas terakhir dengan klausa `WHERE id > last_seen_id LIMIT 10`) lebih direkomendasikan demi menjaga efisiensi pembacaan indeks.
+</Callout>

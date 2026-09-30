@@ -1,0 +1,163 @@
+---
+title: Struktur Data Dasar
+description: Mengelola kumpulan data menggunakan List, Tuple, Dictionary, dan Set di Python.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Struktur Data Dasar
+
+Ketika program membutuhkan penanganan banyak data sekaligus, menyimpan setiap nilai ke dalam variabel terpisah menjadi tidak efisien. Python menyediakan empat struktur data koleksi bawaan untuk menyimpan sekumpulan nilai dalam satu variabel:
+
+| Tipe Struktur | Karakteristik | Sintaks Deklarasi | Sifat Data |
+| :--- | :--- | :--- | :--- |
+| **List** | Berurutan (*ordered*), mengizinkan duplikat | `[nilai1, nilai2]` | Dapat diubah (*mutable*) |
+| **Tuple** | Berurutan (*ordered*), mengizinkan duplikat | `(nilai1, nilai2)` | Tidak dapat diubah (*immutable*) |
+| **Dictionary** | Pasangan kunci dan nilai (*key-value*) | `{"kunci": "nilai"}` | Kunci unik, nilai dapat diubah |
+| **Set** | Anggota unik tanpa duplikat, tidak berurutan | `{nilai1, nilai2}` | Anggota unik (*mutable*) |
+
+## List
+
+List adalah koleksi data berurutan yang elemennya dapat diubah, ditambah, maupun dihapus setelah dideklarasikan.
+
+```python title="list_dasar.py"
+bahasa_pemrograman = ["Python", "JavaScript", "Go", "Rust"]
+
+# Mengakses elemen melalui indeks (dimulai dari 0)
+print(bahasa_pemrograman[0])   # Python
+print(bahasa_pemrograman[-1])  # Rust (indeks negatif membaca dari posisi paling belakang)
+
+# Mengubah nilai elemen
+bahasa_pemrograman[1] = "TypeScript"
+print(bahasa_pemrograman)      # ['Python', 'TypeScript', 'Go', 'Rust']
+```
+
+### Operasi dan Metode Penting pada List
+
+```python title="metode_list.py"
+antrean = ["Budi", "Siti"]
+
+# Menambahkan elemen di akhir list
+antrean.append("Dewi")
+
+# Menyisipkan elemen pada indeks tertentu
+antrean.insert(1, "Rian")
+
+# Menghitung jumlah elemen
+print(f"Total antrean: {len(antrean)}")  # 4
+
+# Menghapus elemen berdasarkan nilai
+antrean.remove("Budi")
+
+# Mengambil dan menghapus elemen terakhir
+terakhir = antrean.pop()
+print(f"Dipanggil: {terakhir}")
+
+print(f"Sisa antrean: {antrean}")
+```
+
+### Slicing pada List
+
+Slicing mengambil sebagian rentang data menggunakan format `list[start:stop]`:
+
+```python title="slicing.py"
+angka = [10, 20, 30, 40, 50, 60]
+
+print(angka[1:4])  # [20, 30, 40] -> indeks 1 sampai sebelum indeks 4
+print(angka[:3])   # [10, 20, 30] -> dari awal sampai indeks sebelum 3
+print(angka[3:])   # [40, 50, 60] -> dari indeks 3 sampai akhir
+```
+
+## Tuple
+
+Tuple memiliki karakteristik mirip dengan list, namun nilainya bersifat tetap (*immutable*). Setelah dibuat, elemen tuple tidak dapat ditambah, dihapus, atau diubah nilainya.
+
+Tuple lazim digunakan untuk menyimpan data yang tidak boleh berubah secara tidak sengaja, seperti koordinat geografis atau parameter konfigurasi:
+
+```python title="tuple_dasar.py"
+koordinat = (-6.2088, 106.8456)
+
+print(f"Latitude : {koordinat[0]}")
+print(f"Longitude: {koordinat[1]}")
+
+# Percobaan mengubah nilai akan menghasilkan galat TypeError
+# koordinat[0] = -6.1111  -> Error
+```
+
+## Dictionary
+
+Dictionary menyimpan kumpulan data dalam format pasangan kunci dan nilai (*key-value*). Setiap kunci (*key*) harus bersifat unik dan bertipe data tetap (biasanya string atau integer).
+
+```python title="dictionary_dasar.py"
+profil_mahasiswa = {
+    "nim": "202601001",
+    "nama": "Farhan",
+    "jurusan": "Teknik Informatika",
+    "ipk": 3.82
+}
+
+# Mengakses data menggunakan kunci
+print(profil_mahasiswa["nama"])
+
+# Mengakses data secara aman menggunakan method .get()
+# Jika kunci tidak ditemukan, mengembalikan nilai default tanpa memicu KeyError
+alamat = profil_mahasiswa.get("alamat", "Belum dicantumkan")
+print(f"Alamat: {alamat}")
+
+# Menambah atau memperbarui entri data
+profil_mahasiswa["semester"] = 4
+profil_mahasiswa["ipk"] = 3.87
+```
+
+### Iterasi pada Dictionary
+
+```python title="iterasi_dict.py"
+data_barang = {"Buku": 15000, "Pulpen": 5000, "Penghapus": 3000}
+
+# Mengiterasi kunci dan nilai secara bersamaan
+for barang, harga in data_barang.items():
+    print(f"Item: {barang:<10} | Harga: Rp {harga:,}")
+```
+
+## Set
+
+Set adalah kumpulan nilai tanpa elemen duplikat dan tidak memiliki urutan indeks. Set sangat berguna saat perlu menyaring data ganda atau menguji keanggotaan data secara cepat:
+
+```python title="set_dasar.py"
+# Deklarasi set langsung menyaring duplikasi nilai
+kategori = {"Laptop", "Mouse", "Keyboard", "Mouse", "Laptop"}
+print(kategori)  # {'Laptop', 'Keyboard', 'Mouse'}
+
+# Menambah elemen baru
+kategori.add("Monitor")
+
+# Uji keanggotaan menggunakan operator 'in'
+apakah_ada = "Mouse" in kategori
+print(f"Apakah Mouse ada di daftar? {apakah_ada}")
+```
+
+## Studi Kasus: Rekap Nilai Siswa
+
+Program berikut menggabungkan list dan dictionary untuk menghitung rata-rata nilai kelas:
+
+```python title="rekap_nilai.py"
+daftar_siswa = [
+    {"nama": "Andi", "nilai": 85},
+    {"nama": "Budi", "nilai": 78},
+    {"nama": "Citra", "nilai": 92},
+    {"nama": "Dina", "nilai": 88},
+]
+
+total_nilai = 0
+
+print("Daftar Peserta dan Nilai:")
+for siswa in daftar_siswa:
+    print(f"- {siswa['nama']}: {siswa['nilai']}")
+    total_nilai += siswa["nilai"]
+
+jumlah_siswa = len(daftar_siswa)
+rata_rata = total_nilai / jumlah_siswa
+
+print(f"\nJumlah Mahasiswa: {jumlah_siswa}")
+print(f"Rata-rata Kelas : {rata_rata:.2f}")
+```

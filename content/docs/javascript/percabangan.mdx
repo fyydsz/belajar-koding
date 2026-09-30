@@ -1,0 +1,138 @@
+---
+title: Percabangan (If & Switch)
+description: Mengontrol alur logika program menggunakan pernyataan if, else if, else, evaluasi truthy-falsy, serta switch case di JavaScript.
+program_studi: [teknik_informatika, sistem_informasi, sistem_komputer]
+icon: BookText
+---
+
+# Percabangan di JavaScript
+
+Struktur percabangan memungkinkan program menjalankan blok instruksi yang berbeda sesuai dengan hasil evaluasi kondisi yang ditentukan.
+
+## Struktur `if`, `else if`, dan `else`
+
+Bentuk dasar percabangan menggunakan kata kunci `if`. Jika pengujian pertama tidak terpenuhi, pengujian berikutnya dilanjutkan menggunakan `else if`, dan diakhiri dengan `else` sebagai penanganan kondisi terakhir:
+
+```javascript title="if_else.js"
+const skor = 82;
+
+if (skor >= 90) {
+  console.log("Predikat: A (Istimewa)");
+} else if (skor >= 80) {
+  console.log("Predikat: B (Sangat Baik)");
+} else if (skor >= 70) {
+  console.log("Predikat: C (Cukup)");
+} else {
+  console.log("Predikat: D (Perlu Pembinaan)");
+}
+```
+
+## Konsep Truthy dan Falsy
+
+Di JavaScript, kondisi di dalam tanda kurung `if (...)` tidak harus berupa nilai boolean eksplisit (`true` atau `false`). Nilai tipe apa pun akan otomatis dievaluasi menjadi bernilai *truthy* atau *falsy*.
+
+### Nilai Falsy
+
+Terdapat tepat delapan nilai yang selalu dievaluasi sebagai `false`:
+
+1. `false`
+2. `0` dan `-0`
+3. `0n` (BigInt nol)
+4. `""` (string kosong)
+5. `null`
+6. `undefined`
+7. `NaN`
+
+Semua nilai selain kedelapan nilai di atas dianggap **truthy**, termasuk string spasi `" "`, array kosong `[]`, dan objek kosong `{}`:
+
+```javascript title="truthy_falsy.js"
+const emailInput = ""; // Falsy karena string kosong
+
+if (emailInput) {
+  console.log(`Mengirim tautan ke: ${emailInput}`);
+} else {
+  console.log("Peringatan: Alamat email tidak boleh kosong.");
+}
+
+// Catatan penting: array dan objek kosong bernilai truthy
+const daftarPesanan = [];
+if (daftarPesanan) {
+  console.log("Array kosong tetap dievaluasi sebagai truthy.");
+}
+```
+
+## Struktur `switch...case`
+
+Pernyataan `switch` digunakan untuk membandingkan satu nilai terhadap serangkaian kemungkinan nilai konstan (*cases*). Perbandingan pada `switch` menggunakan evaluasi ketat (*strict equality* `===`):
+
+```javascript title="switch_case.js"
+const kodeHari = 3;
+let namaHari;
+
+switch (kodeHari) {
+  case 1:
+    namaHari = "Senin";
+    break;
+  case 2:
+    namaHari = "Selasa";
+    break;
+  case 3:
+    namaHari = "Rabu";
+    break;
+  case 4:
+    namaHari = "Kamis";
+    break;
+  case 5:
+    namaHari = "Jumat";
+    break;
+  case 6:
+  case 7:
+    namaHari = "Akhir Pekan (Sabtu/Minggu)";
+    break;
+  default:
+    namaHari = "Kode hari tidak valid";
+    break;
+}
+
+console.log(`Hari yang dipilih: ${namaHari}`);
+```
+
+<Callout type="warning">
+  Pastikan menyertakan kata kunci `break` pada setiap blok `case`. Jika `break` diabaikan, program akan mengalami *fall-through*, yaitu mengeksekusi blok kode berikutnya secara terus-menerus meskipun kondisinya tidak cocok.
+</Callout>
+
+## Studi Kasus: Validasi Diskon Transaksi
+
+Berikut contoh alur percabangan untuk menghitung potongan harga belanja berdasarkan status keanggotaan dan batas minimal belanja:
+
+```javascript title="kalkulator_diskon.js"
+const totalBelanja = 250000;
+const tierMember = "GOLD"; // Opsi: "REGULER", "SILVER", "GOLD"
+
+let persentaseDiskon = 0;
+
+if (totalBelanja >= 200000) {
+  switch (tierMember) {
+    case "GOLD":
+      persentaseDiskon = 15;
+      break;
+    case "SILVER":
+      persentaseDiskon = 10;
+      break;
+    default:
+      persentaseDiskon = 5;
+      break;
+  }
+} else if (totalBelanja >= 100000) {
+  persentaseDiskon = 5;
+} else {
+  persentaseDiskon = 0;
+}
+
+const nominalPotongan = (totalBelanja * persentaseDiskon) / 100;
+const totalBayar = totalBelanja - nominalPotongan;
+
+console.log(`Total Belanja : Rp ${totalBelanja.toLocaleString("id-ID")}`);
+console.log(`Diskon (${persentaseDiskon}%)   : Rp ${nominalPotongan.toLocaleString("id-ID")}`);
+console.log(`Total Tagihan : Rp ${totalBayar.toLocaleString("id-ID")}`);
+```
