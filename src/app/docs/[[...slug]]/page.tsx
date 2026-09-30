@@ -98,23 +98,16 @@ function CourseCards() {
         <Link
           key={track.href}
           href={track.href}
-          className="block rounded-2xl border border-fd-border bg-fd-card/90 p-5 text-fd-card-foreground hover:bg-fd-accent/60 hover:border-fd-primary/30 transition-all not-prose no-underline shadow-2xs"
+          className="flex items-center gap-3.5 rounded-2xl border border-fd-border bg-fd-card/90 p-4 text-fd-card-foreground hover:bg-fd-accent/60 hover:border-fd-primary/30 transition-all not-prose no-underline shadow-2xs group"
         >
-          <div className="flex items-start gap-4">
-            {track.icon ? (
-              <div className="size-8 rounded-xl bg-fd-primary/10 text-fd-primary border border-fd-primary/20 flex items-center justify-center shrink-0 [&_svg]:size-4.5 mt-0.5">
-                {track.icon}
-              </div>
-            ) : null}
-            <div className="space-y-1.5 min-w-0">
-              <h3 className="text-base font-semibold text-fd-foreground m-0 leading-snug">
-                {track.title}
-              </h3>
-              <p className="text-sm text-fd-muted-foreground leading-relaxed m-0">
-                {track.description}
-              </p>
+          {track.icon ? (
+            <div className="size-9 rounded-xl bg-fd-primary/10 text-fd-primary border border-fd-primary/20 flex items-center justify-center shrink-0 [&_svg]:size-4.5 transition-colors group-hover:bg-fd-primary/20">
+              {track.icon}
             </div>
-          </div>
+          ) : null}
+          <h3 className="text-sm font-semibold text-fd-foreground m-0 leading-snug group-hover:text-fd-primary transition-colors">
+            {track.title}
+          </h3>
         </Link>
       ))}
     </Cards>
