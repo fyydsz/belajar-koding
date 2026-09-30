@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { uploadAvatar, deleteAvatarFromStorage } from '@/lib/supabase/storage';
+import {
+  fetchCurrentUser,
+  uploadAvatarViaBackend,
+  updateUserPassword,
+  resendVerificationEmail,
+  getAuthToken,
+  type AuthUser,
+} from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,7 +31,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const LANGUAGES = [
   { value: 'id', label: 'Bahasa Indonesia' },
@@ -40,7 +45,7 @@ const COOLDOWN_SECONDS = 60;
 const STORAGE_KEY = 'belajarkoding_email_resend_cooldown';
 
 export default function AccountSettingsPage() {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Profile Picture Upload & Cropper State
@@ -113,36 +118,20 @@ export default function AccountSettingsPage() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  // Fetch user data from Supabase Auth & backend
   const refreshUser = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const currentUser = await fetchCurrentUser();
+    setUser(currentUser);
 
-    if (user) {
-      let currentName = user.user_metadata?.full_name || '';
-      let currentAvatar = user.user_metadata?.avatar_url || null;
-      const currentEmail = user.email || '';
+    if (currentUser) {
+      const currentName = currentUser.fullName || '';
+      const currentAvatar = currentUser.avatarUrl || null;
+      const currentEmail = currentUser.email || '';
       let currentLanguage = 'id';
 
       if (typeof window !== 'undefined') {
         const savedLanguage = localStorage.getItem('belajarkoding_pref_language');
         if (savedLanguage) currentLanguage = savedLanguage;
       }
-
-      // Sync with backend profile if available
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch(`${apiUrl}/v1/profile/me`, {
-          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-        });
-        const json = await res.json();
-        if (res.ok && json.success && json.data?.profile) {
-          if (json.data.profile.fullName) currentName = json.data.profile.fullName;
-          if (json.data.profile.avatarUrl) currentAvatar = json.data.profile.avatarUrl;
-        }
-      } catch {}
 
       setName(currentName);
       setEmail(currentEmail);
@@ -201,37 +190,10 @@ export default function AccountSettingsPage() {
   const handleCroppedSave = async (croppedFile: File) => {
     if (!user) return;
 
-    const oldImageUrl = avatarUrl;
     setIsUploadingAvatar(true);
     try {
-      // 1. Upload foto crop ke Supabase Storage
-      const { publicUrl } = await uploadAvatar(croppedFile, user.id);
-
-      // 2. Update profil di backend ElysiaJS
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-
-      await fetch(`${apiUrl}/v1/profile`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ avatarUrl: publicUrl }),
-      });
-
-      // 3. Sinkronkan dengan Supabase user metadata
-      await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl },
-      });
-
-      // 4. Hapus avatar lama dari storage jika berbeda
-      if (oldImageUrl && oldImageUrl !== publicUrl) {
-        await deleteAvatarFromStorage(oldImageUrl);
-      }
-
-      setAvatarUrl(publicUrl);
+      const { avatarUrl: newAvatarUrl } = await uploadAvatarViaBackend(croppedFile);
+      setAvatarUrl(newAvatarUrl);
       await refreshUser();
       toast.success('Foto profil berhasil diperbarui.');
     } catch (err: unknown) {
@@ -249,26 +211,21 @@ export default function AccountSettingsPage() {
 
     setIsDeletingAvatar(true);
     try {
-      if (avatarUrl) {
-        await deleteAvatarFromStorage(avatarUrl);
-      }
-
+      const token = getAuthToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
 
-      await fetch(`${apiUrl}/v1/profile`, {
+      const res = await fetch(`${apiUrl}/v1/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ avatarUrl: null }),
       });
 
-      await supabase.auth.updateUser({
-        data: { avatar_url: null },
-      });
+      if (!res.ok) {
+        throw new Error('Gagal menghapus avatar di server.');
+      }
 
       setAvatarUrl(null);
       await refreshUser();
@@ -285,13 +242,7 @@ export default function AccountSettingsPage() {
     if (isSendingVerification || cooldown > 0 || !email) return;
     setIsSendingVerification(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-
-      if (error) throw error;
+      await resendVerificationEmail();
 
       toast.success('Email verifikasi telah dikirim.', {
         description: `Silakan periksa kotak masuk atau folder spam di ${email}.`,
@@ -329,16 +280,14 @@ export default function AccountSettingsPage() {
     setProfileSuccess(false);
 
     try {
+      const token = getAuthToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
 
-      // 1. Update ke backend ElysiaJS
       const res = await fetch(`${apiUrl}/v1/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ fullName: trimmedName }),
       });
@@ -348,12 +297,6 @@ export default function AccountSettingsPage() {
         throw new Error(json.message || 'Gagal memperbarui profil.');
       }
 
-      // 2. Update user metadata di Supabase Auth
-      await supabase.auth.updateUser({
-        data: { full_name: trimmedName },
-      });
-
-      // 3. Simpan preferensi bahasa di localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('belajarkoding_pref_language', language);
       }
@@ -397,12 +340,7 @@ export default function AccountSettingsPage() {
     setIsUpdatingPassword(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) throw error;
+      await updateUserPassword(newPassword);
 
       setCurrentPassword('');
       setNewPassword('');
@@ -427,7 +365,7 @@ export default function AccountSettingsPage() {
     !hasProfileChanges ||
     !name.trim();
 
-  const isEmailVerified = Boolean(user?.email_confirmed_at);
+  const isEmailVerified = Boolean(user?.emailConfirmedAt);
 
   return (
     <div className="space-y-10 w-full max-w-2xl mx-auto py-2">

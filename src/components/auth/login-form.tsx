@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { createClient } from '@/lib/supabase/client';
+import { loginUser } from '@/lib/auth';
 import { appName } from '@/lib/shared';
 
 export function LoginForm({
@@ -34,21 +34,7 @@ export function LoginForm({
 
     startTransition(async () => {
       try {
-        const supabase = createClient();
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            setErrorMessage('Email atau kata sandi yang Anda masukkan salah.');
-          } else {
-            setErrorMessage(error.message);
-          }
-          return;
-        }
-
+        await loginUser(email.trim(), password);
         router.refresh();
         router.push(redirectTarget);
       } catch (err: unknown) {

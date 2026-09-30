@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
+import { authRoutes } from './routes/auth';
 import { profileRoutes } from './routes/profile';
 import { gradeRoutes } from './routes/grades';
 import { assignmentRoutes } from './routes/assignments';
@@ -36,6 +37,7 @@ export const app = new Elysia()
     service: 'belajar-koding-server',
     timestamp: new Date().toISOString(),
   }))
+  .use(authRoutes)
   .use(profileRoutes)
   .use(gradeRoutes)
   .use(assignmentRoutes)

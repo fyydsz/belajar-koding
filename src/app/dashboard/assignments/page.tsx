@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { getAuthToken } from '@/lib/auth';
 import {
   Check,
   Copy,
@@ -54,10 +54,9 @@ export default function AssignmentsDashboardPage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = getAuthToken();
 
-      if (!session) {
+      if (!token) {
         setError('Sesi login telah berakhir. Silakan masuk kembali.');
         return;
       }
@@ -66,7 +65,7 @@ export default function AssignmentsDashboardPage() {
 
       // 1. Ambil status penautan Discord & kode pairing aktif
       const resDiscord = await fetch(`${apiUrl}/v1/profile/discord/status`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const jsonDiscord = await resDiscord.json();
       if (resDiscord.ok && jsonDiscord.success) {
@@ -80,7 +79,7 @@ export default function AssignmentsDashboardPage() {
 
       // 2. Ambil data assignments
       const resAssign = await fetch(`${apiUrl}/v1/assignments`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const jsonAssign = await resAssign.json();
       if (resAssign.ok && jsonAssign.success) {
@@ -104,10 +103,9 @@ export default function AssignmentsDashboardPage() {
     setNotice(null);
 
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = getAuthToken();
 
-      if (!session) {
+      if (!token) {
         setNotice({ type: 'error', message: 'Sesi login telah berakhir.' });
         return;
       }
@@ -116,7 +114,7 @@ export default function AssignmentsDashboardPage() {
       const res = await fetch(`${apiUrl}/v1/profile/discord/generate-code`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -144,10 +142,9 @@ export default function AssignmentsDashboardPage() {
     setNotice(null);
 
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = getAuthToken();
 
-      if (!session) {
+      if (!token) {
         setNotice({ type: 'error', message: 'Sesi login telah berakhir.' });
         return;
       }
@@ -156,7 +153,7 @@ export default function AssignmentsDashboardPage() {
       const res = await fetch(`${apiUrl}/v1/profile/unlink-discord`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { getAuthToken } from '@/lib/auth';
 import { BookOpen, CheckSquare, Award, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface GradeItem {
@@ -34,10 +34,9 @@ export default function DashboardHomePage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = getAuthToken();
 
-      if (!session) {
+      if (!token) {
         setError('Sesi login telah berakhir. Silakan masuk kembali.');
         return;
       }
@@ -45,7 +44,7 @@ export default function DashboardHomePage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/v1/grades/my`, {
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 

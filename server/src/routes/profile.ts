@@ -4,6 +4,7 @@ import { db } from '../db';
 import { profiles, discordPairingCodes } from '../db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
+import { supabaseAdmin } from '../lib/supabase';
 
 function generatePairingCode(): string {
   const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -73,6 +74,70 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
       body: t.Object({
         fullName: t.Optional(t.String()),
         avatarUrl: t.Optional(t.Nullable(t.String())),
+      }),
+    }
+  )
+  .post(
+    '/avatar',
+    async ({ user, body, set }) => {
+      if (!user) {
+        set.status = 401;
+        return { success: false, message: 'Autentikasi diperlukan.' };
+      }
+
+      const file = body.file;
+      if (!file) {
+        set.status = 400;
+        return { success: false, message: 'File gambar wajib disertakan.' };
+      }
+
+      const fileExt = file.name ? file.name.split('.').pop() || 'jpg' : 'jpg';
+      const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('avatars')
+        .upload(filePath, buffer, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'image/jpeg',
+        });
+
+      if (uploadError) {
+        set.status = 500;
+        return {
+          success: false,
+          message: `Gagal mengunggah foto profil: ${uploadError.message}`,
+        };
+      }
+
+      const { data: urlData } = supabaseAdmin.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = urlData.publicUrl;
+
+      const [updated] = await db
+        .update(profiles)
+        .set({
+          avatarUrl,
+          updatedAt: new Date(),
+        })
+        .where(eq(profiles.id, user.id))
+        .returning();
+
+      return {
+        success: true,
+        message: 'Foto profil berhasil diperbarui.',
+        data: {
+          avatarUrl,
+          profile: updated,
+        },
+      };
+    },
+    {
+      body: t.Object({
+        file: t.File({
+          maxSize: 5 * 1024 * 1024,
+        }),
       }),
     }
   )

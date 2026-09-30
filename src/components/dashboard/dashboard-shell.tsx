@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/auth/user-menu';
-import { createClient } from '@/lib/supabase/client';
+import { fetchCurrentUser, logoutUser } from '@/lib/auth';
 import { appName } from '@/lib/shared';
 
 interface NavItem {
@@ -112,11 +112,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<string>('student');
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    fetchCurrentUser().then((user) => {
       if (user) {
-        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Mahasiswa');
-        setUserRole(user.user_metadata?.role || 'student');
+        setUserName(user.fullName || user.email?.split('@')[0] || 'Mahasiswa');
+        setUserRole(user.role || 'student');
       }
     });
   }, []);
@@ -149,8 +148,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await logoutUser();
     router.refresh();
     router.push('/');
   };

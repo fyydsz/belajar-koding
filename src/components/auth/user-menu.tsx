@@ -4,17 +4,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { User as UserIcon, LogOut, BookOpen, CheckSquare } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { fetchCurrentUser, logoutUser, type AuthUser } from '@/lib/auth';
 
 export function UserMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith('/dashboard');
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [role, setRole] = useState<string>('student');
-  const [fullName, setFullName] = useState<string>('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
@@ -29,52 +25,36 @@ export function UserMenu() {
   };
 
   useEffect(() => {
-    const supabase = createClient();
+    let mounted = true;
 
-    const fetchUser = async () => {
+    const loadUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-        if (user) {
-          setFullName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Siswa');
-          setRole(user.user_metadata?.role || 'student');
-          setAvatarUrl(user.user_metadata?.avatar_url || null);
-
-          // Sinkronkan data avatar dari backend Elysia jika ada
-          try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.access_token) {
-              const res = await fetch(`${apiUrl}/v1/profile/me`, {
-                headers: { Authorization: `Bearer ${session.access_token}` },
-              });
-              const json = await res.json();
-              if (res.ok && json.success && json.data?.profile?.avatarUrl) {
-                setAvatarUrl(json.data.profile.avatarUrl);
-              }
-            }
-          } catch {}
+        const currentUser = await fetchCurrentUser();
+        if (mounted) {
+          setUser(currentUser);
         }
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchUser();
+    loadUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        setFullName(currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Siswa');
-        setRole(currentUser.user_metadata?.role || 'student');
-        setAvatarUrl(currentUser.user_metadata?.avatar_url || null);
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ user: AuthUser | null }>;
+      if (customEvent.detail?.user !== undefined) {
+        setUser(customEvent.detail.user);
+      } else {
+        loadUser();
       }
-      setIsLoading(false);
-    });
+    };
 
+    window.addEventListener('auth-changed', handleAuthChange);
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      window.removeEventListener('auth-changed', handleAuthChange);
     };
   }, []);
 
@@ -104,8 +84,8 @@ export function UserMenu() {
   }, [isOpen]);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await logoutUser();
+    setUser(null);
     setIsOpen(false);
     router.refresh();
     router.push('/');
@@ -115,7 +95,6 @@ export function UserMenu() {
     return <div className="h-8 w-16 animate-pulse rounded-full bg-fd-muted shrink-0" />;
   }
 
-  // 1. Jika belum login: tombol "Masuk" tetap tombol dengan teks Masuk di pojok kanan
   if (!user) {
     return (
       <Link
@@ -127,7 +106,10 @@ export function UserMenu() {
     );
   }
 
-  // 2. Jika sudah login: tombol Dashboard (Primary) + Hanya icon avatar bundar (tanpa teks nama panjang)
+  const fullName = user.fullName || user.email?.split('@')[0] || 'Siswa';
+  const role = user.role || 'student';
+  const avatarUrl = user.avatarUrl || null;
+
   const initials = fullName
     .split(' ')
     .map((n) => n[0])

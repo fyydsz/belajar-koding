@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { createClient } from '@/lib/supabase/client';
+import { registerUser } from '@/lib/auth';
 import { appName } from '@/lib/shared';
 
 export function RegisterForm({
@@ -50,23 +50,9 @@ export function RegisterForm({
 
     startTransition(async () => {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              full_name: fullName.trim(),
-            },
-          },
-        });
+        const { session } = await registerUser(fullName.trim(), email.trim(), password);
 
-        if (error) {
-          setErrorMessage(error.message);
-          return;
-        }
-
-        if (data.session) {
+        if (session) {
           router.refresh();
           router.push(redirectTarget);
           return;
