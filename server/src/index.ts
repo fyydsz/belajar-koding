@@ -14,7 +14,25 @@ const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 export const app = new Elysia()
   .use(
     cors({
-      origin: [frontendUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+      origin: (request: Request): boolean => {
+        const origin = request.headers.get('origin');
+        if (!origin) return true;
+        try {
+          const parsed = new URL(origin);
+          if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+            return true;
+          }
+          if (parsed.hostname.endsWith('.vercel.app')) {
+            return true;
+          }
+        } catch {
+          // ignore url parse error
+        }
+        if (frontendUrl && origin === frontendUrl) {
+          return true;
+        }
+        return false;
+      },
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Bot-Secret'],
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
