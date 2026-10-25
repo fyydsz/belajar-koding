@@ -687,7 +687,7 @@ export default function AdminBatchesPage() {
           </p>
         </div>
 
-        <ButtonGroup className="self-start sm:self-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
             type="button"
             variant="outline"
@@ -706,7 +706,7 @@ export default function AdminBatchesPage() {
             <Plus className="size-3.5" />
             <span>Buka Batch Baru</span>
           </Button>
-        </ButtonGroup>
+        </div>
       </header>
 
       {/* Kartu Statistik */}
@@ -1129,31 +1129,29 @@ export default function AdminBatchesPage() {
               </div>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-fd-border/70">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCreateModalOpen(false)}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSubmittingBatch || newBatchCourseIds.length === 0}
-                >
-                  {isSubmittingBatch ? (
-                    <>
-                      <RefreshCw className="size-3.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    'Simpan Batch Kelas'
-                  )}
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-3 border-t border-fd-border/70 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmittingBatch || newBatchCourseIds.length === 0}
+              >
+                {isSubmittingBatch ? (
+                  <>
+                    <RefreshCw className="size-3.5 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  'Simpan Batch Kelas'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1377,32 +1375,30 @@ export default function AdminBatchesPage() {
               </div>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-fd-border/70">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingBatch(null)}
-                  disabled={isUpdatingBatch}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isUpdatingBatch || editBatchCourseIds.length === 0}
-                >
-                  {isUpdatingBatch ? (
-                    <>
-                      <RefreshCw className="size-3.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    'Simpan Perubahan'
-                  )}
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-3 border-t border-fd-border/70 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingBatch(null)}
+                disabled={isUpdatingBatch}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isUpdatingBatch || editBatchCourseIds.length === 0}
+              >
+                {isUpdatingBatch ? (
+                  <>
+                    <RefreshCw className="size-3.5 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1442,37 +1438,35 @@ export default function AdminBatchesPage() {
             </ul>
           </div>
 
-          <DialogFooter className="pt-2">
-            <ButtonGroup>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDeletingBatch(null)}
-                disabled={isDeletingBatch}
-              >
-                Batal
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleConfirmDeleteBatch}
-                disabled={isDeletingBatch}
-              >
-                {isDeletingBatch ? (
-                  <>
-                    <RefreshCw className="size-3.5 animate-spin" />
-                    <span>Menghapus...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="size-3.5" />
-                    <span>Hapus Batch Permanen</span>
-                  </>
-                )}
-              </Button>
-            </ButtonGroup>
+          <DialogFooter className="pt-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDeletingBatch(null)}
+              disabled={isDeletingBatch}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDeleteBatch}
+              disabled={isDeletingBatch}
+            >
+              {isDeletingBatch ? (
+                <>
+                  <RefreshCw className="size-3.5 animate-spin" />
+                  <span>Menghapus...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-3.5" />
+                  <span>Hapus Batch Permanen</span>
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1662,7 +1656,7 @@ export default function AdminBatchesPage() {
                 </span>
               )}
             </span>
-            <ButtonGroup>
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -1691,7 +1685,7 @@ export default function AdminBatchesPage() {
                   )}
                 </Button>
               )}
-            </ButtonGroup>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

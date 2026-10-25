@@ -633,28 +633,26 @@ export default function DosenTugasPage() {
               Apakah Anda yakin ingin menghapus tugas <strong>{deletingAssignment?.title}</strong> beserta seluruh pengumpulan siswa di dalamnya? Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="pt-2">
-            <ButtonGroup>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDeletingAssignment(null)}
-                disabled={isDeleting}
-              >
-                Batal
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleConfirmDeleteAssignment}
-                disabled={isDeleting}
-              >
-                {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
-                <span>Hapus Permanen</span>
-              </Button>
-            </ButtonGroup>
+          <DialogFooter className="pt-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDeletingAssignment(null)}
+              disabled={isDeleting}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleConfirmDeleteAssignment}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+              <span>Hapus Permanen</span>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

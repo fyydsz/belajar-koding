@@ -970,7 +970,7 @@ export default function DosenNilaiPage() {
               </Button>
             )}
 
-            <ButtonGroup className="ml-auto w-full sm:w-auto">
+            <div className="flex items-center gap-2 ml-auto w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -991,7 +991,7 @@ export default function DosenNilaiPage() {
                 {isSavingOverride && <Loader2 className="size-3.5 animate-spin" />}
                 <span>Simpan Nilai</span>
               </Button>
-            </ButtonGroup>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

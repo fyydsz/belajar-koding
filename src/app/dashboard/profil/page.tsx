@@ -15,7 +15,6 @@ import {
   topProgress,
 } from '@/lib/dashboard-navigation';
 import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import {
   Avatar,
@@ -460,7 +459,7 @@ export default function AccountSettingsPage() {
                 id="avatar-upload-input"
                 disabled={isUploadingAvatar || isDeletingAvatar}
               />
-              <ButtonGroup>
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -492,7 +491,7 @@ export default function AccountSettingsPage() {
                     <span>Hapus Foto</span>
                   </Button>
                 )}
-              </ButtonGroup>
+              </div>
             </div>
 
             <p className="text-xs text-fd-muted-foreground">

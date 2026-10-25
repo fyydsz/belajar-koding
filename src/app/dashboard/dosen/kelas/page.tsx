@@ -35,7 +35,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -240,7 +239,7 @@ export default function DosenClassroomListPage() {
           </p>
         </div>
 
-        <ButtonGroup className="self-start sm:self-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
             type="button"
             variant="outline"
@@ -259,7 +258,7 @@ export default function DosenClassroomListPage() {
             <PlusCircle className="size-3.5" />
             <span>Buat Kelas Baru</span>
           </Button>
-        </ButtonGroup>
+        </div>
       </header>
 
       {error && (
@@ -422,22 +421,20 @@ export default function DosenClassroomListPage() {
               </div>
             </div>
 
-            <DialogFooter>
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCreateOpen(false)}
-                  disabled={isSubmitting}
-                >
-                  Batal
-                </Button>
-                <Button type="submit" size="sm" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Simpan & Buat Kelas</span>
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Simpan & Buat Kelas</span>
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -452,20 +449,18 @@ export default function DosenClassroomListPage() {
               Kelas <strong>&quot;{courseToDelete?.title}&quot;</strong> beserta seluruh sesi materi dan modul pertemuannya akan dihapus secara permanen.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <ButtonGroup>
-              <AlertDialogCancel disabled={isDeleting} className="m-0">
-                Batal
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteCourse}
-                disabled={isDeleting}
-                className={buttonVariants({ variant: 'destructive', size: 'sm' })}
-              >
-                {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
-                <span>Ya, Hapus Kelas</span>
-              </AlertDialogAction>
-            </ButtonGroup>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isDeleting} className="m-0">
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCourse}
+              disabled={isDeleting}
+              className={buttonVariants({ variant: 'destructive', size: 'sm' })}
+            >
+              {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+              <span>Ya, Hapus Kelas</span>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

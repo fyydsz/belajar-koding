@@ -1081,7 +1081,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
 
                 {/* Balanced Action Toolbar */}
                 <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-fd-border/40">
-                  <ButtonGroup className="flex-wrap">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       type="button"
                       size="sm"
@@ -1091,44 +1091,46 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                       <span>Tambah Materi</span>
                     </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleOpenAddAssignment}
-                    >
-                      <ClipboardList className="size-3.5 shrink-0 text-fd-muted-foreground" />
-                      <span>Tambah Tugas</span>
-                    </Button>
+                    <ButtonGroup>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOpenAddAssignment}
+                      >
+                        <ClipboardList className="size-3.5 shrink-0 text-fd-muted-foreground" />
+                        <span>Tambah Tugas</span>
+                      </Button>
 
-                    {activeAttendance ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsAttendanceModalOpen(true)}
-                        className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
-                        title="Lihat kode dan status presensi aktif"
-                      >
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                        </span>
-                        <span>Presensi: <span className="font-mono font-bold tracking-wider">{activeAttendance.tokenCode}</span></span>
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsAttendanceModalOpen(true)}
-                        title="Buka sesi presensi untuk pertemuan ini"
-                      >
-                        <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
-                        <span>Buka Presensi</span>
-                      </Button>
-                    )}
-                  </ButtonGroup>
+                      {activeAttendance ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAttendanceModalOpen(true)}
+                          className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
+                          title="Lihat kode dan status presensi aktif"
+                        >
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                          </span>
+                          <span>Presensi: <span className="font-mono font-bold tracking-wider">{activeAttendance.tokenCode}</span></span>
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAttendanceModalOpen(true)}
+                          title="Buka sesi presensi untuk pertemuan ini"
+                        >
+                          <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
+                          <span>Buka Presensi</span>
+                        </Button>
+                      )}
+                    </ButtonGroup>
+                  </div>
 
                   <Button
                     type="button"
@@ -1272,28 +1274,30 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           )}
                         </div>
 
-                        <ButtonGroup className="shrink-0">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditAssignment(task)}
-                            title="Edit Tugas"
-                          >
-                            <Edit className="size-3.5" />
-                            <span>Edit Tugas</span>
-                          </Button>
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <ButtonGroup>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenEditAssignment(task)}
+                              title="Edit Tugas"
+                            >
+                              <Edit className="size-3.5" />
+                              <span>Edit Tugas</span>
+                            </Button>
 
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => handleDeleteAssignment(task.id)}
-                            title="Hapus Tugas"
-                            aria-label="Hapus Tugas"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => handleDeleteAssignment(task.id)}
+                              title="Hapus Tugas"
+                              aria-label="Hapus Tugas"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </ButtonGroup>
 
                           <Link
                             href="/dashboard/dosen/tugas"
@@ -1303,7 +1307,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                             <span>Koreksi & Nilai</span>
                             <ChevronRight className="size-3.5" />
                           </Link>
-                        </ButtonGroup>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1394,26 +1398,24 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsNewSessionModalOpen(false)}
-                  disabled={isSubmitting}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSubmitting || !newSessionTitle.trim()}
-                >
-                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Simpan Pertemuan</span>
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewSessionModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting || !newSessionTitle.trim()}
+              >
+                {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Simpan Pertemuan</span>
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1463,32 +1465,30 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               />
             </div>
 
-            <DialogFooter className="pt-3 border-t border-fd-border/40">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditSessionModalOpen(false)}
-                  disabled={isSavingSession}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSavingSession || !editSessionTitle.trim()}
-                >
-                  {isSavingSession ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    'Simpan Perubahan'
-                  )}
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-3 border-t border-fd-border/40 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditSessionModalOpen(false)}
+                disabled={isSavingSession}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSavingSession || !editSessionTitle.trim()}
+              >
+                {isSavingSession ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1545,26 +1545,24 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsMaterialModalOpen(false)}
-                  disabled={isSubmitting}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSubmitting || !materialTitle.trim() || !materialContentMdx.trim()}
-                >
-                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Simpan & Publikasikan ke Supabase</span>
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsMaterialModalOpen(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting || !materialTitle.trim() || !materialContentMdx.trim()}
+              >
+                {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Simpan & Publikasikan ke Supabase</span>
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1628,29 +1626,27 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsAssignmentModalOpen(false);
-                    setEditingAssignmentId(null);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isSubmitting || !assignmentTitle.trim() || !assignmentExpiredAt}
-                >
-                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>{editingAssignmentId ? 'Perbarui Tugas' : 'Publikasikan Tugas'}</span>
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsAssignmentModalOpen(false);
+                  setEditingAssignmentId(null);
+                }}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting || !assignmentTitle.trim() || !assignmentExpiredAt}
+              >
+                {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>{editingAssignmentId ? 'Perbarui Tugas' : 'Publikasikan Tugas'}</span>
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1835,27 +1831,25 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               </div>
 
               {/* Dialog Footer */}
-              <div className="pt-2 flex items-center justify-end border-t border-fd-border/40">
-                <ButtonGroup>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleCloseAttendance}
-                    disabled={isClosingAttendance}
-                  >
-                    {isClosingAttendance && <Loader2 className="size-3.5 animate-spin" />}
-                    <span>Tutup Sesi Sekarang</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAttendanceModalOpen(false)}
-                  >
-                    Tutup Jendela
-                  </Button>
-                </ButtonGroup>
+              <div className="pt-2 flex items-center justify-between gap-2 border-t border-fd-border/40">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCloseAttendance}
+                  disabled={isClosingAttendance}
+                >
+                  {isClosingAttendance && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Tutup Sesi Sekarang</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAttendanceModalOpen(false)}
+                >
+                  Tutup Jendela
+                </Button>
               </div>
             </div>
           ) : (
@@ -1919,27 +1913,25 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                 </p>
               </div>
 
-              <DialogFooter className="pt-2">
-                <ButtonGroup>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAttendanceModalOpen(false)}
-                    disabled={isOpeningAttendance}
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleOpenAttendance}
-                    disabled={isOpeningAttendance || !selectedBatchId}
-                  >
-                    {isOpeningAttendance && <Loader2 className="size-3.5 animate-spin" />}
-                    <span>Buka Kelas & Generate Kode</span>
-                  </Button>
-                </ButtonGroup>
+              <DialogFooter className="pt-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAttendanceModalOpen(false)}
+                  disabled={isOpeningAttendance}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleOpenAttendance}
+                  disabled={isOpeningAttendance || !selectedBatchId}
+                >
+                  {isOpeningAttendance && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Buka Kelas & Generate Kode</span>
+                </Button>
               </DialogFooter>
             </div>
           )}

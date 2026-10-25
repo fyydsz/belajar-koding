@@ -18,7 +18,6 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
@@ -301,7 +300,7 @@ export default function AdminDashboardPage() {
             Halo, {adminName}. Ini kondisi batch, pendaftaran, dan penugasan saat ini.
           </p>
         </div>
-        <ButtonGroup className="self-start sm:self-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
             id="admin-refresh"
             type="button"
@@ -323,7 +322,7 @@ export default function AdminDashboardPage() {
             <Layers className="size-3.5" />
             <span>Kelola Batch</span>
           </Button>
-        </ButtonGroup>
+        </div>
       </header>
 
       {/* Baris fokus: antrean tindakan + batch berjalan */}

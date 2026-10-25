@@ -414,7 +414,7 @@ export default function DosenBatchVerificationPage() {
                     </span>
                   )}
 
-                  <ButtonGroup>
+                  <div className="flex flex-wrap items-center gap-2">
                     {item.paymentProofUrl && (
                       <Button
                         type="button"
@@ -471,7 +471,7 @@ export default function DosenBatchVerificationPage() {
                         <span>Ubah ke Setujui</span>
                       </Button>
                     )}
-                  </ButtonGroup>
+                  </div>
                 </div>
               </div>
             );
@@ -527,43 +527,41 @@ export default function DosenBatchVerificationPage() {
             </div>
           )}
 
-          <DialogFooter className="pt-2">
-            <ButtonGroup>
-              {previewItem?.status === 'pending' && (
-                <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isSubmittingAction}
-                    onClick={() => handleApprove(previewItem.id)}
-                  >
-                    <CheckCircle2 className="size-3.5" />
-                    <span>Setujui Pembayaran</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    disabled={isSubmittingAction}
-                    onClick={() => {
-                      setRejectingItem(previewItem);
-                      setRejectReason('');
-                    }}
-                  >
-                    <XCircle className="size-3.5" />
-                    <span>Tolak</span>
-                  </Button>
-                </>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPreviewItem(null)}
-              >
-                Tutup
-              </Button>
-            </ButtonGroup>
+          <DialogFooter className="pt-2 gap-2">
+            {previewItem?.status === 'pending' && (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isSubmittingAction}
+                  onClick={() => handleApprove(previewItem.id)}
+                >
+                  <CheckCircle2 className="size-3.5" />
+                  <span>Setujui Pembayaran</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={isSubmittingAction}
+                  onClick={() => {
+                    setRejectingItem(previewItem);
+                    setRejectReason('');
+                  }}
+                >
+                  <XCircle className="size-3.5" />
+                  <span>Tolak</span>
+                </Button>
+              </>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewItem(null)}
+            >
+              Tutup
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -604,26 +602,24 @@ export default function DosenBatchVerificationPage() {
               </p>
             </div>
 
-            <DialogFooter className="pt-2">
-              <ButtonGroup>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRejectingItem(null)}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  variant="destructive"
-                  size="sm"
-                  disabled={isSubmittingAction || !rejectReason.trim()}
-                >
-                  {isSubmittingAction && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Konfirmasi Tolak</span>
-                </Button>
-              </ButtonGroup>
+            <DialogFooter className="pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setRejectingItem(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                size="sm"
+                disabled={isSubmittingAction || !rejectReason.trim()}
+              >
+                {isSubmittingAction && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Konfirmasi Tolak</span>
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

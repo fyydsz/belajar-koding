@@ -615,7 +615,7 @@ export default function MentorPresensiPage() {
           </p>
         </div>
 
-        <ButtonGroup className="self-start sm:self-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
             type="button"
             variant="outline"
@@ -637,7 +637,7 @@ export default function MentorPresensiPage() {
               <span>Buka Materi Sesi</span>
             </Link>
           )}
-        </ButtonGroup>
+        </div>
       </header>
 
       {/* FILTER & SELECTOR BAR */}
@@ -779,24 +779,27 @@ export default function MentorPresensiPage() {
                     </div>
                   </div>
 
-                  <ButtonGroup>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleCopyCode}
-                    >
-                      {copiedCode ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                      <span>{copiedCode ? 'Tersalin' : 'Salin Kode'}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleOpenEditPresensi(activeSession)}
-                    >
-                      <Edit className="size-3.5 text-fd-primary" />
-                      <span>Edit Presensi</span>
-                    </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ButtonGroup>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyCode}
+                      >
+                        {copiedCode ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                        <span>{copiedCode ? 'Tersalin' : 'Salin Kode'}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleOpenEditPresensi(activeSession)}
+                      >
+                        <Edit className="size-3.5 text-fd-primary" />
+                        <span>Edit Presensi</span>
+                      </Button>
+                    </ButtonGroup>
                     <Button
                       type="button"
                       size="sm"
@@ -805,7 +808,7 @@ export default function MentorPresensiPage() {
                     >
                       Tutup Sesi
                     </Button>
-                  </ButtonGroup>
+                  </div>
                 </div>
 
                 {/* DISCORD OMNICHANNEL COMMAND */}
@@ -1095,27 +1098,25 @@ export default function MentorPresensiPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="pt-2">
-            <ButtonGroup>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                disabled={isClosingSession}
-              >
-                Batal
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleCloseSession}
-                disabled={isClosingSession}
-              >
-                {isClosingSession ? 'Menutup...' : 'Tutup Sesi Sekarang'}
-              </Button>
-            </ButtonGroup>
+          <DialogFooter className="pt-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              disabled={isClosingSession}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleCloseSession}
+              disabled={isClosingSession}
+            >
+              {isClosingSession ? 'Menutup...' : 'Tutup Sesi Sekarang'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1186,7 +1187,7 @@ export default function MentorPresensiPage() {
 
                 <div className="flex items-center gap-2">
                   {new Date(editingSession.expiresAt) > new Date() ? (
-                    <ButtonGroup>
+                    <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -1206,7 +1207,7 @@ export default function MentorPresensiPage() {
                       >
                         Tutup Sesi
                       </Button>
-                    </ButtonGroup>
+                    </div>
                   ) : (
                     <Button
                       type="button"
