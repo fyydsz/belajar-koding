@@ -327,17 +327,22 @@ export default function AdminPenggunaPage() {
                         </span>
                       )}
 
-                      <ButtonGroup>
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-fd-border bg-fd-muted/30 p-1">
                         {ROLE_OPTIONS.map((opt) => {
                           const isActive = u.role === opt.value;
                           const isDisabled = isUpdating || (isSelf && opt.value !== 'admin');
 
+                          const activeColorClass =
+                            opt.value === 'admin'
+                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                              : opt.value === 'mentor'
+                              ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                              : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+
                           return (
-                            <Button
+                            <button
                               key={opt.value}
                               type="button"
-                              size="sm"
-                              variant={isActive ? 'default' : 'outline'}
                               disabled={isDisabled}
                               onClick={() => handleRoleChange(u, opt.value)}
                               title={
@@ -345,12 +350,19 @@ export default function AdminPenggunaPage() {
                                   ? 'Akun Anda sendiri tidak dapat diturunkan dari Admin'
                                   : `Ubah peran menjadi ${opt.label}`
                               }
+                              className={cn(
+                                'h-7 px-2.5 rounded-md text-[11px] font-semibold transition-all border',
+                                isActive
+                                  ? cn('shadow-2xs', activeColorClass)
+                                  : 'border-transparent text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-muted/50',
+                                isDisabled && !isActive && 'opacity-40 cursor-not-allowed'
+                              )}
                             >
                               {opt.label}
-                            </Button>
+                            </button>
                           );
                         })}
-                      </ButtonGroup>
+                      </div>
                     </div>
                   </div>
                 );
