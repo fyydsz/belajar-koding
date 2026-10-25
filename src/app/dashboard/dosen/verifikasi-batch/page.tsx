@@ -224,11 +224,7 @@ export default function DosenBatchVerificationPage() {
   const filteredEnrollments = enrollments.filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
-    if (isLoading && enrollments.length === 0) {
-    return null;
-  }
-
-  return (
+    return (
       item.studentName.toLowerCase().includes(q) ||
       item.studentEmail.toLowerCase().includes(q) ||
       item.batchName.toLowerCase().includes(q) ||
@@ -237,11 +233,7 @@ export default function DosenBatchVerificationPage() {
   });
 
   if (isAuthLoading) {
-    if (isLoading && enrollments.length === 0) {
-    return null;
-  }
-
-  return (
+    return (
       <div className="flex min-h-[350px] items-center justify-center">
         <Loader2 className="size-6 animate-spin text-fd-primary" />
       </div>
@@ -352,11 +344,7 @@ export default function DosenBatchVerificationPage() {
           {filteredEnrollments.map((item) => {
             const isPdf = item.paymentProofUrl?.toLowerCase().includes('.pdf');
 
-            if (isLoading && enrollments.length === 0) {
-    return null;
-  }
-
-  return (
+            return (
               <div
                 key={item.id}
                 className="rounded-xl border border-fd-border bg-fd-card p-4 sm:p-5 shadow-2xs hover:border-fd-primary/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"

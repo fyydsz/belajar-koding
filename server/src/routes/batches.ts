@@ -208,8 +208,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       return { success: true, data: enrichedMentorBatches };
     }
 
-    // Role Student: ambil batch yang di-enroll siswa beserta pembayaran
-    const studentEnrollments = await db
+    // Role Student: ambil batch yang di-enroll siswa beserta pembayaran terbaru
+    const rawStudentEnrollments = await db
       .select({
         enrollmentId: batchEnrollments.id,
         batchId: batchEnrollments.batchId,
@@ -225,20 +225,54 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         courseId: courses.id,
         courseTitle: courses.title,
         courseSlug: courses.slug,
-        paymentProofUrl: enrollmentPayments.proofUrl,
-        paymentStatus: enrollmentPayments.status,
-        rejectedReason: enrollmentPayments.rejectionReason,
-        verifiedAt: enrollmentPayments.verifiedAt,
       })
       .from(batchEnrollments)
       .innerJoin(batches, eq(batchEnrollments.batchId, batches.id))
       .leftJoin(batchCourses, eq(batches.id, batchCourses.batchId))
       .leftJoin(courses, eq(batchCourses.courseId, courses.id))
-      .leftJoin(enrollmentPayments, eq(batchEnrollments.id, enrollmentPayments.enrollmentId))
       .where(eq(batchEnrollments.studentId, profile.id))
       .orderBy(desc(batchEnrollments.enrolledAt));
 
-    return { success: true, data: studentEnrollments };
+    const enrollmentIds = Array.from(new Set(rawStudentEnrollments.map((e) => e.enrollmentId)));
+    const paymentRows =
+      enrollmentIds.length > 0
+        ? await db
+            .select()
+            .from(enrollmentPayments)
+            .where(inArray(enrollmentPayments.enrollmentId, enrollmentIds))
+            .orderBy(desc(enrollmentPayments.createdAt))
+        : [];
+
+    const latestPaymentByEnrollment = new Map<string, (typeof paymentRows)[number]>();
+    for (const p of paymentRows) {
+      if (!latestPaymentByEnrollment.has(p.enrollmentId)) {
+        latestPaymentByEnrollment.set(p.enrollmentId, p);
+      }
+    }
+
+    const dedupedStudentEnrollments = new Map<
+      string,
+      (typeof rawStudentEnrollments)[number] & {
+        paymentProofUrl: string | null;
+        paymentStatus: string | null;
+        rejectedReason: string | null;
+        verifiedAt: Date | null;
+      }
+    >();
+    for (const row of rawStudentEnrollments) {
+      if (!dedupedStudentEnrollments.has(row.enrollmentId)) {
+        const pay = latestPaymentByEnrollment.get(row.enrollmentId);
+        dedupedStudentEnrollments.set(row.enrollmentId, {
+          ...row,
+          paymentProofUrl: pay?.proofUrl || null,
+          paymentStatus: pay?.status || null,
+          rejectedReason: pay?.rejectionReason || null,
+          verifiedAt: pay?.verifiedAt || null,
+        });
+      }
+    }
+
+    return { success: true, data: Array.from(dedupedStudentEnrollments.values()) };
   })
 
   // 3. Upload File Bukti Pembayaran (PNG, JPG, PDF maks 5MB)
@@ -315,6 +349,11 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       if (!user || !profile) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan.' };
+      }
+
+      if (!body.paymentProofUrl || !body.paymentProofUrl.trim()) {
+        set.status = 400;
+        return { success: false, message: 'Bukti pembayaran transfer wajib diunggah.' };
       }
 
       const [batch] = await db
@@ -415,7 +454,7 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         batchId: t.String(),
       }),
       body: t.Object({
-        paymentProofUrl: t.Optional(t.String()),
+        paymentProofUrl: t.String({ minLength: 5 }),
         notes: t.Optional(t.String()),
       }),
     }
@@ -428,6 +467,11 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       if (!user || !profile) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan.' };
+      }
+
+      if (!body.paymentProofUrl || !body.paymentProofUrl.trim()) {
+        set.status = 400;
+        return { success: false, message: 'Bukti pembayaran transfer wajib diunggah.' };
       }
 
       const [batch] = await db
@@ -536,14 +580,55 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       }
 
       const accessibleBatchIds = await getAccessibleBatchIds(profile);
-      const visibleRows =
+      const filteredRows =
         accessibleBatchIds === 'all'
           ? rows
           : rows.filter((r) => accessibleBatchIds.includes(r.batchId));
 
+      const enrollmentIds = Array.from(new Set(filteredRows.map((r) => r.id)));
+      const paymentRows =
+        enrollmentIds.length > 0
+          ? await db
+              .select()
+              .from(enrollmentPayments)
+              .where(inArray(enrollmentPayments.enrollmentId, enrollmentIds))
+              .orderBy(desc(enrollmentPayments.createdAt))
+          : [];
+
+      const latestPaymentByEnrollment = new Map<string, (typeof paymentRows)[number]>();
+      for (const p of paymentRows) {
+        if (!latestPaymentByEnrollment.has(p.enrollmentId)) {
+          latestPaymentByEnrollment.set(p.enrollmentId, p);
+        }
+      }
+
+      const dedupedRows = new Map<
+        string,
+        (typeof filteredRows)[number] & {
+          paymentProofUrl: string | null;
+          paymentStatus: string | null;
+          rejectedReason: string | null;
+          verifiedAt: Date | null;
+        }
+      >();
+      for (const r of filteredRows) {
+        if (!dedupedRows.has(r.id)) {
+          const pay = latestPaymentByEnrollment.get(r.id);
+          dedupedRows.set(r.id, {
+            ...r,
+            courseTitle: r.courseTitle || '-',
+            courseSlug: r.courseSlug || '',
+            paymentProofUrl: pay?.proofUrl || null,
+            paymentStatus: pay?.status || null,
+            rejectedReason: pay?.rejectionReason || null,
+            verifiedAt: pay?.verifiedAt || null,
+          });
+        }
+      }
+
       return {
         success: true,
-        data: visibleRows,
+        data: Array.from(dedupedRows.values()),
       };
     },
     {

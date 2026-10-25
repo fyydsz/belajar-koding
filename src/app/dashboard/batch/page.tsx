@@ -222,18 +222,14 @@ export default function StudentBatchCatalogPage() {
 
     try {
       setIsRegistering(true);
-      let proofUrl: string | undefined = undefined;
 
-      const priceNum = parseFloat(selectedBatch.price || '0');
-      if (priceNum > 0 && !selectedFile) {
+      if (!selectedFile) {
         toast.error('Harap unggah bukti pembayaran transfer terlebih dahulu.');
         setIsRegistering(false);
         return;
       }
 
-      if (selectedFile) {
-        proofUrl = await uploadProofFile(selectedFile);
-      }
+      const proofUrl = await uploadProofFile(selectedFile);
 
       const res = await fetch(`${apiUrl}/v1/batches/${selectedBatch.id}/register`, {
         method: 'POST',
@@ -685,7 +681,7 @@ export default function StudentBatchCatalogPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isRegistering}
+                  disabled={isRegistering || !selectedFile}
                   className="min-h-[40px] text-xs font-semibold gap-1.5"
                 >
                   {isRegistering && <Loader2 className="size-3.5 animate-spin" />}
