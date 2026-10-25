@@ -22,10 +22,12 @@ export interface ThemeSwitchProps extends ComponentProps<'div'> {
   mode?: 'light-dark' | 'light-dark-system';
 }
 
+import { useMounted } from '@/lib/use-mounted';
+
 export function ThemeSwitch({ className, mode = 'light-dark', ...props }: ThemeSwitchProps) {
   const { setTheme, theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const t = useTranslations({ note: 'theme switcher' });
+  const t = useTranslations({ note: 'theme switch' });
+  const mounted = useMounted();
   const themeAriaLabels = {
     light: t('Light', { note: 'aria-label' }),
     dark: t('Dark', { note: 'aria-label' }),
@@ -39,10 +41,6 @@ export function ThemeSwitch({ className, mode = 'light-dark', ...props }: ThemeS
       setTheme(newTheme);
     }
   };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const container = cn(
     'inline-flex items-center rounded-full border p-1 overflow-hidden *:rounded-full',

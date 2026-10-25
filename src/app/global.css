@@ -12,12 +12,12 @@
   --color-fd-ring: #2563EB;
   --background: var(--color-fd-background, hsl(0, 0%, 98%));
   --foreground: var(--color-fd-foreground, hsl(0, 0%, 3.9%));
-  --card: var(--color-fd-card, hsl(0, 0%, 99.7%));
+  --card: var(--color-fd-card, hsl(0, 0%, 100%));
   --card-foreground: var(--color-fd-card-foreground, hsl(0, 0%, 3.9%));
   --popover: var(--color-fd-popover, hsl(0, 0%, 100%));
   --popover-foreground: var(--color-fd-popover-foreground, hsl(0, 0%, 15.1%));
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--color-fd-primary);
+  --primary-foreground: var(--color-fd-primary-foreground);
   --secondary: var(--color-fd-secondary, hsl(0, 0%, 96.1%));
   --secondary-foreground: var(--color-fd-secondary-foreground, hsl(0, 0%, 9%));
   --muted: var(--color-fd-muted, hsl(0, 0%, 96.1%));
@@ -26,27 +26,27 @@
   --accent-foreground: var(--color-fd-accent-foreground, hsl(0, 0%, 9%));
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--color-fd-border, hsla(0, 0%, 60%, 0.2));
-  --input: hsla(0, 0%, 0%, 0.1);
-  --ring: var(--color-fd-ring, hsl(0, 0%, 63.9%));
+  --input: var(--color-fd-border, hsla(0, 0%, 0%, 0.12));
+  --ring: var(--color-fd-ring, #2563EB);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: var(--color-fd-card, hsl(0, 0%, 99.7%));
+  --sidebar: var(--color-fd-card, hsl(0, 0%, 100%));
   --sidebar-foreground: var(--color-fd-card-foreground, hsl(0, 0%, 3.9%));
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--color-fd-primary);
+  --sidebar-primary-foreground: var(--color-fd-primary-foreground);
   --sidebar-accent: var(--color-fd-accent, hsl(0, 0%, 94.1%));
   --sidebar-accent-foreground: var(--color-fd-accent-foreground, hsl(0, 0%, 9%));
   --sidebar-border: var(--color-fd-border, hsla(0, 0%, 60%, 0.2));
-  --sidebar-ring: var(--color-fd-ring, hsl(0, 0%, 63.9%));
+  --sidebar-ring: var(--color-fd-ring, #2563EB);
 }
 
 .dark {
   --color-fd-primary: #38BDF8;
-  --color-fd-primary-foreground: #0e0517;
+  --color-fd-primary-foreground: #090d16;
   --color-fd-ring: #38BDF8;
   --background: var(--color-fd-background, hsl(0, 0%, 2%));
   --foreground: var(--color-fd-foreground, hsl(0, 0%, 98%));
@@ -54,8 +54,8 @@
   --card-foreground: var(--color-fd-card-foreground, hsl(0, 0%, 98%));
   --popover: var(--color-fd-popover, hsl(0, 0%, 4%));
   --popover-foreground: var(--color-fd-popover-foreground, hsl(0, 0%, 98%));
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: var(--color-fd-primary);
+  --primary-foreground: var(--color-fd-primary-foreground);
   --secondary: var(--color-fd-secondary, hsl(0, 0%, 12.9%));
   --secondary-foreground: var(--color-fd-secondary-foreground, hsl(0, 0%, 98%));
   --muted: var(--color-fd-muted, hsl(0, 0%, 8%));
@@ -64,8 +64,8 @@
   --accent-foreground: var(--color-fd-accent-foreground, hsl(0, 0%, 100%));
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--color-fd-border, hsla(0, 0%, 50%, 0.2));
-  --input: hsla(0, 0%, 100%, 0.12);
-  --ring: var(--color-fd-ring, hsl(0, 0%, 34.9%));
+  --input: var(--color-fd-border, hsla(0, 0%, 100%, 0.12));
+  --ring: var(--color-fd-ring, #38BDF8);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -73,12 +73,12 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: var(--color-fd-card, hsl(0, 0%, 4%));
   --sidebar-foreground: var(--color-fd-card-foreground, hsl(0, 0%, 98%));
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--color-fd-primary);
+  --sidebar-primary-foreground: var(--color-fd-primary-foreground);
   --sidebar-accent: var(--color-fd-accent, hsl(0, 0%, 15%));
   --sidebar-accent-foreground: var(--color-fd-accent-foreground, hsl(0, 0%, 100%));
   --sidebar-border: var(--color-fd-border, hsla(0, 0%, 50%, 0.2));
-  --sidebar-ring: var(--color-fd-ring, hsl(0, 0%, 34.9%));
+  --sidebar-ring: var(--color-fd-ring, #38BDF8);
 }
 
 html {

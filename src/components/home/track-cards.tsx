@@ -70,7 +70,7 @@ export function TrackCards() {
                 </div>
               ) : (
                 <>
-                  {track.modules.slice(0, 6).map((m) => (
+                  {track.modules.slice(0, 3).map((m) => (
                     <Link
                       key={m.href}
                       href={m.href}
@@ -88,12 +88,12 @@ export function TrackCards() {
                     </Link>
                   ))}
 
-                  {track.modules.length > 6 && (
+                  {track.modules.length > 3 && (
                     <Link
                       href={track.href}
                       className="flex items-center justify-center p-2 rounded-xl text-xs text-fd-muted-foreground hover:text-fd-primary transition-colors"
                     >
-                      <span>+{track.modules.length - 6} modul lainnya</span>
+                      <span>+{track.modules.length - 3} modul lainnya</span>
                     </Link>
                   )}
                 </>

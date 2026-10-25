@@ -208,6 +208,7 @@ function ThumbTrack({ computed, thumbBox }: { computed: ComputedSVG; thumbBox: b
       style={{
         width: computed.width,
         height: computed.height,
+        // eslint-disable-next-line react-hooks/refs
         ...calculate(tocInfo.get()),
       }}
     >

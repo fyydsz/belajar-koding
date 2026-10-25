@@ -5,6 +5,8 @@ export interface AuthUser {
   role: string;
   avatarUrl: string | null;
   emailConfirmedAt?: string | null;
+  discordId?: string | null;
+  discordUsername?: string | null;
 }
 
 export interface AuthSession {
@@ -14,6 +16,30 @@ export interface AuthSession {
 }
 
 const TOKEN_COOKIE = 'auth_token';
+const USER_CACHE_KEY = 'belajar_koding_auth_user';
+
+export function getCachedUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedUser(user: AuthUser | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_CACHE_KEY);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
 
 function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -41,6 +67,13 @@ export function setAuthSession(session: AuthSession, user?: AuthUser): void {
   const secureFlag = isSecure ? '; Secure' : '';
 
   document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(session.accessToken)}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
+  if (user?.role) {
+    document.cookie = `auth_role=${encodeURIComponent(user.role)}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
+  }
+
+  if (user) {
+    setCachedUser(user);
+  }
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user } }));
@@ -51,6 +84,8 @@ export function clearAuthSession(): void {
   if (typeof document === 'undefined') return;
 
   document.cookie = `${TOKEN_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  document.cookie = `auth_role=; path=/; max-age=0; SameSite=Lax`;
+  setCachedUser(null);
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('auth-changed', { detail: null }));
@@ -62,6 +97,7 @@ export async function loginUser(email: string, password: string): Promise<{ user
   const res = await fetch(`${apiUrl}/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ email, password }),
   });
 
@@ -84,6 +120,7 @@ export async function registerUser(
   const res = await fetch(`${apiUrl}/v1/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ fullName, email, password }),
   });
 
@@ -108,6 +145,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   try {
     const res = await fetch(`${apiUrl}/v1/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -118,7 +156,17 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
     }
 
     const json = await res.json();
-    return json.success ? json.data : null;
+    if (!json.success || !json.data) return null;
+    const user: AuthUser = {
+      ...json.data,
+      discordId: json.data.discordId || json.data.profile?.discordId || null,
+      discordUsername: json.data.discordUsername || json.data.profile?.discordUsername || null,
+    };
+    setCachedUser(user);
+    if (typeof document !== 'undefined' && user.role) {
+      document.cookie = `auth_role=${encodeURIComponent(user.role)}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+    }
+    return user;
   } catch {
     return null;
   }
@@ -133,6 +181,7 @@ export async function logoutUser(): Promise<void> {
       await fetch(`${apiUrl}/v1/auth/logout`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
     }
   } finally {
@@ -177,6 +226,7 @@ export async function updateUserPassword(newPassword: string): Promise<void> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
+    credentials: 'include',
     body: JSON.stringify({ newPassword }),
   });
 
@@ -196,6 +246,7 @@ export async function resendVerificationEmail(): Promise<void> {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    credentials: 'include',
   });
 
   const json = await res.json();

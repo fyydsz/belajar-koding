@@ -3,15 +3,26 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { User as UserIcon, LogOut, BookOpen, CheckSquare } from 'lucide-react';
-import { fetchCurrentUser, logoutUser, type AuthUser } from '@/lib/auth';
+import {
+  User as UserIcon,
+  LogOut,
+  BookOpen,
+  CheckSquare,
+  ClipboardList,
+  FileSpreadsheet,
+  LayoutDashboard,
+  Layers,
+  ShieldCheck,
+} from 'lucide-react';
+import { fetchCurrentUser, logoutUser, getCachedUser, type AuthUser } from '@/lib/auth';
+import { useMounted } from '@/lib/use-mounted';
 
 export function UserMenu() {
+  const mounted = useMounted();
   const router = useRouter();
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith('/dashboard');
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -25,18 +36,22 @@ export function UserMenu() {
   };
 
   useEffect(() => {
-    let mounted = true;
+    let isCurrent = true;
+
+    // Pasang user dari cache lokal segera setelah client mounted
+    const cached = getCachedUser();
+    if (cached) {
+      setUser(cached);
+    }
 
     const loadUser = async () => {
       try {
         const currentUser = await fetchCurrentUser();
-        if (mounted) {
+        if (isCurrent) {
           setUser(currentUser);
         }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+      } catch {
+        // ignore errors
       }
     };
 
@@ -53,7 +68,7 @@ export function UserMenu() {
 
     window.addEventListener('auth-changed', handleAuthChange);
     return () => {
-      mounted = false;
+      isCurrent = false;
       window.removeEventListener('auth-changed', handleAuthChange);
     };
   }, []);
@@ -91,8 +106,8 @@ export function UserMenu() {
     router.push('/');
   };
 
-  if (isLoading) {
-    return <div className="h-8 w-16 animate-pulse rounded-full bg-fd-muted shrink-0" />;
+  if (!mounted) {
+    return null;
   }
 
   if (!user) {
@@ -118,11 +133,11 @@ export function UserMenu() {
     .toUpperCase();
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    <div suppressHydrationWarning className="flex items-center gap-2 shrink-0">
       {/* Tombol Link Dashboard (Warna Primary) - Disembunyikan saat sedang berada di /dashboard */}
       {!isDashboard && (
         <Link
-          href="/dashboard"
+          href={role === 'admin' ? '/dashboard/admin' : role === 'mentor' ? '/dashboard/mentor' : '/dashboard/siswa'}
           className="inline-flex h-8 items-center justify-center rounded-full bg-fd-primary px-3.5 text-xs font-semibold text-fd-primary-foreground shadow-2xs transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring shrink-0"
         >
           Dashboard
@@ -184,33 +199,105 @@ export function UserMenu() {
               </div>
             </div>
 
-            {/* Navigasi SIAKAD */}
-            <div className="py-1">
-              <Link
-                href="/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
-              >
-                <BookOpen className="size-3.5 text-fd-muted-foreground shrink-0" />
-                <span>Beranda SIAKAD</span>
-              </Link>
-              <Link
-                href="/dashboard/profil"
-                onClick={() => setIsOpen(false)}
-                className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
-              >
-                <UserIcon className="size-3.5 text-fd-muted-foreground shrink-0" />
-                <span>Profil Mahasiswa</span>
-              </Link>
-              <Link
-                href="/dashboard/assignments"
-                onClick={() => setIsOpen(false)}
-                className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
-              >
-                <CheckSquare className="size-3.5 text-fd-muted-foreground shrink-0" />
-                <span>Daftar Tugas & Discord</span>
-              </Link>
-            </div>
+            {/* Navigasi Berdasarkan Role */}
+            {role === 'admin' ? (
+              <div className="py-1">
+                <Link
+                  href="/dashboard/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <LayoutDashboard className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Ringkasan Admin</span>
+                </Link>
+                <Link
+                  href="/dashboard/admin/batches"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <Layers className="size-3.5 text-fd-primary shrink-0" />
+                  <span>Kelola Batch &amp; Siswa</span>
+                </Link>
+                <Link
+                  href="/dashboard/admin/pengguna"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <ShieldCheck className="size-3.5 text-emerald-500 shrink-0" />
+                  <span>Kelola Pengguna</span>
+                </Link>
+                <Link
+                  href="/dashboard/profil"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <UserIcon className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Profil Akun</span>
+                </Link>
+              </div>
+            ) : role === 'mentor' ? (
+              <div className="py-1">
+                <Link
+                  href="/dashboard/mentor"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <BookOpen className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Beranda Mentor</span>
+                </Link>
+                <Link
+                  href="/dashboard/dosen/tugas"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <ClipboardList className="size-3.5 text-blue-500 shrink-0" />
+                  <span>Kelola &amp; Koreksi Tugas</span>
+                </Link>
+                <Link
+                  href="/dashboard/dosen/nilai"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <FileSpreadsheet className="size-3.5 text-emerald-500 shrink-0" />
+                  <span>Input Nilai SIAKAD</span>
+                </Link>
+                <Link
+                  href="/dashboard/profil"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <UserIcon className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Profil Akun</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="py-1">
+                <Link
+                  href="/dashboard/siswa"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <BookOpen className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Beranda SIAKAD</span>
+                </Link>
+                <Link
+                  href="/dashboard/assignments"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <CheckSquare className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Daftar Tugas & Discord</span>
+                </Link>
+                <Link
+                  href="/dashboard/profil"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full min-h-[36px] items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-fd-foreground transition hover:bg-fd-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  <UserIcon className="size-3.5 text-fd-muted-foreground shrink-0" />
+                  <span>Profil Mahasiswa</span>
+                </Link>
+              </div>
+            )}
 
             {/* Tombol Keluar */}
             <div className="border-t border-fd-border pt-1">

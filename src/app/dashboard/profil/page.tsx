@@ -9,6 +9,11 @@ import {
   getAuthToken,
   type AuthUser,
 } from '@/lib/auth';
+import {
+  dashboardCache,
+  loadProfilCache,
+  topProgress,
+} from '@/lib/dashboard-navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,8 +50,16 @@ const COOLDOWN_SECONDS = 60;
 const STORAGE_KEY = 'belajarkoding_email_resend_cooldown';
 
 export default function AccountSettingsPage() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const cachedUser = dashboardCache.profil?.user || null;
+  const initialLang =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('belajarkoding_pref_language') || 'id'
+      : 'id';
+
+  const [user, setUser] = useState<AuthUser | null>(cachedUser);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    cachedUser?.avatarUrl || null,
+  );
 
   // Profile Picture Upload & Cropper State
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -56,33 +69,18 @@ export default function AccountSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile Information State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [language, setLanguage] = useState('id');
+  const [name, setName] = useState(cachedUser?.fullName || '');
+  const [email, setEmail] = useState(cachedUser?.email || '');
+  const [language, setLanguage] = useState(initialLang);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(!dashboardCache.profil);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   // Email verification resend state
   const [isSendingVerification, setIsSendingVerification] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-
-  // Initial loaded values to detect changes
-  const [initialProfile, setInitialProfile] = useState<{
-    name: string;
-    email: string;
-    language: string;
-  } | null>(null);
-
-  // Update Password State
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-
-  // Restore cooldown from localStorage
-  useEffect(() => {
+  const [cooldown, setCooldown] = useState(() => {
+    if (typeof window === 'undefined') return 0;
     try {
       const storedTime = localStorage.getItem(STORAGE_KEY);
       if (storedTime) {
@@ -90,14 +88,34 @@ export default function AccountSettingsPage() {
           0,
           Math.ceil((parseInt(storedTime, 10) - Date.now()) / 1000)
         );
-        if (remaining > 0) {
-          setCooldown(remaining);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-        }
+        if (remaining > 0) return remaining;
+        localStorage.removeItem(STORAGE_KEY);
       }
     } catch {}
-  }, []);
+    return 0;
+  });
+
+  // Initial loaded values to detect changes
+  const [initialProfile, setInitialProfile] = useState<{
+    name: string;
+    email: string;
+    language: string;
+  } | null>(
+    cachedUser
+      ? {
+          name: cachedUser.fullName || '',
+          email: cachedUser.email || '',
+          language: initialLang,
+        }
+      : null,
+  );
+
+  // Update Password State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Cooldown countdown timer
   useEffect(() => {
@@ -119,7 +137,8 @@ export default function AccountSettingsPage() {
   }, [cooldown]);
 
   const refreshUser = async () => {
-    const currentUser = await fetchCurrentUser();
+    const data = await loadProfilCache();
+    const currentUser = data.user;
     setUser(currentUser);
 
     if (currentUser) {
@@ -147,7 +166,21 @@ export default function AccountSettingsPage() {
   };
 
   useEffect(() => {
-    refreshUser();
+    if (dashboardCache.profil) return;
+    let ignore = false;
+    const run = async () => {
+      topProgress.start();
+      try {
+        await refreshUser();
+      } finally {
+        if (!ignore) setIsLoadingProfile(false);
+        topProgress.done();
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const getInitials = (displayName: string) => {
@@ -367,20 +400,34 @@ export default function AccountSettingsPage() {
 
   const isEmailVerified = Boolean(user?.emailConfirmedAt);
 
+  if (isLoadingProfile) {
+    return null;
+  }
+
   return (
-    <div className="space-y-10 w-full max-w-2xl mx-auto py-2">
-      {/* Profile Photo Section */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-base font-semibold text-fd-foreground">
-            Foto Profil
-          </h2>
+    <div className="space-y-8 pb-10">
+      <header className="flex flex-col gap-2 border-b border-fd-border pb-5">
+        <h1 className="text-2xl font-bold tracking-tight text-fd-foreground">
+          Profil & Pengaturan Akun
+        </h1>
+        <p className="text-sm text-fd-muted-foreground">
+          Kelola foto profil, informasi identitas, preferensi bahasa, dan keamanan kata sandi akun Anda.
+        </p>
+      </header>
+
+      <>
+        {/* Profile Photo Section */}
+          <section className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-2xs space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-fd-foreground">
+                Foto Profil
+              </h2>
           <p className="text-xs text-fd-muted-foreground">
-            Foto ini akan ditampilkan pada profil dan akun Belajar Koding Anda.
+            Foto ini akan ditampilkan pada profil dan identitas akun Belajar Koding Anda.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 rounded-xl border border-fd-border/70 bg-fd-card/40">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pt-1">
           {/* Avatar dengan loading overlay */}
           <div className="relative group shrink-0">
             <Avatar className="size-20 border-2 border-fd-border shadow-xs">
@@ -394,7 +441,6 @@ export default function AccountSettingsPage() {
               </AvatarFallback>
             </Avatar>
 
-            {/* Spinner overlay saat upload/delete */}
             {(isUploadingAvatar || isDeletingAvatar) && (
               <div className="absolute inset-0 rounded-full bg-fd-background/80 backdrop-blur-xs flex items-center justify-center">
                 <Loader2 className="size-5 animate-spin text-fd-primary" />
@@ -419,7 +465,7 @@ export default function AccountSettingsPage() {
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingAvatar || isDeletingAvatar}
-                className="min-h-[44px] text-xs font-semibold gap-1.5 cursor-pointer"
+                className="min-h-[40px] text-xs font-semibold gap-1.5 cursor-pointer"
               >
                 {isUploadingAvatar ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -436,231 +482,230 @@ export default function AccountSettingsPage() {
                   size="sm"
                   onClick={handleRemoveAvatar}
                   disabled={isUploadingAvatar || isDeletingAvatar}
-                  className="min-h-[44px] text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 gap-1.5 cursor-pointer"
+                  className="min-h-[40px] text-xs font-medium text-destructive hover:bg-destructive/10 gap-1.5 cursor-pointer"
                 >
                   {isDeletingAvatar ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
                     <Trash2 className="size-3.5" />
                   )}
-                  <span>Hapus</span>
+                  <span>Hapus Foto</span>
                 </Button>
               )}
             </div>
 
-            <p className="text-[11px] text-fd-muted-foreground">
+            <p className="text-xs text-fd-muted-foreground">
               Format JPG, PNG, WebP, atau GIF. Ukuran maksimal 10MB.
             </p>
           </div>
         </div>
       </section>
 
-      <div className="border-t border-fd-border/40" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Profile Information Section */}
+        <section className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-2xs space-y-5">
+          <div>
+            <h2 className="text-base font-semibold text-fd-foreground">
+              Informasi Profil
+            </h2>
+            <p className="text-xs text-fd-muted-foreground">
+              Perbarui nama lengkap dan preferensi bahasa antarmuka Anda.
+            </p>
+          </div>
 
-      {/* Profile Information Section */}
-      <section className="space-y-6">
-        <div>
-          <h2 className="text-base font-semibold text-fd-foreground">
-            Informasi Profil
-          </h2>
-          <p className="text-xs text-fd-muted-foreground">
-            Perbarui nama lengkap dan setelan akun Anda
-          </p>
-        </div>
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            {profileError && (
+              <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20">
+                {profileError}
+              </div>
+            )}
 
-        <form onSubmit={handleSaveProfile} className="space-y-4">
-          {profileError && (
-            <div className="rounded-lg bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 border border-red-500/20">
-              {profileError}
+            {/* Name */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Nama Lengkap
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (profileError) setProfileError(null);
+                }}
+                placeholder="Nama lengkap Anda"
+                className="h-10 text-sm"
+                maxLength={50}
+                disabled={isSavingProfile}
+              />
             </div>
-          )}
 
-          {/* Name */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Nama Lengkap
-            </label>
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (profileError) setProfileError(null);
-              }}
-              placeholder="Nama lengkap Anda"
-              className="h-10 text-sm"
-              maxLength={50}
-              disabled={isSavingProfile}
-            />
-          </div>
+            {/* Email address */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Alamat Email
+              </label>
+              <Input
+                type="email"
+                value={email}
+                readOnly
+                disabled
+                placeholder="nama@email.com"
+                className="h-10 text-sm bg-fd-muted/40 cursor-not-allowed opacity-80"
+                maxLength={100}
+              />
+            </div>
 
-          {/* Email address */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Alamat Email
-            </label>
-            <Input
-              type="email"
-              value={email}
-              readOnly
-              disabled
-              placeholder="nama@email.com"
-              className="h-10 text-sm bg-fd-muted/40 cursor-not-allowed opacity-80"
-              maxLength={100}
-            />
-          </div>
+            {/* Language */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Bahasa
+              </label>
+              <Select value={language} onValueChange={(val) => val && setLanguage(val)}>
+                <SelectTrigger className="w-full h-10 text-sm">
+                  <SelectValue placeholder="Pilih bahasa">
+                    {LANGUAGES.find((l) => l.value === language)?.label || 'Pilih bahasa'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => (
+                    <SelectItem key={l.value} value={l.value} className="text-sm">
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Language */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Bahasa
-            </label>
-            <Select value={language} onValueChange={(val) => val && setLanguage(val)}>
-              <SelectTrigger className="w-full h-10 text-sm">
-                <SelectValue placeholder="Pilih bahasa">
-                  {LANGUAGES.find((l) => l.value === language)?.label || 'Pilih bahasa'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((l) => (
-                  <SelectItem key={l.value} value={l.value} className="text-sm">
-                    {l.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Unverified email notice */}
+            {!isEmailVerified && (
+              <div className="text-xs text-fd-muted-foreground pt-1">
+                Alamat email Anda belum terverifikasi.{' '}
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isSendingVerification || cooldown > 0}
+                  className="font-medium text-fd-primary underline hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSendingVerification
+                    ? 'Mengirim...'
+                    : cooldown > 0
+                    ? `Kirim ulang dalam ${cooldown} detik`
+                    : 'Kirim ulang email verifikasi'}
+                </button>
+              </div>
+            )}
 
-          {/* Unverified email notice */}
-          {!isEmailVerified && (
-            <div className="text-xs text-fd-muted-foreground pt-1">
-              Alamat email Anda belum terverifikasi.{' '}
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={isSendingVerification || cooldown > 0}
-                className="font-medium text-fd-foreground underline hover:text-fd-primary transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="default"
+                disabled={isSaveDisabled}
+                className="min-h-[40px] px-5 font-semibold text-xs cursor-pointer"
               >
-                {isSendingVerification
-                  ? 'Mengirim...'
-                  : cooldown > 0
-                  ? `Kirim ulang dalam ${cooldown} detik`
-                  : 'Klik di sini untuk mengirim ulang email verifikasi.'}
-              </button>
+                {isSavingProfile && (
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                )}
+                {profileSuccess && (
+                  <Check className="mr-1.5 size-3.5" />
+                )}
+                <span>Simpan Perubahan</span>
+              </Button>
             </div>
-          )}
+          </form>
+        </section>
 
-          <div className="pt-2">
-            <Button
-              type="submit"
-              variant="default"
-              disabled={isSaveDisabled}
-              className="min-h-[44px] px-5 font-semibold text-xs cursor-pointer bg-zinc-100 text-zinc-900 hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:opacity-60 transition"
-            >
-              {isSavingProfile && (
-                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-              )}
-              {profileSuccess && (
-                <Check className="mr-1.5 size-3.5 text-emerald-400" />
-              )}
-              <span>Save</span>
-            </Button>
+        {/* Update Password Section */}
+        <section className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-2xs space-y-5">
+          <div>
+            <h2 className="text-base font-semibold text-fd-foreground">
+              Perbarui Kata Sandi
+            </h2>
+            <p className="text-xs text-fd-muted-foreground">
+              Pastikan akun Anda menggunakan kata sandi yang kuat dan minimal 8 karakter.
+            </p>
           </div>
-        </form>
-      </section>
 
-      <div className="border-t border-fd-border/40" />
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            {passwordError && (
+              <div className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20">
+                {passwordError}
+              </div>
+            )}
 
-      {/* Update Password Section */}
-      <section className="space-y-6">
-        <div>
-          <h2 className="text-base font-semibold text-fd-foreground">
-            Perbarui Kata Sandi
-          </h2>
-          <p className="text-xs text-fd-muted-foreground">
-            Pastikan akun Anda menggunakan kata sandi yang aman dan tidak mudah ditebak.
-          </p>
-        </div>
-
-        <form onSubmit={handleUpdatePassword} className="space-y-4">
-          {passwordError && (
-            <div className="rounded-lg bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 border border-red-500/20">
-              {passwordError}
+            {/* Current Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Kata Sandi Saat Ini
+              </label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                placeholder="••••••••"
+                className="h-10 text-sm"
+                disabled={isUpdatingPassword}
+              />
             </div>
-          )}
 
-          {/* Current Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Kata Sandi Saat Ini
-            </label>
-            <Input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => {
-                setCurrentPassword(e.target.value);
-                if (passwordError) setPasswordError(null);
-              }}
-              placeholder="••••••••"
-              className="h-10 text-sm"
-              disabled={isUpdatingPassword}
-            />
-          </div>
+            {/* New Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Kata Sandi Baru
+              </label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                placeholder="••••••••"
+                className="h-10 text-sm"
+                disabled={isUpdatingPassword}
+              />
+            </div>
 
-          {/* New Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Kata Sandi Baru
-            </label>
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => {
-                setNewPassword(e.target.value);
-                if (passwordError) setPasswordError(null);
-              }}
-              placeholder="••••••••"
-              className="h-10 text-sm"
-              disabled={isUpdatingPassword}
-            />
-          </div>
+            {/* Confirm Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-fd-foreground">
+                Konfirmasi Kata Sandi Baru
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                placeholder="••••••••"
+                className="h-10 text-sm"
+                disabled={isUpdatingPassword}
+              />
+            </div>
 
-          {/* Confirm Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-fd-foreground">
-              Konfirmasi Kata Sandi Baru
-            </label>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                if (passwordError) setPasswordError(null);
-              }}
-              placeholder="••••••••"
-              className="h-10 text-sm"
-              disabled={isUpdatingPassword}
-            />
-          </div>
-
-          <div className="pt-2">
-            <Button
-              type="submit"
-              variant="default"
-              disabled={
-                isUpdatingPassword ||
-                !newPassword ||
-                !confirmPassword
-              }
-              className="min-h-[44px] px-5 font-semibold text-xs cursor-pointer bg-zinc-100 text-zinc-900 hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:opacity-60 transition"
-            >
-              {isUpdatingPassword && (
-                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-              )}
-              <span>Save</span>
-            </Button>
-          </div>
-        </form>
-      </section>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="default"
+                disabled={
+                  isUpdatingPassword ||
+                  !newPassword ||
+                  !confirmPassword
+                }
+                className="min-h-[40px] px-5 font-semibold text-xs cursor-pointer"
+              >
+                {isUpdatingPassword && (
+                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                )}
+                <span>Simpan Kata Sandi</span>
+              </Button>
+            </div>
+          </form>
+        </section>
+      </div>
+      </>
 
       {/* Avatar Cropper Dialog */}
       <AvatarCropperDialog

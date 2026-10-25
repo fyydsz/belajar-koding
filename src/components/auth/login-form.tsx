@@ -34,9 +34,20 @@ export function LoginForm({
 
     startTransition(async () => {
       try {
-        await loginUser(email.trim(), password);
+        const { user } = await loginUser(email.trim(), password);
         router.refresh();
-        router.push(redirectTarget);
+        if (redirectTarget && redirectTarget !== '/docs' && redirectTarget !== '/dashboard') {
+          router.push(redirectTarget);
+        } else {
+          // Direct by user role
+          if (user.role === 'admin') {
+            router.push('/dashboard/admin');
+          } else if (user.role === 'mentor') {
+            router.push('/dashboard/mentor');
+          } else {
+            router.push('/dashboard/siswa');
+          }
+        }
       } catch (err: unknown) {
         const message =
           err instanceof Error

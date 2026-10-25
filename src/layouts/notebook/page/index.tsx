@@ -201,17 +201,15 @@ export function DocsTitle({ children, className, ...props }: ComponentProps<'h1'
   );
 }
 
+import { useMounted } from '@/lib/use-mounted';
+
 export function PageLastUpdate({
   date: value,
   ...props
 }: Omit<ComponentProps<'p'>, 'children'> & { date: Date }) {
   const t = useTranslations({ note: 'page footer' });
-  const [date, setDate] = useState('');
-
-  useEffect(() => {
-    // to the timezone of client
-    setDate(value.toLocaleDateString());
-  }, [value]);
+  const mounted = useMounted();
+  const date = mounted ? value.toLocaleDateString() : '';
 
   return (
     <p {...props} className={cn('text-sm text-fd-muted-foreground', props.className)}>

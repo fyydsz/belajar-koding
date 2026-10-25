@@ -172,7 +172,7 @@ function SidebarItem({
 
   return (
     <Base.SidebarItem
-      className={cn(itemVariants({ variant: 'link', highlight: depth >= 1 }), className)}
+      className={cn(itemVariants({ variant: 'link', highlight: depth >= 1 }), 'group', className)}
       style={{
         paddingInlineStart: getItemOffset(depth),
         ...style,

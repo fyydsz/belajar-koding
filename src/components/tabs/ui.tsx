@@ -88,8 +88,7 @@ export function Tabs({
     return () => {
       groupListeners.delete(setValue);
     };
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId, persist]);
+  }, [groupId, persist, setValue]);
 
   useLayoutEffect(() => {
     const openFromHash = () => {
@@ -122,8 +121,7 @@ export function Tabs({
     openFromHash();
     window.addEventListener('hashchange', openFromHash);
     return () => window.removeEventListener('hashchange', openFromHash);
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [valueToIdMap, panels]);
+  }, [valueToIdMap, panels, setValue]);
 
   return (
     <Primitive.Root
