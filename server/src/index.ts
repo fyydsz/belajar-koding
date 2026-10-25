@@ -5,36 +5,23 @@ import { authRoutes } from './routes/auth';
 import { profileRoutes } from './routes/profile';
 import { gradeRoutes } from './routes/grades';
 import { assignmentRoutes } from './routes/assignments';
+import { classroomRoutes } from './routes/classroom';
+import { batchRoutes } from './routes/batches';
+import { attendanceRoutes } from './routes/attendance';
 import { botRoutes } from './routes/bot';
+import { storageRoutes } from './routes/storage';
+import { auth } from './lib/auth';
+import { isAllowedOrigin } from './lib/origins';
 import 'dotenv/config';
 
 const port = Number(process.env.PORT) || 3001;
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 export const app = new Elysia()
   .use(
     cors({
-      origin: (request: Request): boolean => {
-        const origin = request.headers.get('origin');
-        if (!origin) return true;
-        try {
-          const parsed = new URL(origin);
-          if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
-            return true;
-          }
-          if (parsed.hostname.endsWith('.vercel.app')) {
-            return true;
-          }
-        } catch {
-          // ignore url parse error
-        }
-        if (frontendUrl && origin === frontendUrl) {
-          return true;
-        }
-        return false;
-      },
+      origin: (request: Request): boolean => isAllowedOrigin(request.headers.get('origin')),
       credentials: true,
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Bot-Secret'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Bot-Secret', 'Cookie'],
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     })
   )
@@ -45,7 +32,7 @@ export const app = new Elysia()
         info: {
           title: 'Belajar Koding SIAKAD & E-Learning API',
           version: '1.0.0',
-          description: 'Backend API untuk sistem pembelajaran, SIAKAD, dan bot pengumpulan tugas Discord',
+          description: 'Backend API untuk sistem pembelajaran, SIAKAD, presensi token, dan bot Discord',
         },
       },
     })
@@ -55,12 +42,19 @@ export const app = new Elysia()
     service: 'belajar-koding-server',
     timestamp: new Date().toISOString(),
   }))
+  .all('/api/auth/*', ({ request }) => auth.handler(request))
   .use(authRoutes)
   .use(profileRoutes)
   .use(gradeRoutes)
   .use(assignmentRoutes)
+  .use(classroomRoutes)
+  .use(batchRoutes)
+  .use(attendanceRoutes)
   .use(botRoutes)
+  .use(storageRoutes)
   .listen(port);
+
+export type App = typeof app;
 
 console.log(`🦊 Elysia backend server is running at ${app.server?.hostname}:${app.server?.port}`);
 console.log(`📚 Swagger documentation available at http://localhost:${port}/swagger`);

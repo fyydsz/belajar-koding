@@ -9,13 +9,17 @@
     "start": "bun src/index.ts",
     "test": "bun test",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "bun src/db/migrate-auth.ts",
+    "db:reset": "bun src/db/reset.ts",
+    "set:admin": "bun src/db/set-admin.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.2.0",
     "@elysiajs/swagger": "^1.2.0",
     "@supabase/supabase-js": "^2.49.1",
     "@types/uuid": "^11.0.0",
+    "better-auth": "^1.7.9",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
     "elysia": "^1.2.10",
@@ -23,6 +27,7 @@
     "uuid": "^14.0.2"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.3",
     "@types/node": "^22.13.9",
     "drizzle-kit": "^0.30.5"
   }

@@ -1,38 +1,62 @@
 import { Elysia } from 'elysia';
-import { supabaseAdmin } from '../lib/supabase';
+import { auth } from '../lib/auth';
 import { db } from '../db';
 import { profiles } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 export const authPlugin = new Elysia({ name: 'auth-plugin' })
-  .derive({ as: 'scoped' }, async ({ headers }) => {
-    const authHeader = headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { user: null, profile: null };
-    }
-
-    const token = authHeader.substring(7).trim();
-    if (!token) {
-      return { user: null, profile: null };
-    }
-
+  .derive({ as: 'scoped' }, async ({ request }) => {
     try {
-      const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-      if (error || !user) {
-        return { user: null, profile: null };
+      const session = await auth.api.getSession({
+        headers: request.headers,
+      });
+
+      if (!session || !session.user) {
+        return {
+          user: null,
+          session: null,
+          profile: null,
+        };
       }
 
       const [userProfile] = await db
         .select()
         .from(profiles)
-        .where(eq(profiles.id, user.id))
+        .where(eq(profiles.id, session.user.id))
         .limit(1);
 
+      const userRecord = session.user as typeof session.user & {
+        role?: string;
+        discordId?: string;
+        discordUsername?: string;
+      };
+
+      const profile = {
+        id: session.user.id,
+        email: session.user.email,
+        fullName: userProfile?.fullName || session.user.name,
+        avatarUrl: userProfile?.avatarUrl || session.user.image || null,
+        role: (userRecord.role as 'student' | 'mentor' | 'admin') || 'student',
+        discordId: userRecord.discordId || null,
+        discordUsername: userRecord.discordUsername || null,
+        nim: userProfile?.nim || null,
+        phoneNumber: userProfile?.phoneNumber || null,
+        githubUsername: userProfile?.githubUsername || null,
+        bio: userProfile?.bio || null,
+        createdAt: userProfile?.createdAt || session.user.createdAt,
+        updatedAt: userProfile?.updatedAt || session.user.updatedAt,
+      };
+
       return {
-        user,
-        profile: userProfile || null,
+        user: session.user,
+        session: session.session,
+        profile,
       };
     } catch {
-      return { user: null, profile: null };
+      return {
+        user: null,
+        session: null,
+        profile: null,
+      };
     }
   });

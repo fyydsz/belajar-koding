@@ -47,7 +47,7 @@ describe('Auth Endpoints Validation Tests', () => {
     );
 
     expect(res.status).toBe(401);
-    const body = await res.json();
+    const body = (await res.json()) as { success?: boolean };
     expect(body.success).toBe(false);
   });
 
@@ -60,4 +60,17 @@ describe('Auth Endpoints Validation Tests', () => {
 
     expect(res.status).toBe(401);
   });
+
+  it('GET /api/auth/ok returns Better Auth health status', async () => {
+    const res = await app.handle(
+      new Request('http://localhost/api/auth/ok', {
+        method: 'GET',
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok?: boolean };
+    expect(body.ok).toBe(true);
+  });
 });
+

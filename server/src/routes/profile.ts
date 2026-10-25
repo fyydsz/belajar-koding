@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia';
 import { authPlugin } from '../middleware/auth';
 import { db } from '../db';
-import { profiles, discordPairingCodes } from '../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { profiles, user as userTable, discordPairingCodes } from '../db/schema';
+import { eq, and, gt, desc } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
 
@@ -215,13 +215,13 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
     }
 
     const [updated] = await db
-      .update(profiles)
+      .update(userTable)
       .set({
         discordId: null,
         discordUsername: null,
         updatedAt: new Date(),
       })
-      .where(eq(profiles.id, user.id))
+      .where(eq(userTable.id, user.id))
       .returning();
 
     return {
@@ -243,8 +243,8 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
 
       const [existing] = await db
         .select()
-        .from(profiles)
-        .where(eq(profiles.discordId, discord_id))
+        .from(userTable)
+        .where(eq(userTable.discordId, discord_id))
         .limit(1);
 
       if (existing && existing.id !== user.id) {
@@ -256,13 +256,13 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
       }
 
       const [updated] = await db
-        .update(profiles)
+        .update(userTable)
         .set({
           discordId: discord_id,
           discordUsername: discord_username || null,
           updatedAt: new Date(),
         })
-        .where(eq(profiles.id, user.id))
+        .where(eq(userTable.id, user.id))
         .returning();
 
       return {
@@ -277,4 +277,96 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
         discord_username: t.Optional(t.String()),
       }),
     }
+  )
+  // 5. (Admin) Ambil semua daftar pengguna sistem beserta role-nya
+  .get('/users', async ({ user, profile, set }) => {
+    if (!user || !profile || profile.role !== 'admin') {
+      set.status = 403;
+      return { success: false, message: 'Hanya Administrator yang dapat mengelola pengguna.' };
+    }
+
+    const allUsers = await db
+      .select({
+        id: userTable.id,
+        fullName: profiles.fullName,
+        email: userTable.email,
+        role: userTable.role,
+        avatarUrl: profiles.avatarUrl,
+        discordId: userTable.discordId,
+        discordUsername: userTable.discordUsername,
+        nim: profiles.nim,
+        phoneNumber: profiles.phoneNumber,
+        createdAt: userTable.createdAt,
+        updatedAt: userTable.updatedAt,
+      })
+      .from(userTable)
+      .leftJoin(profiles, eq(userTable.id, profiles.id))
+      .orderBy(desc(userTable.createdAt));
+
+    return {
+      success: true,
+      data: allUsers,
+    };
+  })
+  // 6. (Admin) Ubah role pengguna (student | mentor | admin)
+  .patch(
+    '/users/:userId/role',
+    async ({ user, profile, params, body, set }) => {
+      if (!user || !profile || profile.role !== 'admin') {
+        set.status = 403;
+        return { success: false, message: 'Hanya Administrator yang dapat mengubah peran pengguna.' };
+      }
+
+      const targetUserId = params.userId;
+      const newRole = body.role;
+
+      if (targetUserId === user.id && newRole !== 'admin') {
+        set.status = 400;
+        return {
+          success: false,
+          message: 'Anda tidak dapat menurunkan peran akun Administrator Anda sendiri.',
+        };
+      }
+
+      const [targetUser] = await db
+        .select({
+          id: userTable.id,
+          fullName: profiles.fullName,
+        })
+        .from(userTable)
+        .leftJoin(profiles, eq(userTable.id, profiles.id))
+        .where(eq(userTable.id, targetUserId))
+        .limit(1);
+
+      if (!targetUser) {
+        set.status = 404;
+        return { success: false, message: 'Pengguna tidak ditemukan.' };
+      }
+
+      const [updatedUser] = await db
+        .update(userTable)
+        .set({
+          role: newRole,
+          updatedAt: new Date(),
+        })
+        .where(eq(userTable.id, targetUserId))
+        .returning();
+
+      return {
+        success: true,
+        message: `Peran ${targetUser.fullName || targetUser.id} berhasil diperbarui menjadi ${
+          newRole === 'admin' ? 'Admin' : newRole === 'mentor' ? 'Mentor' : 'Siswa'
+        }.`,
+        data: updatedUser,
+      };
+    },
+    {
+      params: t.Object({
+        userId: t.String(),
+      }),
+      body: t.Object({
+        role: t.Union([t.Literal('student'), t.Literal('mentor'), t.Literal('admin')]),
+      }),
+    }
   );
+

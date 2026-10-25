@@ -6,7 +6,7 @@ describe('Server & Bot Webhook Tests', () => {
     const response = await app.handle(new Request('http://localhost:3001/health'));
     expect(response.status).toBe(200);
 
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.status).toBe('ok');
     expect(body.service).toBe('belajar-koding-server');
   });
@@ -27,7 +27,7 @@ describe('Server & Bot Webhook Tests', () => {
     );
 
     expect(response.status).toBe(401);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.success).toBe(false);
     expect(body.message).toContain('X-Bot-Secret');
   });
@@ -49,7 +49,7 @@ describe('Server & Bot Webhook Tests', () => {
     );
 
     expect(response.status).toBe(401);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.success).toBe(false);
   });
 
@@ -72,7 +72,7 @@ describe('Server & Bot Webhook Tests', () => {
     );
 
     expect(response.status).toBe(404);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.success).toBe(false);
     expect(body.message).toContain('belum menautkan akun Discord');
   });

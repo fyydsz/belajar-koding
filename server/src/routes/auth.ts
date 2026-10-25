@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { supabaseAdmin } from '../lib/supabase';
+import { auth } from '../lib/auth';
 import { authPlugin } from '../middleware/auth';
 import { db } from '../db';
 import { profiles } from '../db/schema';
@@ -11,73 +11,71 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
     async ({ body, set }) => {
       const { email, password, fullName } = body;
 
-      const { data, error } = await supabaseAdmin.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
+      try {
+        const result = await auth.api.signUpEmail({
+          body: {
+            email: email.trim().toLowerCase(),
+            password,
+            name: fullName.trim(),
+          },
+          asResponse: false,
+        });
+
+        if (!result || !result.user) {
+          set.status = 400;
+          return {
+            success: false,
+            message: 'Pendaftaran gagal diproses.',
+          };
+        }
+
+        let [profile] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.id, result.user.id))
+          .limit(1);
+
+        if (!profile) {
+          const [newProfile] = await db
+            .insert(profiles)
+            .values({
+              id: result.user.id,
+              fullName: fullName.trim(),
+            })
+            .onConflictDoNothing()
+            .returning();
+          profile = newProfile;
+        }
+
+        const userRole = (result.user as { role?: string }).role || 'student';
+
+        set.status = 201;
+        return {
+          success: true,
+          message: 'Pendaftaran berhasil.',
           data: {
-            full_name: fullName.trim(),
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              fullName: fullName.trim(),
+              role: userRole,
+            },
+            session: result.token
+              ? {
+                  accessToken: result.token,
+                  expiresIn: 7 * 24 * 60 * 60,
+                }
+              : null,
           },
-        },
-      });
-
-      if (error) {
+        };
+      } catch (err: unknown) {
         set.status = 400;
+        const msg = err instanceof Error ? err.message : 'Pendaftaran gagal diproses.';
         return {
           success: false,
-          message: error.message,
+          message: msg,
         };
       }
-
-      if (!data.user) {
-        set.status = 400;
-        return {
-          success: false,
-          message: 'Pendaftaran gagal diproses.',
-        };
-      }
-
-      let [profile] = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.id, data.user.id))
-        .limit(1);
-
-      if (!profile) {
-        const [newProfile] = await db
-          .insert(profiles)
-          .values({
-            id: data.user.id,
-            email: data.user.email!,
-            fullName: fullName.trim(),
-            role: 'student',
-          })
-          .onConflictDoNothing()
-          .returning();
-        profile = newProfile;
-      }
-
-      return {
-        success: true,
-        message: data.session
-          ? 'Pendaftaran berhasil.'
-          : 'Pendaftaran berhasil. Silakan periksa email untuk konfirmasi akun jika diperlukan.',
-        data: {
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            fullName: fullName.trim(),
-            role: profile?.role || 'student',
-          },
-          session: data.session
-            ? {
-                accessToken: data.session.access_token,
-                refreshToken: data.session.refresh_token,
-                expiresIn: data.session.expires_in,
-              }
-            : null,
-        },
-      };
     },
     {
       body: t.Object({
@@ -92,47 +90,56 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
     async ({ body, set }) => {
       const { email, password } = body;
 
-      const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      try {
+        const result = await auth.api.signInEmail({
+          body: {
+            email: email.trim().toLowerCase(),
+            password,
+          },
+          asResponse: false,
+        });
 
-      if (error || !data.user || !data.session) {
+        if (!result || !result.user) {
+          set.status = 401;
+          return {
+            success: false,
+            message: 'Email atau kata sandi tidak valid.',
+          };
+        }
+
+        const [profile] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.id, result.user.id))
+          .limit(1);
+
+        const userRole = (result.user as { role?: string }).role || 'student';
+
+        return {
+          success: true,
+          message: 'Login berhasil.',
+          data: {
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              fullName: profile?.fullName || result.user.name || 'Siswa',
+              role: userRole,
+              avatarUrl: profile?.avatarUrl || result.user.image || null,
+            },
+            profile: profile || null,
+            session: {
+              accessToken: result.token,
+              expiresIn: 7 * 24 * 60 * 60,
+            },
+          },
+        };
+      } catch {
         set.status = 401;
-        const msg = error?.message.includes('Invalid login credentials')
-          ? 'Email atau kata sandi tidak valid.'
-          : error?.message || 'Login gagal. Silakan periksa kembali data login.';
         return {
           success: false,
-          message: msg,
+          message: 'Email atau kata sandi tidak valid.',
         };
       }
-
-      const [profile] = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.id, data.user.id))
-        .limit(1);
-
-      return {
-        success: true,
-        message: 'Login berhasil.',
-        data: {
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            fullName: profile?.fullName || data.user.user_metadata?.full_name || 'Siswa',
-            role: profile?.role || 'student',
-            avatarUrl: profile?.avatarUrl || null,
-          },
-          profile: profile || null,
-          session: {
-            accessToken: data.session.access_token,
-            refreshToken: data.session.refresh_token,
-            expiresIn: data.session.expires_in,
-          },
-        },
-      };
     },
     {
       body: t.Object({
@@ -151,20 +158,30 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
       };
     }
 
+    const userRole = (user as { role?: string }).role || 'student';
+
     return {
       success: true,
       data: {
         id: user.id,
         email: user.email,
-        fullName: profile?.fullName || user.user_metadata?.full_name || 'Siswa',
-        role: profile?.role || 'student',
-        avatarUrl: profile?.avatarUrl || null,
-        emailConfirmedAt: user.email_confirmed_at || null,
+        fullName: profile?.fullName || user.name || 'Siswa',
+        role: profile?.role || userRole,
+        avatarUrl: profile?.avatarUrl || user.image || null,
+        emailConfirmedAt: user.emailVerified ? new Date().toISOString() : null,
         profile: profile || null,
       },
     };
   })
-  .post('/logout', () => {
+  .post('/logout', async ({ request }) => {
+    try {
+      await auth.api.signOut({
+        headers: request.headers,
+      });
+    } catch {
+      // ignore
+    }
+
     return {
       success: true,
       message: 'Berhasil keluar.',
@@ -172,30 +189,38 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
   })
   .patch(
     '/password',
-    async ({ user, body, set }) => {
+    async ({ user, request, body, set }) => {
       if (!user) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan.' };
       }
 
-      const { newPassword } = body;
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-        password: newPassword,
-      });
+      const { currentPassword, newPassword, revokeOtherSessions } = body;
+      try {
+        await auth.api.changePassword({
+          body: {
+            currentPassword,
+            newPassword,
+            revokeOtherSessions: revokeOtherSessions !== false,
+          },
+          headers: request.headers,
+        });
 
-      if (error) {
+        return {
+          success: true,
+          message: 'Kata sandi berhasil diperbarui.',
+        };
+      } catch (err: unknown) {
         set.status = 400;
-        return { success: false, message: error.message };
+        const msg = err instanceof Error ? err.message : 'Gagal memperbarui kata sandi.';
+        return { success: false, message: msg };
       }
-
-      return {
-        success: true,
-        message: 'Kata sandi berhasil diperbarui.',
-      };
     },
     {
       body: t.Object({
+        currentPassword: t.String({ minLength: 1 }),
         newPassword: t.String({ minLength: 6 }),
+        revokeOtherSessions: t.Optional(t.Boolean()),
       }),
     }
   )
@@ -205,18 +230,20 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
       return { success: false, message: 'Autentikasi diperlukan.' };
     }
 
-    const { error } = await supabaseAdmin.auth.resend({
-      type: 'signup',
-      email: user.email,
-    });
+    try {
+      await auth.api.sendVerificationEmail({
+        body: {
+          email: user.email,
+        },
+      });
 
-    if (error) {
+      return {
+        success: true,
+        message: 'Email verifikasi berhasil dikirim ulang.',
+      };
+    } catch (err: unknown) {
       set.status = 400;
-      return { success: false, message: error.message };
+      const msg = err instanceof Error ? err.message : 'Gagal mengirim email verifikasi.';
+      return { success: false, message: msg };
     }
-
-    return {
-      success: true,
-      message: 'Email verifikasi berhasil dikirim ulang.',
-    };
   });
