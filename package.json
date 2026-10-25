@@ -12,6 +12,7 @@
     "dev:server": "bun --cwd server dev",
     "test:server": "bun --cwd server test",
     "db:push": "bun --cwd server db:push",
+    "db:reset": "bun --cwd server db:reset",
     "db:studio": "bun --cwd server db:studio",
     "start": "next start",
     "types:check": "next typegen && tsc --noEmit",
