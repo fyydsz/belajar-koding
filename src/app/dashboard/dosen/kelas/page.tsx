@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
   Trash2,
+  RefreshCw,
 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -238,14 +240,26 @@ export default function DosenClassroomListPage() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsCreateOpen(true)}
-          size="sm"
-          className="min-h-[40px] gap-2 font-semibold shrink-0 self-start sm:self-auto"
-        >
-          <PlusCircle className="size-4" />
-          <span>Buat Kelas Baru</span>
-        </Button>
+        <ButtonGroup className="self-start sm:self-auto shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadCourses}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Segarkan</span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <PlusCircle className="size-3.5" />
+            <span>Buat Kelas Baru</span>
+          </Button>
+        </ButtonGroup>
       </header>
 
       {error && (
@@ -263,8 +277,8 @@ export default function DosenClassroomListPage() {
           <p className="text-xs text-fd-muted-foreground max-w-md mx-auto mt-1 mb-5 leading-relaxed">
             Belum ada kurikulum kelas yang terdaftar. Klik tombol di bawah untuk membuat kelas baru beserta sesi pertemuannya.
           </p>
-          <Button onClick={() => setIsCreateOpen(true)} size="sm" className="min-h-[40px] gap-2">
-            <PlusCircle className="size-4" />
+          <Button type="button" onClick={() => setIsCreateOpen(true)} size="sm">
+            <PlusCircle className="size-3.5" />
             <span>Buat Kelas Pertama</span>
           </Button>
         </div>
@@ -288,17 +302,20 @@ export default function DosenClassroomListPage() {
                       <span>{course.totalSessions} Pertemuan</span>
                     </span>
                     {isAdmin && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={(e) => {
                           e.preventDefault();
                           setCourseToDelete(course);
                         }}
                         title="Hapus Kelas"
-                        className="size-9 rounded-lg flex items-center justify-center text-fd-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Hapus Kelas"
+                        className="text-fd-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Trash2 className="size-4" />
-                      </button>
+                        <Trash2 className="size-3.5" />
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -405,20 +422,22 @@ export default function DosenClassroomListPage() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-                disabled={isSubmitting}
-                className="min-h-[44px]"
-              >
-                Batal
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="min-h-[44px] gap-1.5">
-                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                <span>Simpan & Buat Kelas</span>
-              </Button>
+            <DialogFooter>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" size="sm" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Simpan & Buat Kelas</span>
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -433,18 +452,20 @@ export default function DosenClassroomListPage() {
               Kelas <strong>&quot;{courseToDelete?.title}&quot;</strong> beserta seluruh sesi materi dan modul pertemuannya akan dihapus secara permanen.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel disabled={isDeleting} className="min-h-[44px]">
-              Batal
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteCourse}
-              disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground min-h-[44px] gap-1.5"
-            >
-              {isDeleting && <Loader2 className="size-4 animate-spin" />}
-              <span>Ya, Hapus Kelas</span>
-            </AlertDialogAction>
+          <AlertDialogFooter>
+            <ButtonGroup>
+              <AlertDialogCancel disabled={isDeleting} className="m-0">
+                Batal
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCourse}
+                disabled={isDeleting}
+                className={buttonVariants({ variant: 'destructive', size: 'sm' })}
+              >
+                {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Ya, Hapus Kelas</span>
+              </AlertDialogAction>
+            </ButtonGroup>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -8,7 +8,7 @@ import { buttonVariants } from '../../../components/ui/button';
 import type { VariantProps } from 'class-variance-authority';
 
 export interface LanguageSelectProps extends ComponentProps<'button'> {
-  variant?: VariantProps<typeof buttonVariants>['variant'];
+  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'secondary' | null;
 }
 
 export function LanguageSelect({

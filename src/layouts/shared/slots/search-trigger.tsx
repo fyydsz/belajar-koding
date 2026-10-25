@@ -7,7 +7,10 @@ import { cn } from '../../../lib/cn';
 import { type ButtonProps, buttonVariants } from '../../../components/ui/button';
 import { Dialog } from '@base-ui/react/dialog';
 
-export interface SearchTriggerProps extends Omit<ComponentProps<'button'>, 'color'>, ButtonProps {
+export interface SearchTriggerProps extends Omit<ComponentProps<'button'>, 'color'> {
+  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'secondary' | null;
+  color?: 'default' | 'primary' | 'outline' | 'ghost' | 'secondary' | null;
+  size?: 'sm' | 'icon' | 'icon-sm' | 'icon-xs' | null;
   hideIfDisabled?: boolean;
 }
 

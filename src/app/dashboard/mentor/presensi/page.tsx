@@ -29,7 +29,8 @@ import {
 } from 'lucide-react';
 import { fetchCurrentUser, getAuthToken, type AuthUser } from '@/lib/auth';
 import { topProgress } from '@/lib/dashboard-navigation';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -597,45 +598,47 @@ export default function MentorPresensiPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 pb-12">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-fd-border">
+      <header className="flex flex-col gap-4 border-b border-fd-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fd-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-fd-foreground sm:text-3xl">
               Presensi Sesi Pembelajaran
             </h1>
             <Badge variant="outline" className="text-xs uppercase font-mono">
               {currentUser?.role === 'admin' ? 'Admin' : 'Mentor'}
             </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-fd-muted-foreground">
+          <p className="text-sm text-fd-muted-foreground">
             Generate kode kehadiran pertemuan kelas dan pantau siswa yang hadir secara langsung.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <ButtonGroup className="self-start sm:self-auto shrink-0">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={checkActiveSessionAndHistory}
             disabled={isLoadingSession}
-            className="text-xs h-8 gap-1.5 shadow-none"
           >
             <RefreshCw className={`size-3.5 ${isLoadingSession ? 'animate-spin' : ''}`} />
             <span>Segarkan</span>
           </Button>
 
           {currentCourse && (
-            <Link href={`/dashboard/dosen/kelas/${currentCourse.slug}?p=${selectedSessionNumber}`}>
-              <Button size="sm" variant="secondary" className="text-xs h-8 gap-1.5 shadow-none">
-                <BookOpen className="size-3.5" />
-                <span>Buka Materi Sesi</span>
-              </Button>
+            <Link
+              href={`/dashboard/dosen/kelas/${currentCourse.slug}?p=${selectedSessionNumber}`}
+              data-slot="button"
+              className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
+            >
+              <BookOpen className="size-3.5" />
+              <span>Buka Materi Sesi</span>
             </Link>
           )}
-        </div>
-      </div>
+        </ButtonGroup>
+      </header>
 
       {/* FILTER & SELECTOR BAR */}
       <div className="p-4 rounded-xl border border-fd-border bg-fd-card/60 backdrop-blur-xs space-y-3">
@@ -776,33 +779,33 @@ export default function MentorPresensiPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <ButtonGroup>
                     <Button
+                      type="button"
                       size="sm"
                       onClick={handleCopyCode}
-                      className="text-xs h-9 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-none"
                     >
                       {copiedCode ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       <span>{copiedCode ? 'Tersalin' : 'Salin Kode'}</span>
                     </Button>
                     <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenEditPresensi(activeSession)}
-                      className="text-xs h-9 px-3 gap-1.5 hover:border-fd-primary hover:text-fd-primary shadow-none"
                     >
                       <Edit className="size-3.5 text-fd-primary" />
                       <span>Edit Presensi</span>
                     </Button>
                     <Button
+                      type="button"
                       size="sm"
-                      variant="outline"
+                      variant="destructive"
                       onClick={() => setIsConfirmCloseOpen(true)}
-                      className="text-xs h-9 px-3 border-destructive/40 text-destructive hover:bg-destructive/10 shadow-none"
                     >
                       Tutup Sesi
                     </Button>
-                  </div>
+                  </ButtonGroup>
                 </div>
 
                 {/* DISCORD OMNICHANNEL COMMAND */}
@@ -812,14 +815,15 @@ export default function MentorPresensiPage() {
                       <MessageSquare className="size-3.5 text-[#5865F2]" />
                       <span>Perintah Presensi Bot Discord</span>
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="xs"
                       onClick={handleCopyDiscordCmd}
-                      className="text-[11px] text-fd-muted-foreground hover:text-fd-foreground transition-colors cursor-pointer flex items-center gap-1"
                     >
                       {copiedDiscord ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                       <span>{copiedDiscord ? 'Tersalin' : 'Salin'}</span>
-                    </button>
+                    </Button>
                   </div>
                   <div className="p-2 rounded bg-fd-background/80 border border-fd-border/50 font-mono text-xs text-fd-foreground select-all">
                     /presensi kode:{activeSession.tokenCode}
@@ -957,8 +961,9 @@ export default function MentorPresensiPage() {
 
                   <Button
                     type="submit"
+                    size="sm"
                     disabled={isSubmittingOpen || !selectedBatchId}
-                    className="w-full h-10 text-xs sm:text-sm font-semibold gap-2 shadow-xs"
+                    className="w-full font-semibold"
                   >
                     {isSubmittingOpen ? (
                       <>
@@ -1055,13 +1060,13 @@ export default function MentorPresensiPage() {
                             </div>
 
                             <Button
+                              type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => handleOpenEditPresensi(sess)}
-                              className="h-8 px-2.5 text-xs gap-1.5 hover:border-fd-primary hover:text-fd-primary font-medium"
                               title="Kelola & edit status kehadiran pertemuan ini"
                             >
-                              <Edit className="size-3 text-fd-primary" />
+                              <Edit className="size-3.5 text-fd-primary" />
                               <span>Edit Presensi</span>
                             </Button>
                           </div>
@@ -1090,26 +1095,27 @@ export default function MentorPresensiPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsConfirmCloseOpen(false)}
-              disabled={isClosingSession}
-              className="text-xs"
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleCloseSession}
-              disabled={isClosingSession}
-              className="text-xs bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isClosingSession ? 'Menutup...' : 'Tutup Sesi Sekarang'}
-            </Button>
+          <DialogFooter className="pt-2">
+            <ButtonGroup>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsConfirmCloseOpen(false)}
+                disabled={isClosingSession}
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleCloseSession}
+                disabled={isClosingSession}
+              >
+                {isClosingSession ? 'Menutup...' : 'Tutup Sesi Sekarang'}
+              </Button>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1180,29 +1186,27 @@ export default function MentorPresensiPage() {
 
                 <div className="flex items-center gap-2">
                   {new Date(editingSession.expiresAt) > new Date() ? (
-                    <>
+                    <ButtonGroup>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={isUpdatingSession}
                         onClick={() => handleSessionAction('extend')}
-                        className="text-xs h-7 px-2.5 gap-1"
                       >
-                        <Clock className="size-3" />
+                        <Clock className="size-3.5" />
                         <span>+15 Menit</span>
                       </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
                         disabled={isUpdatingSession}
                         onClick={() => handleSessionAction('close')}
-                        className="text-xs h-7 px-2.5 text-destructive border-destructive/30 hover:bg-destructive/10"
                       >
                         Tutup Sesi
                       </Button>
-                    </>
+                    </ButtonGroup>
                   ) : (
                     <Button
                       type="button"
@@ -1210,9 +1214,8 @@ export default function MentorPresensiPage() {
                       size="sm"
                       disabled={isUpdatingSession}
                       onClick={() => handleSessionAction('reopen')}
-                      className="text-xs h-7 px-2.5 gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
                     >
-                      <RefreshCw className="size-3" />
+                      <RefreshCw className="size-3.5" />
                       <span>Buka Kembali (+30 Mnt)</span>
                     </Button>
                   )}
@@ -1321,17 +1324,16 @@ export default function MentorPresensiPage() {
                       {student.attended ? (
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
                           disabled={togglingStudentId === student.studentId}
                           onClick={() => handleToggleAttendance(student.studentId, true)}
-                          className="h-7 px-2.5 text-[11px] gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
                           title="Ubah status siswa menjadi tidak hadir"
                         >
                           {togglingStudentId === student.studentId ? (
-                            <RefreshCw className="size-3 animate-spin" />
+                            <RefreshCw className="size-3.5 animate-spin" />
                           ) : (
-                            <UserX className="size-3" />
+                            <UserX className="size-3.5" />
                           )}
                           <span>Batal Hadir</span>
                         </Button>
@@ -1341,13 +1343,12 @@ export default function MentorPresensiPage() {
                           size="sm"
                           disabled={togglingStudentId === student.studentId}
                           onClick={() => handleToggleAttendance(student.studentId, false)}
-                          className="h-7 px-2.5 text-[11px] gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                           title="Tandai siswa ini hadir secara manual"
                         >
                           {togglingStudentId === student.studentId ? (
-                            <RefreshCw className="size-3 animate-spin" />
+                            <RefreshCw className="size-3.5 animate-spin" />
                           ) : (
-                            <UserCheck className="size-3" />
+                            <UserCheck className="size-3.5" />
                           )}
                           <span>Tandai Hadir</span>
                         </Button>

@@ -22,6 +22,7 @@ import {
   X,
   FileSpreadsheet,
   AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
@@ -33,6 +34,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -430,28 +432,41 @@ export default function DosenNilaiPage() {
           </p>
         </div>
 
-        {/* Action Buttons: Export CSV & Print */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+        {/* Action Buttons: Refresh, Export CSV & Print */}
+        <ButtonGroup className="self-start sm:self-auto shrink-0">
           <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => selectedBatchId ? loadGradebook(selectedBatchId) : loadBatches()}
+            disabled={isLoadingBatches || isLoadingGrades}
+          >
+            <RefreshCw className={`size-3.5 ${(isLoadingBatches || isLoadingGrades) ? 'animate-spin' : ''}`} />
+            <span>Segarkan</span>
+          </Button>
+
+          <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleExportCSV}
             disabled={!gradebook || gradebook.students.length === 0}
           >
-            <Download className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <Download className="size-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Unduh CSV (Excel)</span>
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handlePrint}
             disabled={!gradebook || gradebook.students.length === 0}
           >
-            <Printer className="size-4 text-fd-primary" />
+            <Printer className="size-3.5 text-fd-primary" />
             <span>Cetak Transkrip</span>
           </Button>
-        </div>
+        </ButtonGroup>
       </header>
 
       {/* Batch Selector Bar */}
@@ -731,10 +746,9 @@ export default function DosenNilaiPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenOverrideModal(student)}
-                          className="h-8 px-2.5 text-xs font-medium gap-1.5 hover:bg-primary hover:text-primary-foreground min-h-[36px]"
                         >
-                          <SlidersHorizontal className="w-3.5 h-3.5" />
-                          Sesuaikan
+                          <SlidersHorizontal className="size-3.5" />
+                          <span>Sesuaikan</span>
                         </Button>
                       </td>
                     </tr>
@@ -949,21 +963,21 @@ export default function DosenNilaiPage() {
                 size="sm"
                 onClick={() => handleSaveOverride(false)}
                 disabled={isSavingOverride}
-                className="text-xs text-muted-foreground hover:text-destructive min-h-[44px]"
+                className="text-muted-foreground hover:text-destructive"
               >
-                <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                Kembalikan ke Kalkulasi Otomatis
+                <RotateCcw className="size-3.5" />
+                <span>Kembalikan ke Kalkulasi Otomatis</span>
               </Button>
             )}
 
-            <div className="flex items-center gap-2 ml-auto w-full sm:w-auto">
+            <ButtonGroup className="ml-auto w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setIsOverrideModalOpen(false)}
                 disabled={isSavingOverride}
-                className="w-full sm:w-auto min-h-[44px]"
+                className="flex-1 sm:flex-initial"
               >
                 Batal
               </Button>
@@ -972,12 +986,12 @@ export default function DosenNilaiPage() {
                 size="sm"
                 onClick={() => handleSaveOverride(modalIsOverride)}
                 disabled={isSavingOverride}
-                className="w-full sm:w-auto min-h-[44px] gap-1.5"
+                className="flex-1 sm:flex-initial"
               >
-                {isSavingOverride && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Simpan Nilai
+                {isSavingOverride && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Simpan Nilai</span>
               </Button>
-            </div>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>

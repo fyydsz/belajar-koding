@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { getAuthToken, fetchCurrentUser, type AuthUser } from '@/lib/auth';
 import { topProgress } from '@/lib/dashboard-navigation';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -166,12 +167,13 @@ export default function AdminPenggunaPage() {
 
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
           >
-            <RefreshCw className={cn('size-4', isLoading && 'animate-spin')} />
+            <RefreshCw className={cn('size-3.5', isLoading && 'animate-spin')} />
             <span>Segarkan</span>
           </Button>
         </div>
@@ -231,23 +233,19 @@ export default function AdminPenggunaPage() {
           />
         </div>
 
-        <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-fd-border bg-fd-muted/40 p-1 self-start sm:self-auto">
+        <ButtonGroup className="self-start sm:self-auto">
           {(['all', 'student', 'mentor', 'admin'] as const).map((r) => (
-            <button
+            <Button
               key={r}
               type="button"
+              size="sm"
+              variant={filterRole === r ? 'default' : 'outline'}
               onClick={() => setFilterRole(r)}
-              className={cn(
-                'min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap',
-                filterRole === r
-                  ? 'bg-fd-card text-fd-foreground shadow-2xs border border-fd-border/60'
-                  : 'text-fd-muted-foreground hover:text-fd-foreground'
-              )}
             >
               {r === 'all' ? 'Semua Role' : r === 'student' ? 'Siswa' : r === 'mentor' ? 'Mentor' : 'Admin'}
-            </button>
+            </Button>
           ))}
-        </div>
+        </ButtonGroup>
       </div>
 
       {error && (
@@ -329,22 +327,17 @@ export default function AdminPenggunaPage() {
                         </span>
                       )}
 
-                      <div className="inline-flex items-center gap-1 rounded-lg border border-fd-border bg-fd-muted/30 p-1">
+                      <ButtonGroup>
                         {ROLE_OPTIONS.map((opt) => {
                           const isActive = u.role === opt.value;
                           const isDisabled = isUpdating || (isSelf && opt.value !== 'admin');
 
-                          const activeColorClass =
-                            opt.value === 'admin'
-                              ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30'
-                              : opt.value === 'mentor'
-                              ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30'
-                              : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
-
                           return (
-                            <button
+                            <Button
                               key={opt.value}
                               type="button"
+                              size="sm"
+                              variant={isActive ? 'default' : 'outline'}
                               disabled={isDisabled}
                               onClick={() => handleRoleChange(u, opt.value)}
                               title={
@@ -352,19 +345,12 @@ export default function AdminPenggunaPage() {
                                   ? 'Akun Anda sendiri tidak dapat diturunkan dari Admin'
                                   : `Ubah peran menjadi ${opt.label}`
                               }
-                              className={cn(
-                                'h-7 px-2.5 rounded-md text-[11px] font-semibold transition-all border',
-                                isActive
-                                  ? cn('shadow-2xs', activeColorClass)
-                                  : 'border-transparent text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-muted/50',
-                                isDisabled && !isActive && 'opacity-40 cursor-not-allowed'
-                              )}
                             >
                               {opt.label}
-                            </button>
+                            </Button>
                           );
                         })}
-                      </div>
+                      </ButtonGroup>
                     </div>
                   </div>
                 );

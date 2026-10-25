@@ -21,7 +21,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -282,7 +283,7 @@ export default function DosenBatchVerificationPage() {
           size="sm"
           onClick={loadEnrollments}
           disabled={isLoading}
-          className="min-h-[40px] gap-2 self-start sm:self-auto"
+          className="self-start sm:self-auto shrink-0"
         >
           <RefreshCw className={cn('size-3.5', isLoading && 'animate-spin')} />
           <span>Segarkan</span>
@@ -292,7 +293,7 @@ export default function DosenBatchVerificationPage() {
       {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-fd-border bg-fd-muted/40 p-1 self-start">
+        <ButtonGroup className="self-start">
           {(
             [
               { id: 'pending', label: 'Menunggu Persetujuan' },
@@ -301,21 +302,17 @@ export default function DosenBatchVerificationPage() {
               { id: 'all', label: 'Semua' },
             ] as const
           ).map((tab) => (
-            <button
+            <Button
               key={tab.id}
               type="button"
+              size="sm"
+              variant={activeTab === tab.id ? 'default' : 'outline'}
               onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors',
-                activeTab === tab.id
-                  ? 'bg-fd-card text-fd-foreground shadow-2xs border border-fd-border/60'
-                  : 'text-fd-muted-foreground hover:text-fd-foreground'
-              )}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
-        </div>
+        </ButtonGroup>
 
         {/* Search Input */}
         <div className="relative w-full md:w-72">
@@ -411,72 +408,70 @@ export default function DosenBatchVerificationPage() {
 
                 {/* Right: Proof Preview & Actions */}
                 <div className="shrink-0 flex items-center flex-wrap gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-fd-border/50">
-                  {/* Proof Button */}
-                  {item.paymentProofUrl ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPreviewItem(item)}
-                      className="min-h-[36px] gap-1.5 text-xs font-semibold"
-                    >
-                      {isPdf ? (
-                        <FileText className="size-3.5 text-red-500" />
-                      ) : (
-                        <Eye className="size-3.5 text-fd-primary" />
-                      )}
-                      <span>Lihat Bukti</span>
-                    </Button>
-                  ) : (
+                  {!item.paymentProofUrl && (
                     <span className="text-[11px] text-fd-muted-foreground px-2 py-1 italic">
                       Tanpa bukti berkas
                     </span>
                   )}
 
-                  {/* Approve & Reject Buttons */}
-                  {item.status === 'pending' && (
-                    <>
+                  <ButtonGroup>
+                    {item.paymentProofUrl && (
                       <Button
                         type="button"
+                        variant="outline"
                         size="sm"
-                        disabled={isSubmittingAction}
-                        onClick={() => handleApprove(item.id)}
-                        className="min-h-[36px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
+                        onClick={() => setPreviewItem(item)}
                       >
-                        <CheckCircle2 className="size-3.5" />
-                        <span>Setujui</span>
+                        {isPdf ? (
+                          <FileText className="size-3.5 text-red-500" />
+                        ) : (
+                          <Eye className="size-3.5 text-fd-primary" />
+                        )}
+                        <span>Lihat Bukti</span>
                       </Button>
+                    )}
 
+                    {item.status === 'pending' && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={isSubmittingAction}
+                          onClick={() => handleApprove(item.id)}
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                          <span>Setujui</span>
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          disabled={isSubmittingAction}
+                          onClick={() => {
+                            setRejectingItem(item);
+                            setRejectReason('');
+                          }}
+                        >
+                          <XCircle className="size-3.5" />
+                          <span>Tolak</span>
+                        </Button>
+                      </>
+                    )}
+
+                    {item.status === 'rejected' && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={isSubmittingAction}
-                        onClick={() => {
-                          setRejectingItem(item);
-                          setRejectReason('');
-                        }}
-                        className="min-h-[36px] gap-1.5 border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 text-xs font-semibold"
+                        onClick={() => handleApprove(item.id)}
                       >
-                        <XCircle className="size-3.5" />
-                        <span>Tolak</span>
+                        <CheckCircle2 className="size-3.5" />
+                        <span>Ubah ke Setujui</span>
                       </Button>
-                    </>
-                  )}
-
-                  {item.status === 'rejected' && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={isSubmittingAction}
-                      onClick={() => handleApprove(item.id)}
-                      className="min-h-[36px] gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold"
-                    >
-                      <CheckCircle2 className="size-3.5" />
-                      <span>Ubah ke Setujui</span>
-                    </Button>
-                  )}
+                    )}
+                  </ButtonGroup>
                 </div>
               </div>
             );
@@ -532,43 +527,43 @@ export default function DosenBatchVerificationPage() {
             </div>
           )}
 
-          <DialogFooter className="gap-2 pt-2">
-            {previewItem?.status === 'pending' && (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isSubmittingAction}
-                  onClick={() => handleApprove(previewItem.id)}
-                  className="min-h-[38px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
-                >
-                  <CheckCircle2 className="size-3.5" />
-                  <span>Setujui Pembayaran</span>
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={isSubmittingAction}
-                  onClick={() => {
-                    setRejectingItem(previewItem);
-                    setRejectReason('');
-                  }}
-                  className="min-h-[38px] gap-1.5 bg-red-600 text-white hover:bg-red-700 text-xs font-semibold"
-                >
-                  <XCircle className="size-3.5" />
-                  <span>Tolak</span>
-                </Button>
-              </>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setPreviewItem(null)}
-              className="min-h-[38px] text-xs"
-            >
-              Tutup
-            </Button>
+          <DialogFooter className="pt-2">
+            <ButtonGroup>
+              {previewItem?.status === 'pending' && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isSubmittingAction}
+                    onClick={() => handleApprove(previewItem.id)}
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    <span>Setujui Pembayaran</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={isSubmittingAction}
+                    onClick={() => {
+                      setRejectingItem(previewItem);
+                      setRejectReason('');
+                    }}
+                  >
+                    <XCircle className="size-3.5" />
+                    <span>Tolak</span>
+                  </Button>
+                </>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewItem(null)}
+              >
+                Tutup
+              </Button>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -609,25 +604,26 @@ export default function DosenBatchVerificationPage() {
               </p>
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setRejectingItem(null)}
-                className="min-h-[38px] text-xs"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSubmittingAction || !rejectReason.trim()}
-                className="min-h-[38px] gap-1.5 bg-red-600 text-white hover:bg-red-700 text-xs font-semibold"
-              >
-                {isSubmittingAction && <Loader2 className="size-3.5 animate-spin" />}
-                <span>Konfirmasi Tolak</span>
-              </Button>
+            <DialogFooter className="pt-2">
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRejectingItem(null)}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  size="sm"
+                  disabled={isSubmittingAction || !rejectReason.trim()}
+                >
+                  {isSubmittingAction && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Konfirmasi Tolak</span>
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>

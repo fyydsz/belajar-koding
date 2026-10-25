@@ -15,6 +15,7 @@ import {
   topProgress,
 } from '@/lib/dashboard-navigation';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import {
   Avatar,
@@ -459,39 +460,39 @@ export default function AccountSettingsPage() {
                 id="avatar-upload-input"
                 disabled={isUploadingAvatar || isDeletingAvatar}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar || isDeletingAvatar}
-                className="min-h-[40px] text-xs font-semibold gap-1.5 cursor-pointer"
-              >
-                {isUploadingAvatar ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Camera className="size-3.5 text-fd-muted-foreground" />
-                )}
-                <span>{avatarUrl ? 'Ganti Foto' : 'Unggah Foto'}</span>
-              </Button>
-
-              {avatarUrl && (
+              <ButtonGroup>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={handleRemoveAvatar}
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingAvatar || isDeletingAvatar}
-                  className="min-h-[40px] text-xs font-medium text-destructive hover:bg-destructive/10 gap-1.5 cursor-pointer"
                 >
-                  {isDeletingAvatar ? (
+                  {isUploadingAvatar ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <Trash2 className="size-3.5" />
+                    <Camera className="size-3.5 text-fd-muted-foreground" />
                   )}
-                  <span>Hapus Foto</span>
+                  <span>{avatarUrl ? 'Ganti Foto' : 'Unggah Foto'}</span>
                 </Button>
-              )}
+
+                {avatarUrl && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemoveAvatar}
+                    disabled={isUploadingAvatar || isDeletingAvatar}
+                  >
+                    {isDeletingAvatar ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-3.5" />
+                    )}
+                    <span>Hapus Foto</span>
+                  </Button>
+                )}
+              </ButtonGroup>
             </div>
 
             <p className="text-xs text-fd-muted-foreground">
@@ -598,14 +599,14 @@ export default function AccountSettingsPage() {
               <Button
                 type="submit"
                 variant="default"
+                size="sm"
                 disabled={isSaveDisabled}
-                className="min-h-[40px] px-5 font-semibold text-xs cursor-pointer"
               >
                 {isSavingProfile && (
-                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                 )}
                 {profileSuccess && (
-                  <Check className="mr-1.5 size-3.5" />
+                  <Check className="size-3.5" />
                 )}
                 <span>Simpan Perubahan</span>
               </Button>
@@ -689,15 +690,15 @@ export default function AccountSettingsPage() {
               <Button
                 type="submit"
                 variant="default"
+                size="sm"
                 disabled={
                   isUpdatingPassword ||
                   !newPassword ||
                   !confirmPassword
                 }
-                className="min-h-[40px] px-5 font-semibold text-xs cursor-pointer"
               >
                 {isUpdatingPassword && (
-                  <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                 )}
                 <span>Simpan Kata Sandi</span>
               </Button>

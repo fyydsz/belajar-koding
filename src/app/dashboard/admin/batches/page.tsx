@@ -20,6 +20,7 @@ import {
 import { getAuthToken } from '@/lib/auth';
 import { topProgress } from '@/lib/dashboard-navigation';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -686,14 +687,26 @@ export default function AdminBatchesPage() {
           </p>
         </div>
 
-        <Button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="self-start sm:self-auto shrink-0"
-        >
-          <Plus className="size-4" />
-          <span>Buka Batch Baru</span>
-        </Button>
+        <ButtonGroup className="self-start sm:self-auto shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Segarkan</span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus className="size-3.5" />
+            <span>Buka Batch Baru</span>
+          </Button>
+        </ButtonGroup>
       </header>
 
       {/* Kartu Statistik */}
@@ -876,15 +889,14 @@ export default function AdminBatchesPage() {
 
                       {/* Kolom 6: Aksi */}
                       <td className="px-5 py-3.5 align-middle text-right">
-                        <div className="inline-flex items-center justify-end gap-1.5">
+                        <ButtonGroup className="ml-auto">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => openPlottingModal(b)}
-                            className="h-7 px-2.5 text-[11px] font-medium rounded-md border-fd-border shadow-none hover:bg-fd-accent/40"
                           >
-                            <UserCheck className="size-3.5 text-fd-primary mr-1" />
+                            <UserCheck className="size-3.5 text-fd-primary" />
                             <span>Plot Siswa</span>
                           </Button>
 
@@ -893,9 +905,8 @@ export default function AdminBatchesPage() {
                               render={
                                 <Button
                                   type="button"
-                                  variant="ghost"
+                                  variant="outline"
                                   size="icon"
-                                  className="size-7 rounded-md text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-muted"
                                   title="Aksi Lainnya"
                                 />
                               }
@@ -921,7 +932,7 @@ export default function AdminBatchesPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
+                        </ButtonGroup>
                       </td>
                     </tr>
                   );
@@ -1119,30 +1130,30 @@ export default function AdminBatchesPage() {
             </div>
 
             <DialogFooter className="pt-3 border-t border-fd-border/70">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsCreateModalOpen(false)}
-                className="h-8 px-3 text-xs rounded-md shadow-none"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSubmittingBatch || newBatchCourseIds.length === 0}
-                className="h-8 px-3.5 text-xs rounded-md shadow-none bg-fd-foreground text-fd-background hover:bg-fd-foreground/90 font-medium"
-              >
-                {isSubmittingBatch ? (
-                  <>
-                    <RefreshCw className="size-3 animate-spin mr-1.5" />
-                    <span>Menyimpan...</span>
-                  </>
-                ) : (
-                  'Simpan Batch Kelas'
-                )}
-              </Button>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmittingBatch || newBatchCourseIds.length === 0}
+                >
+                  {isSubmittingBatch ? (
+                    <>
+                      <RefreshCw className="size-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    'Simpan Batch Kelas'
+                  )}
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1253,7 +1264,7 @@ export default function AdminBatchesPage() {
                   <label className="text-xs font-medium text-fd-foreground">
                     Status Pendaftaran
                   </label>
-                  <div className="grid grid-cols-3 gap-1 p-0.5 rounded-lg border border-fd-border/70 bg-fd-muted/20">
+                  <ButtonGroup className="w-full">
                     {(
                       [
                         { id: 'active', label: 'Aktif' },
@@ -1261,20 +1272,18 @@ export default function AdminBatchesPage() {
                         { id: 'completed', label: 'Selesai' },
                       ] as const
                     ).map((st) => (
-                      <button
+                      <Button
                         key={st.id}
                         type="button"
+                        size="sm"
+                        variant={editBatchStatus === st.id ? 'default' : 'outline'}
                         onClick={() => setEditBatchStatus(st.id)}
-                        className={`h-7 px-2 rounded text-[11px] font-medium transition-colors ${
-                          editBatchStatus === st.id
-                            ? 'bg-fd-background text-fd-foreground shadow-2xs font-semibold'
-                            : 'text-fd-muted-foreground hover:text-fd-foreground'
-                        }`}
+                        className="flex-1"
                       >
                         {st.label}
-                      </button>
+                      </Button>
                     ))}
-                  </div>
+                  </ButtonGroup>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
@@ -1369,31 +1378,31 @@ export default function AdminBatchesPage() {
             </div>
 
             <DialogFooter className="pt-3 border-t border-fd-border/70">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setEditingBatch(null)}
-                disabled={isUpdatingBatch}
-                className="h-8 px-3 text-xs rounded-md shadow-none"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isUpdatingBatch || editBatchCourseIds.length === 0}
-                className="h-8 px-3.5 text-xs rounded-md shadow-none bg-fd-foreground text-fd-background hover:bg-fd-foreground/90 font-medium"
-              >
-                {isUpdatingBatch ? (
-                  <>
-                    <RefreshCw className="size-3 animate-spin mr-1.5" />
-                    <span>Menyimpan...</span>
-                  </>
-                ) : (
-                  'Simpan Perubahan'
-                )}
-              </Button>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingBatch(null)}
+                  disabled={isUpdatingBatch}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isUpdatingBatch || editBatchCourseIds.length === 0}
+                >
+                  {isUpdatingBatch ? (
+                    <>
+                      <RefreshCw className="size-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    'Simpan Perubahan'
+                  )}
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1433,35 +1442,37 @@ export default function AdminBatchesPage() {
             </ul>
           </div>
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDeletingBatch(null)}
-              disabled={isDeletingBatch}
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleConfirmDeleteBatch}
-              disabled={isDeletingBatch}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              {isDeletingBatch ? (
-                <>
-                  <RefreshCw className="size-3.5 animate-spin" />
-                  <span>Menghapus...</span>
-                </>
-              ) : (
-                <>
-                  <Trash2 className="size-3.5" />
-                  <span>Hapus Batch Permanen</span>
-                </>
-              )}
-            </Button>
+          <DialogFooter className="pt-2">
+            <ButtonGroup>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDeletingBatch(null)}
+                disabled={isDeletingBatch}
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleConfirmDeleteBatch}
+                disabled={isDeletingBatch}
+              >
+                {isDeletingBatch ? (
+                  <>
+                    <RefreshCw className="size-3.5 animate-spin" />
+                    <span>Menghapus...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="size-3.5" />
+                    <span>Hapus Batch Permanen</span>
+                  </>
+                )}
+              </Button>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1486,31 +1497,27 @@ export default function AdminBatchesPage() {
               </DialogDescription>
             </div>
 
-            {/* Navigasi Tab Segmented Pill */}
-            <div className="flex p-1 rounded-xl bg-fd-muted/40 border border-fd-border/50 gap-1 pt-1">
-              <button
+            {/* Navigasi Tab Segmented */}
+            <ButtonGroup className="w-full pt-1">
+              <Button
                 type="button"
+                size="sm"
+                variant={activeTab === 'enrolled' ? 'default' : 'outline'}
                 onClick={() => setActiveTab('enrolled')}
-                className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'enrolled'
-                    ? 'bg-fd-card text-fd-foreground shadow-xs border border-fd-border/40'
-                    : 'text-fd-muted-foreground hover:text-fd-foreground'
-                }`}
+                className="flex-1"
               >
                 Siswa Terdaftar ({enrolledStudents.length})
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="sm"
+                variant={activeTab === 'enroll-new' ? 'default' : 'outline'}
                 onClick={() => setActiveTab('enroll-new')}
-                className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'enroll-new'
-                    ? 'bg-fd-card text-fd-foreground shadow-xs border border-fd-border/40'
-                    : 'text-fd-muted-foreground hover:text-fd-foreground'
-                }`}
+                className="flex-1"
               >
                 + Daftarkan Siswa Baru
-              </button>
-            </div>
+              </Button>
+            </ButtonGroup>
           </DialogHeader>
 
           {/* Isi Konten Tab */}
@@ -1546,10 +1553,10 @@ export default function AdminBatchesPage() {
                             )}
                           </div>
                           <Button
-                            variant="ghost"
+                            type="button"
+                            variant="destructive"
                             size="sm"
                             onClick={() => handleUnenrollStudent(s.studentId, s.fullName)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-500/10 h-8 px-2.5 text-xs gap-1"
                           >
                             <Trash2 className="size-3.5" />
                             <span>Keluarkan</span>
@@ -1655,13 +1662,12 @@ export default function AdminBatchesPage() {
                 </span>
               )}
             </span>
-            <div className="flex gap-2">
+            <ButtonGroup>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setActivePlottingBatch(null)}
-                className="text-xs"
               >
                 Tutup
               </Button>
@@ -1671,12 +1677,11 @@ export default function AdminBatchesPage() {
                   size="sm"
                   disabled={isEnrollingStudents || selectedStudentIds.length === 0}
                   onClick={handleEnrollSelectedStudents}
-                  className="text-xs font-semibold gap-1.5"
                 >
                   {isEnrollingStudents ? (
                     <>
                       <RefreshCw className="size-3.5 animate-spin" />
-                      Mendaftarkan...
+                      <span>Mendaftarkan...</span>
                     </>
                   ) : (
                     <>
@@ -1686,7 +1691,7 @@ export default function AdminBatchesPage() {
                   )}
                 </Button>
               )}
-            </div>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -35,7 +35,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -366,6 +367,18 @@ export default function DosenTugasPage() {
             Buat penugasan proyek per batch kelas, periksa kode siswa, dan sinkronkan penilaian ke buku nilai.
           </p>
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={loadData}
+          disabled={isLoading}
+          className="self-start sm:self-auto shrink-0"
+        >
+          <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>Segarkan</span>
+        </Button>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -435,19 +448,16 @@ export default function DosenTugasPage() {
                         { id: 'uas', label: 'UAS Capstone (30%)' },
                       ] as const
                     ).map((cat) => (
-                      <button
+                      <Button
                         key={cat.id}
                         type="button"
+                        size="sm"
+                        variant={assignmentType === cat.id ? 'default' : 'outline'}
                         onClick={() => setAssignmentType(cat.id)}
-                        className={cn(
-                          'min-h-[38px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors text-center',
-                          assignmentType === cat.id
-                            ? 'border-fd-primary bg-fd-primary/10 text-fd-primary'
-                            : 'border-fd-border bg-fd-background text-fd-muted-foreground hover:text-fd-foreground'
-                        )}
+                        className="w-full"
                       >
                         {cat.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -499,12 +509,13 @@ export default function DosenTugasPage() {
 
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={isSubmitting}
-                  className="w-full min-h-[40px] font-semibold text-sm"
+                  className="w-full font-semibold"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      <Loader2 className="size-3.5 animate-spin" />
                       Menerbitkan Tugas...
                     </>
                   ) : (
@@ -567,26 +578,24 @@ export default function DosenTugasPage() {
                             <h3 className="text-sm font-bold text-fd-foreground">{item.title}</h3>
                           </div>
 
-                          <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                          <ButtonGroup className="self-end sm:self-auto shrink-0">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => openSubmissionsModal(item)}
-                              className="min-h-[36px] px-3 text-xs font-semibold gap-1.5"
                             >
                               <Users className="size-3.5 text-fd-primary" />
                               <span>Periksa Jawaban</span>
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="destructive"
                               size="icon"
                               onClick={() => setDeletingAssignment(item)}
                               aria-label="Hapus Tugas"
-                              className="size-9 text-red-600 hover:bg-red-500/10 hover:text-red-700"
                             >
-                              <Trash2 className="size-4" />
+                              <Trash2 className="size-3.5" />
                             </Button>
-                          </div>
+                          </ButtonGroup>
                         </div>
 
                         <div className="flex items-center justify-between text-[11px] text-fd-muted-foreground pt-1">
@@ -624,27 +633,28 @@ export default function DosenTugasPage() {
               Apakah Anda yakin ingin menghapus tugas <strong>{deletingAssignment?.title}</strong> beserta seluruh pengumpulan siswa di dalamnya? Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDeletingAssignment(null)}
-              disabled={isDeleting}
-              className="min-h-[38px] text-xs"
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleConfirmDeleteAssignment}
-              disabled={isDeleting}
-              className="min-h-[38px] bg-red-600 text-white hover:bg-red-700 text-xs gap-1.5"
-            >
-              {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
-              <span>Hapus Permanen</span>
-            </Button>
+          <DialogFooter className="pt-2">
+            <ButtonGroup>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDeletingAssignment(null)}
+                disabled={isDeleting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleConfirmDeleteAssignment}
+                disabled={isDeleting}
+              >
+                {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+                <span>Hapus Permanen</span>
+              </Button>
+            </ButtonGroup>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -706,13 +716,14 @@ export default function DosenTugasPage() {
                         </div>
 
                         {/* Lampiran Kode Sumber & Demo */}
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <ButtonGroup className="flex-wrap">
                           {sub.repoUrl && (
                             <a
                               href={sub.repoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border bg-fd-background px-3 py-1.5 font-semibold text-fd-foreground hover:bg-fd-muted transition"
+                              data-slot="button"
+                              className={buttonVariants({ variant: 'outline', size: 'sm' })}
                             >
                               <FolderGit2 className="size-3.5 text-fd-primary" />
                               <span>Buka Repositori GitHub</span>
@@ -724,7 +735,8 @@ export default function DosenTugasPage() {
                               href={sub.demoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border bg-fd-background px-3 py-1.5 font-semibold text-fd-foreground hover:bg-fd-muted transition"
+                              data-slot="button"
+                              className={buttonVariants({ variant: 'outline', size: 'sm' })}
                             >
                               <Globe className="size-3.5 text-blue-500" />
                               <span>Kunjungi Live Demo</span>
@@ -736,14 +748,15 @@ export default function DosenTugasPage() {
                               href={sub.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border bg-fd-background px-3 py-1.5 font-semibold text-fd-foreground hover:bg-fd-muted transition"
+                              data-slot="button"
+                              className={buttonVariants({ variant: 'outline', size: 'sm' })}
                             >
                               <FileArchive className="size-3.5 text-amber-500" />
                               <span>Unduh Berkas Proyek</span>
                               <ExternalLink className="size-3 text-fd-muted-foreground" />
                             </a>
                           )}
-                        </div>
+                        </ButtonGroup>
 
                         {/* Catatan Siswa */}
                         {sub.notes && (

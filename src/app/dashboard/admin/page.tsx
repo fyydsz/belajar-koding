@@ -18,6 +18,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
@@ -300,27 +301,29 @@ export default function AdminDashboardPage() {
             Halo, {adminName}. Ini kondisi batch, pendaftaran, dan penugasan saat ini.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2.5 self-start sm:self-auto">
+        <ButtonGroup className="self-start sm:self-auto shrink-0">
           <Button
             id="admin-refresh"
+            type="button"
             onClick={() => loadAdminOverview(true)}
             variant="outline"
             size="sm"
             disabled={isRefreshing}
-            className="h-9 gap-2"
           >
             <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
-            <span>{isRefreshing ? 'Memuat...' : 'Muat Ulang'}</span>
+            <span>{isRefreshing ? 'Memuat...' : 'Segarkan'}</span>
           </Button>
-          <Link
+          <Button
             id="admin-manage-batches"
-            href="/dashboard/admin/batches"
-            className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'h-9 gap-2')}
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => router.push('/dashboard/admin/batches')}
           >
-            <Layers className="size-4" />
+            <Layers className="size-3.5" />
             <span>Kelola Batch</span>
-          </Link>
-        </div>
+          </Button>
+        </ButtonGroup>
       </header>
 
       {/* Baris fokus: antrean tindakan + batch berjalan */}
@@ -377,16 +380,17 @@ export default function AdminDashboardPage() {
               <Link
                 id="admin-open-verification"
                 href="/dashboard/dosen/verifikasi-batch"
+                data-slot="button"
                 className={cn(
                   buttonVariants({
                     variant: hasPending ? 'default' : 'outline',
                     size: 'sm',
                   }),
-                  'mt-5 h-10 w-full justify-between'
+                  'mt-5 w-full justify-between'
                 )}
               >
                 <span>{hasPending ? 'Periksa Antrean' : 'Buka Riwayat Verifikasi'}</span>
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-3.5" />
               </Link>
             </div>
           );
@@ -494,7 +498,8 @@ export default function AdminDashboardPage() {
                 </p>
                 <Link
                   href="/dashboard/admin/batches"
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-4 h-9')}
+                  data-slot="button"
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-4')}
                 >
                   Buat Batch
                 </Link>
@@ -542,7 +547,8 @@ export default function AdminDashboardPage() {
             </div>
             <Link
               href="/dashboard/dosen/tugas"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 shrink-0')}
+              data-slot="button"
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}
             >
               Semua Tugas
             </Link>
@@ -610,7 +616,8 @@ export default function AdminDashboardPage() {
             </div>
             <Link
               href="/dashboard/admin/pengguna"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 shrink-0')}
+              data-slot="button"
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}
             >
               Kelola
             </Link>
@@ -668,7 +675,8 @@ export default function AdminDashboardPage() {
           </div>
           <Link
             href="/dashboard/dosen/kelas"
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 shrink-0')}
+            data-slot="button"
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}
           >
             Kelola Kelas
           </Link>

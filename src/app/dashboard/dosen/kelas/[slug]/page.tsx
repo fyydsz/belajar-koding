@@ -50,7 +50,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -847,14 +848,15 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               </span>
             </nav>
 
-            <button
+            <Button
               type="button"
+              size="sm"
               onClick={() => setIsNewSessionModalOpen(true)}
-              className="inline-flex items-center gap-2 min-h-[40px] px-4 py-2 rounded-lg bg-fd-primary text-fd-primary-foreground hover:bg-fd-primary/90 text-xs font-semibold transition-colors shadow-2xs self-start sm:self-auto"
+              className="self-start sm:self-auto shrink-0"
             >
-              <PlusCircle className="size-4 shrink-0" />
+              <PlusCircle className="size-3.5 shrink-0" />
               <span>Tambah Sesi Baru</span>
-            </button>
+            </Button>
           </div>
 
           {/* Course Overview Header */}
@@ -900,14 +902,14 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                   Kelas ini belum memiliki sesi pertemuan. Buat pertemuan baru untuk mulai mengunggah materi ajar dan tugas praktikum.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                size="sm"
                 onClick={() => setIsNewSessionModalOpen(true)}
-                className="inline-flex items-center gap-2 min-h-[40px] px-4 py-2 rounded-lg bg-fd-primary text-fd-primary-foreground text-xs font-semibold hover:bg-fd-primary/90 transition-colors shadow-2xs"
               >
-                <PlusCircle className="size-4" />
+                <PlusCircle className="size-3.5" />
                 <span>Buat Pertemuan Pertama</span>
-              </button>
+              </Button>
             </div>
           ) : (
             <main className="space-y-5">
@@ -934,36 +936,38 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           Pertemuan {sess.sessionNumber.toString().padStart(2, '0')}
                         </span>
 
-                        <div className="flex items-center gap-1 relative z-20">
-                          <button
+                        <ButtonGroup className="relative z-20">
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="icon-xs"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               handleOpenEditSession(sess);
                             }}
-                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 size-9 rounded-lg text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-muted transition-all flex items-center justify-center"
                             title={`Ubah Nama & Info Pertemuan ${sess.sessionNumber}`}
                             aria-label={`Ubah Nama & Info Pertemuan ${sess.sessionNumber}`}
                           >
-                            <Edit className="size-4 shrink-0" />
-                          </button>
+                            <Edit className="size-3.5 shrink-0" />
+                          </Button>
 
-                          <button
+                          <Button
                             type="button"
+                            variant="destructive"
+                            size="icon-xs"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               setSessionToDelete(sess);
                               setIsDeleteSessionModalOpen(true);
                             }}
-                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 size-9 rounded-lg text-fd-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all flex items-center justify-center"
                             title={`Hapus Pertemuan P${sess.sessionNumber}`}
                             aria-label={`Hapus Pertemuan P${sess.sessionNumber}`}
                           >
-                            <Trash2 className="size-4 shrink-0" />
-                          </button>
-                        </div>
+                            <Trash2 className="size-3.5 shrink-0" />
+                          </Button>
+                        </ButtonGroup>
                       </div>
 
                       {/* Session Title (Whole-card clickable link) */}
@@ -1039,9 +1043,10 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               </div>
               <Link
                 href={`/dashboard/dosen/kelas/${slug}`}
-                className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-fd-primary text-fd-primary-foreground text-xs sm:text-sm font-semibold hover:bg-fd-primary/90 transition-colors"
+                data-slot="button"
+                className={buttonVariants({ variant: 'default', size: 'sm' })}
               >
-                <ArrowLeft className="size-4" />
+                <ArrowLeft className="size-3.5" />
                 <span>Kembali ke Daftar Pertemuan</span>
               </Link>
             </div>
@@ -1054,15 +1059,17 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-fd-foreground leading-tight">
                       {activeSessionInfo.title || `Pertemuan ${urlSessionNumber}`}
                     </h1>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => handleOpenEditSession(activeSessionInfo)}
-                      className="p-1.5 rounded-lg text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring shrink-0"
                       title="Ubah judul & deskripsi sesi pertemuan"
                       aria-label="Ubah judul & deskripsi sesi pertemuan"
+                      className="shrink-0"
                     >
-                      <Edit className="size-4 shrink-0" />
-                    </button>
+                      <Edit className="size-3.5 shrink-0" />
+                    </Button>
                   </div>
 
                   {activeSessionInfo.description ? (
@@ -1074,30 +1081,33 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
 
                 {/* Balanced Action Toolbar */}
                 <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-fd-border/40">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <button
+                  <ButtonGroup className="flex-wrap">
+                    <Button
                       type="button"
+                      size="sm"
                       onClick={handleOpenAddMaterial}
-                      className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-fd-primary text-fd-primary-foreground hover:bg-fd-primary/90 text-xs sm:text-sm font-semibold transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
                     >
-                      <PlusCircle className="size-4 shrink-0" />
+                      <PlusCircle className="size-3.5 shrink-0" />
                       <span>Tambah Materi</span>
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={handleOpenAddAssignment}
-                      className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl border border-fd-border bg-fd-card hover:bg-fd-accent text-fd-foreground text-xs sm:text-sm font-semibold transition-all shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
                     >
-                      <ClipboardList className="size-4 shrink-0 text-fd-muted-foreground" />
+                      <ClipboardList className="size-3.5 shrink-0 text-fd-muted-foreground" />
                       <span>Tambah Tugas</span>
-                    </button>
+                    </Button>
 
                     {activeAttendance ? (
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => setIsAttendanceModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3.5 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs sm:text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
                         title="Lihat kode dan status presensi aktif"
                       >
                         <span className="relative flex h-2 w-2">
@@ -1105,32 +1115,35 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                         </span>
                         <span>Presensi: <span className="font-mono font-bold tracking-wider">{activeAttendance.tokenCode}</span></span>
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => setIsAttendanceModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl border border-fd-border bg-fd-card hover:bg-fd-accent text-fd-foreground text-xs sm:text-sm font-semibold transition-all shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
                         title="Buka sesi presensi untuk pertemuan ini"
                       >
-                        <CalendarCheck className="size-4 shrink-0 text-fd-primary" />
+                        <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
                         <span>Buka Presensi</span>
-                      </button>
+                      </Button>
                     )}
-                  </div>
+                  </ButtonGroup>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="destructive"
+                    size="sm"
                     onClick={() => {
                       setSessionToDelete(activeSessionInfo);
                       setIsDeleteSessionModalOpen(true);
                     }}
-                    className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 rounded-xl text-fd-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                     title={`Hapus Pertemuan P${urlSessionNumber}`}
+                    className="self-start sm:self-auto"
                   >
-                    <Trash2 className="size-4 shrink-0" />
+                    <Trash2 className="size-3.5 shrink-0" />
                     <span>Hapus Pertemuan</span>
-                  </button>
+                  </Button>
                 </div>
               </header>
 
@@ -1140,14 +1153,15 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                 {materials.length === 0 ? (
                   <div className="py-8 text-sm text-fd-muted-foreground space-y-2 border-y border-dashed border-fd-border/50">
                     <p>Belum ada materi perkuliahan untuk pertemuan ini.</p>
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={handleOpenAddMaterial}
-                      className="inline-flex items-center gap-1.5 text-xs text-fd-primary font-medium hover:underline"
                     >
-                      <PlusCircle className="size-3.5" />
+                      <PlusCircle className="size-3.5 text-fd-primary" />
                       <span>Tulis materi baru sekarang (MDX)</span>
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   materials.map((mat) => (
@@ -1163,24 +1177,27 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <button
+                        <ButtonGroup>
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleOpenEditMaterial(mat)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-fd-border hover:bg-fd-muted text-xs font-medium text-fd-foreground transition-colors"
                           >
-                            <Edit className="size-3" />
+                            <Edit className="size-3.5" />
                             <span>Edit MDX</span>
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="destructive"
+                            size="icon"
                             onClick={() => handleDeleteMaterial(mat.id)}
-                            className="p-1 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
                             title="Hapus Materi"
+                            aria-label="Hapus Materi"
                           >
                             <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
+                          </Button>
+                        </ButtonGroup>
                       </div>
 
                       {mat.fileUrl && (
@@ -1255,35 +1272,38 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          <button
+                        <ButtonGroup className="shrink-0">
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleOpenEditAssignment(task)}
-                            className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-xl border border-fd-border hover:bg-fd-muted text-xs font-semibold text-fd-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-primary shadow-2xs"
                             title="Edit Tugas"
                           >
                             <Edit className="size-3.5" />
                             <span>Edit Tugas</span>
-                          </button>
+                          </Button>
 
-                          <button
+                          <Button
                             type="button"
+                            variant="destructive"
+                            size="icon"
                             onClick={() => handleDeleteAssignment(task.id)}
-                            className="p-2 min-h-[38px] min-w-[38px] rounded-xl border border-destructive/25 text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                             title="Hapus Tugas"
                             aria-label="Hapus Tugas"
                           >
-                            <Trash2 className="size-4" />
-                          </button>
+                            <Trash2 className="size-3.5" />
+                          </Button>
 
                           <Link
                             href="/dashboard/dosen/tugas"
-                            className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-xl bg-fd-primary/10 text-fd-primary hover:bg-fd-primary hover:text-fd-primary-foreground text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-primary"
+                            data-slot="button"
+                            className={buttonVariants({ variant: 'default', size: 'sm' })}
                           >
                             <span>Koreksi & Nilai</span>
                             <ChevronRight className="size-3.5" />
                           </Link>
-                        </div>
+                        </ButtonGroup>
                       </div>
                     ))}
                   </div>
@@ -1296,39 +1316,42 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                 className="flex items-center justify-between pt-10 border-t border-fd-border/50"
               >
                 {sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) > 0 ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const idx = sessions.findIndex((s) => s.sessionNumber === urlSessionNumber);
                       handleSelectSession(sessions[idx - 1].sessionNumber);
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-fd-muted-foreground hover:text-fd-foreground transition-colors"
                   >
-                    <ChevronLeft className="size-4" />
-                    <span>
+                    <ChevronLeft className="size-3.5" />
+                    <span className="truncate max-w-[200px] sm:max-w-xs">
                       P{sessions[sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) - 1].sessionNumber}:{' '}
                       {sessions[sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) - 1].title}
                     </span>
-                  </button>
+                  </Button>
                 ) : (
                   <div />
                 )}
 
                 {sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) < sessions.length - 1 ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const idx = sessions.findIndex((s) => s.sessionNumber === urlSessionNumber);
                       handleSelectSession(sessions[idx + 1].sessionNumber);
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-fd-muted-foreground hover:text-fd-foreground transition-colors ml-auto"
+                    className="ml-auto"
                   >
-                    <span>
+                    <span className="truncate max-w-[200px] sm:max-w-xs">
                       P{sessions[sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) + 1].sessionNumber}:{' '}
                       {sessions[sessions.findIndex((s) => s.sessionNumber === urlSessionNumber) + 1].title}
                     </span>
-                    <ChevronRight className="size-4" />
-                  </button>
+                    <ChevronRight className="size-3.5" />
+                  </Button>
                 ) : null}
               </nav>
             </main>
@@ -1372,21 +1395,25 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
             </div>
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsNewSessionModalOpen(false)}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !newSessionTitle.trim()}
-              >
-                {isSubmitting && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-                <span>Simpan Pertemuan</span>
-              </Button>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNewSessionModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting || !newSessionTitle.trim()}
+                >
+                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Simpan Pertemuan</span>
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1436,30 +1463,32 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               />
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0 pt-3 border-t border-fd-border/40">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditSessionModalOpen(false)}
-                disabled={isSavingSession}
-                className="rounded-xl text-xs sm:text-sm"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSavingSession || !editSessionTitle.trim()}
-                className="rounded-xl text-xs sm:text-sm"
-              >
-                {isSavingSession ? (
-                  <>
-                    <Loader2 className="size-3.5 animate-spin mr-1.5" />
-                    <span>Menyimpan...</span>
-                  </>
-                ) : (
-                  'Simpan Perubahan'
-                )}
-              </Button>
+            <DialogFooter className="pt-3 border-t border-fd-border/40">
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditSessionModalOpen(false)}
+                  disabled={isSavingSession}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSavingSession || !editSessionTitle.trim()}
+                >
+                  {isSavingSession ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    'Simpan Perubahan'
+                  )}
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1517,21 +1546,25 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
             </div>
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsMaterialModalOpen(false)}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !materialTitle.trim() || !materialContentMdx.trim()}
-              >
-                {isSubmitting && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-                <span>Simpan & Publikasikan ke Supabase</span>
-              </Button>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsMaterialModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting || !materialTitle.trim() || !materialContentMdx.trim()}
+                >
+                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>Simpan & Publikasikan ke Supabase</span>
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1596,24 +1629,28 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
             </div>
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsAssignmentModalOpen(false);
-                  setEditingAssignmentId(null);
-                }}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !assignmentTitle.trim() || !assignmentExpiredAt}
-              >
-                {isSubmitting && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-                <span>{editingAssignmentId ? 'Perbarui Tugas' : 'Publikasikan Tugas'}</span>
-              </Button>
+              <ButtonGroup>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsAssignmentModalOpen(false);
+                    setEditingAssignmentId(null);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting || !assignmentTitle.trim() || !assignmentExpiredAt}
+                >
+                  {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+                  <span>{editingAssignmentId ? 'Perbarui Tugas' : 'Publikasikan Tugas'}</span>
+                </Button>
+              </ButtonGroup>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1798,26 +1835,27 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               </div>
 
               {/* Dialog Footer */}
-              <div className="pt-2 flex items-center justify-between gap-2 border-t border-fd-border/40">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCloseAttendance}
-                  disabled={isClosingAttendance}
-                  className="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
-                  {isClosingAttendance && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Tutup Sesi Sekarang</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAttendanceModalOpen(false)}
-                >
-                  Tutup Jendela
-                </Button>
+              <div className="pt-2 flex items-center justify-end border-t border-fd-border/40">
+                <ButtonGroup>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleCloseAttendance}
+                    disabled={isClosingAttendance}
+                  >
+                    {isClosingAttendance && <Loader2 className="size-3.5 animate-spin" />}
+                    <span>Tutup Sesi Sekarang</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAttendanceModalOpen(false)}
+                  >
+                    Tutup Jendela
+                  </Button>
+                </ButtonGroup>
               </div>
             </div>
           ) : (
@@ -1858,23 +1896,20 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               {/* Duration Selector */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Durasi Presensi Dibuka</Label>
-                <div className="grid grid-cols-4 gap-2">
+                <ButtonGroup className="w-full">
                   {[15, 30, 60, 120].map((mins) => (
-                    <button
+                    <Button
                       key={mins}
                       type="button"
+                      size="sm"
+                      variant={attendanceDuration === mins ? 'default' : 'outline'}
                       onClick={() => setAttendanceDuration(mins)}
-                      className={cn(
-                        'py-2 px-3 text-xs font-semibold rounded-lg border text-center transition-all',
-                        attendanceDuration === mins
-                          ? 'border-fd-primary bg-fd-primary text-fd-primary-foreground shadow-2xs'
-                          : 'border-fd-border bg-fd-card text-fd-muted-foreground hover:text-fd-foreground hover:bg-fd-accent'
-                      )}
+                      className="flex-1"
                     >
                       {mins} Menit
-                    </button>
+                    </Button>
                   ))}
-                </div>
+                </ButtonGroup>
               </div>
 
               <div className="p-3 rounded-lg bg-fd-muted/40 border border-fd-border/70 text-xs text-fd-muted-foreground space-y-1">
@@ -1885,23 +1920,26 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
               </div>
 
               <DialogFooter className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAttendanceModalOpen(false)}
-                  disabled={isOpeningAttendance}
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleOpenAttendance}
-                  disabled={isOpeningAttendance || !selectedBatchId}
-                  className="gap-2"
-                >
-                  {isOpeningAttendance && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Buka Kelas & Generate Kode</span>
-                </Button>
+                <ButtonGroup>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAttendanceModalOpen(false)}
+                    disabled={isOpeningAttendance}
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleOpenAttendance}
+                    disabled={isOpeningAttendance || !selectedBatchId}
+                  >
+                    {isOpeningAttendance && <Loader2 className="size-3.5 animate-spin" />}
+                    <span>Buka Kelas & Generate Kode</span>
+                  </Button>
+                </ButtonGroup>
               </DialogFooter>
             </div>
           )}
