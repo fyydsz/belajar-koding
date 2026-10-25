@@ -410,7 +410,9 @@ export default function DosenBatchVerificationPage() {
                 <div className="shrink-0 flex items-center flex-wrap gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-fd-border/50">
                   {!item.paymentProofUrl && (
                     <span className="text-[11px] text-fd-muted-foreground px-2 py-1 italic">
-                      Tanpa bukti berkas
+                      {parseFloat(String(item.batchPrice || '0')) === 0
+                        ? 'Batch Gratis'
+                        : 'Tanpa bukti berkas'}
                     </span>
                   )}
 

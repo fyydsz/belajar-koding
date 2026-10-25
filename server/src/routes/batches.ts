@@ -342,18 +342,13 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
     }
   )
 
-  // 4. Mahasiswa: Mendaftar ke Batch (Self-Enrollment dengan Bukti Transfer)
+  // 4. Mahasiswa: Mendaftar ke Batch (Self-Enrollment dengan Bukti Transfer untuk Batch Berbayar)
   .post(
     '/:batchId/register',
     async ({ user, profile, params, body, set }) => {
       if (!user || !profile) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan.' };
-      }
-
-      if (!body.paymentProofUrl || !body.paymentProofUrl.trim()) {
-        set.status = 400;
-        return { success: false, message: 'Bukti pembayaran transfer wajib diunggah.' };
       }
 
       const [batch] = await db
@@ -365,6 +360,14 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       if (!batch) {
         set.status = 404;
         return { success: false, message: 'Batch perkuliahan tidak ditemukan.' };
+      }
+
+      const batchPrice = parseFloat(String(batch.price || '0'));
+      const isPaidBatch = !isNaN(batchPrice) && batchPrice > 0;
+
+      if (isPaidBatch && (!body.paymentProofUrl || !body.paymentProofUrl.trim())) {
+        set.status = 400;
+        return { success: false, message: 'Bukti pembayaran transfer wajib diunggah untuk batch berbayar.' };
       }
 
       if (batch.status !== 'open' && (batch.status as string) !== 'active') {
@@ -446,7 +449,7 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       set.status = 201;
       return {
         success: true,
-        message: 'Pendaftaran batch berhasil diajukan dan sedang menunggu verifikasi pembayaran.',
+        message: 'Pendaftaran batch berhasil diajukan dan sedang menunggu verifikasi.',
       };
     },
     {
@@ -454,7 +457,7 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         batchId: t.String(),
       }),
       body: t.Object({
-        paymentProofUrl: t.String({ minLength: 5 }),
+        paymentProofUrl: t.Optional(t.String()),
         notes: t.Optional(t.String()),
       }),
     }

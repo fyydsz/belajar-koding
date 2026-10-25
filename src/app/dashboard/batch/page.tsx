@@ -220,16 +220,19 @@ export default function StudentBatchCatalogPage() {
     const token = getAuthToken();
     if (!token) return;
 
+    const batchPriceNum = parseFloat(selectedBatch.price || '0');
+    const isPaidBatch = !isNaN(batchPriceNum) && batchPriceNum > 0;
+
     try {
       setIsRegistering(true);
 
-      if (!selectedFile) {
+      if (isPaidBatch && !selectedFile) {
         toast.error('Harap unggah bukti pembayaran transfer terlebih dahulu.');
         setIsRegistering(false);
         return;
       }
 
-      const proofUrl = await uploadProofFile(selectedFile);
+      const proofUrl = isPaidBatch && selectedFile ? await uploadProofFile(selectedFile) : undefined;
 
       const res = await fetch(`${apiUrl}/v1/batches/${selectedBatch.id}/register`, {
         method: 'POST',
@@ -623,73 +626,90 @@ export default function StudentBatchCatalogPage() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedBatch && (
-            <form onSubmit={handleSubmitRegistration} className="space-y-4">
-              {/* Petunjuk Rekening Pembayaran */}
-              <div className="rounded-xl border border-fd-border bg-fd-muted/40 p-4 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-fd-muted-foreground font-medium">Biaya Registrasi</span>
-                  <span className="font-bold text-sm text-fd-primary">
-                    {formatRupiah(selectedBatch.price)}
-                  </span>
+          {selectedBatch && (() => {
+            const selectedPriceNum = parseFloat(selectedBatch.price || '0');
+            const isPaidSelectedBatch = !isNaN(selectedPriceNum) && selectedPriceNum > 0;
+
+            return (
+              <form onSubmit={handleSubmitRegistration} className="space-y-4">
+                {/* Ringkasan Biaya & Petunjuk Rekening Pembayaran */}
+                <div className="rounded-xl border border-fd-border bg-fd-muted/40 p-4 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-fd-muted-foreground font-medium">Biaya Registrasi</span>
+                    <span className="font-bold text-sm text-fd-primary">
+                      {formatRupiah(selectedBatch.price)}
+                    </span>
+                  </div>
+
+                  {isPaidSelectedBatch ? (
+                    <div className="pt-2 border-t border-fd-border/60">
+                      <p className="font-semibold text-fd-foreground mb-1">Informasi Rekening Tujuan Transfer:</p>
+                      <p className="text-fd-muted-foreground whitespace-pre-line text-xs leading-relaxed">
+                        {selectedBatch.paymentAccountInfo ||
+                          'Bank BCA: 123-456-7890 a.n Belajar Koding Indonesia\nSertakan nama akun Anda pada berita transfer.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="pt-2 border-t border-fd-border/60 text-fd-muted-foreground leading-relaxed">
+                      Batch ini tidak dipungut biaya (Gratis). Anda dapat langsung mengirimkan permohonan pendaftaran tanpa mengunggah bukti transfer.
+                    </div>
+                  )}
                 </div>
 
-                <div className="pt-2 border-t border-fd-border/60">
-                  <p className="font-semibold text-fd-foreground mb-1">Informasi Rekening Tujuan Transfer:</p>
-                  <p className="text-fd-muted-foreground whitespace-pre-line text-xs leading-relaxed">
-                    {selectedBatch.paymentAccountInfo ||
-                      'Bank BCA: 123-456-7890 a.n Belajar Koding Indonesia\nSertakan nama akun Anda pada berita transfer.'}
-                  </p>
+                {/* Unggah Bukti Transfer (Hanya untuk Batch Berbayar) */}
+                {isPaidSelectedBatch && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-fd-foreground block">
+                      Unggah Bukti Transfer (PNG, JPG, atau PDF) <span className="text-destructive">*</span>
+                    </label>
+                    <FileDropzone
+                      selectedFile={selectedFile}
+                      onFileSelect={setSelectedFile}
+                      disabled={isRegistering}
+                    />
+                  </div>
+                )}
+
+                {/* Catatan Pendaftaran / Transfer */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-fd-foreground block">
+                    {isPaidSelectedBatch ? 'Catatan Pengirim (Opsional)' : 'Catatan Pendaftaran (Opsional)'}
+                  </label>
+                  <Input
+                    type="text"
+                    value={transferNotes}
+                    onChange={(e) => setTransferNotes(e.target.value)}
+                    placeholder={
+                      isPaidSelectedBatch
+                        ? 'Contoh: Transfer via BCA Mobile a.n Ahmad Dahlan'
+                        : 'Contoh: Siap mengikuti kelas sesuai jadwal'
+                    }
+                    className="h-10 text-xs"
+                  />
                 </div>
-              </div>
 
-              {/* Unggah Bukti Transfer */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-fd-foreground block">
-                  Unggah Bukti Transfer (PNG, JPG, atau PDF)
-                </label>
-                <FileDropzone
-                  selectedFile={selectedFile}
-                  onFileSelect={setSelectedFile}
-                  disabled={isRegistering}
-                />
-              </div>
-
-              {/* Catatan Transfer */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-fd-foreground block">
-                  Catatan Pengirim (Opsional)
-                </label>
-                <Input
-                  type="text"
-                  value={transferNotes}
-                  onChange={(e) => setTransferNotes(e.target.value)}
-                  placeholder="Contoh: Transfer via BCA Mobile a.n Ahmad Dahlan"
-                  className="h-10 text-xs"
-                />
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSelectedBatch(null)}
-                  disabled={isRegistering}
-                  className="min-h-[40px] text-xs"
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isRegistering || !selectedFile}
-                  className="min-h-[40px] text-xs font-semibold gap-1.5"
-                >
-                  {isRegistering && <Loader2 className="size-3.5 animate-spin" />}
-                  <span>Kirim Pendaftaran</span>
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
+                <DialogFooter className="pt-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedBatch(null)}
+                    disabled={isRegistering}
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={isRegistering || (isPaidSelectedBatch && !selectedFile)}
+                  >
+                    {isRegistering && <Loader2 className="size-3.5 animate-spin" />}
+                    <span>Kirim Pendaftaran</span>
+                  </Button>
+                </DialogFooter>
+              </form>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
