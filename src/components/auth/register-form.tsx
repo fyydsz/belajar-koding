@@ -38,8 +38,8 @@ export function RegisterForm({
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMessage('Kata sandi harus terdiri dari minimal 6 karakter.');
+    if (password.length < 8) {
+      setErrorMessage('Kata sandi harus terdiri dari minimal 8 karakter.');
       return;
     }
 
@@ -197,7 +197,7 @@ export function RegisterForm({
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                placeholder="Minimal 6 karakter"
+                placeholder="Minimal 8 karakter"
                 required
                 disabled={isPending}
                 value={password}

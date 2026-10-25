@@ -5,14 +5,10 @@ import { profiles, user as userTable, discordPairingCodes } from '../db/schema';
 import { eq, and, gt, desc } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
+import { randomCode, sniffFile } from '../lib/security';
 
 function generatePairingCode(): string {
-  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-  let result = 'KF-';
-  for (let i = 0; i < 4; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  return 'KF-' + randomCode('23456789ABCDEFGHJKLMNPQRSTUVWXYZ', 4);
 }
 
 export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
@@ -55,7 +51,21 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
       }
 
       if (body.avatarUrl !== undefined) {
-        updateData.avatarUrl = body.avatarUrl ? body.avatarUrl.trim() : null;
+        const rawUrl = body.avatarUrl ? body.avatarUrl.trim() : null;
+        if (rawUrl) {
+          let parsedUrl: URL | null = null;
+          try {
+            parsedUrl = new URL(rawUrl);
+          } catch {
+            parsedUrl = null;
+          }
+          const storageHost = process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).host : null;
+          if (!parsedUrl || parsedUrl.protocol !== 'https:' || !storageHost || parsedUrl.host !== storageHost) {
+            set.status = 400;
+            return { success: false, message: 'URL avatar harus berasal dari penyimpanan aplikasi.' };
+          }
+        }
+        updateData.avatarUrl = rawUrl;
       }
 
       const [updated] = await db
@@ -91,17 +101,22 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
         return { success: false, message: 'File gambar wajib disertakan.' };
       }
 
-      const fileExt = file.name ? file.name.split('.').pop() || 'jpg' : 'jpg';
-      const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      const detected = sniffFile(buffer, ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+      if (!detected) {
+        set.status = 400;
+        return { success: false, message: 'Format gambar tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.' };
+      }
+      const filePath = `${user.id}/avatar-${Date.now()}.${detected.ext}`;
 
       const { error: uploadError } = await supabaseAdmin.storage
         .from('avatars')
         .upload(filePath, buffer, {
           cacheControl: '3600',
           upsert: true,
-          contentType: file.type || 'image/jpeg',
+          contentType: detected.mime,
         });
 
       if (uploadError) {
@@ -230,54 +245,6 @@ export const profileRoutes = new Elysia({ prefix: '/v1/profile' })
       data: updated,
     };
   })
-  // 4. Fallback link langsung (untuk backward compatibility)
-  .post(
-    '/link-discord',
-    async ({ user, profile, body, set }) => {
-      if (!user || !profile) {
-        set.status = 401;
-        return { success: false, message: 'Autentikasi diperlukan. Silakan login terlebih dahulu.' };
-      }
-
-      const { discord_id, discord_username } = body;
-
-      const [existing] = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.discordId, discord_id))
-        .limit(1);
-
-      if (existing && existing.id !== user.id) {
-        set.status = 400;
-        return {
-          success: false,
-          message: 'Akun Discord ini sudah ditautkan ke profil siswa lain.',
-        };
-      }
-
-      const [updated] = await db
-        .update(userTable)
-        .set({
-          discordId: discord_id,
-          discordUsername: discord_username || null,
-          updatedAt: new Date(),
-        })
-        .where(eq(userTable.id, user.id))
-        .returning();
-
-      return {
-        success: true,
-        message: 'Akun Discord berhasil ditautkan ke profil Anda.',
-        data: updated,
-      };
-    },
-    {
-      body: t.Object({
-        discord_id: t.String({ minLength: 1 }),
-        discord_username: t.Optional(t.String()),
-      }),
-    }
-  )
   // 5. (Admin) Ambil semua daftar pengguna sistem beserta role-nya
   .get('/users', async ({ user, profile, set }) => {
     if (!user || !profile || profile.role !== 'admin') {

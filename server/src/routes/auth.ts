@@ -4,8 +4,11 @@ import { authPlugin } from '../middleware/auth';
 import { db } from '../db';
 import { profiles } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { rateLimit } from '../lib/rate-limit';
 
-export const authRoutes = new Elysia({ prefix: '/v1/auth' })
+// Tanpa prefix sendiri: prefix '/v1/auth' diwarisi dari authRoutes.
+const credentialRoutes = new Elysia()
+  .use(rateLimit({ name: 'credentials', max: 10, windowMs: 15 * 60 * 1000 }))
   .post(
     '/register',
     async ({ body, set }) => {
@@ -80,7 +83,7 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
     {
       body: t.Object({
         email: t.String({ format: 'email' }),
-        password: t.String({ minLength: 6 }),
+        password: t.String({ minLength: 8, maxLength: 128 }),
         fullName: t.String({ minLength: 2, maxLength: 60 }),
       }),
     }
@@ -147,7 +150,10 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
         password: t.String({ minLength: 1 }),
       }),
     }
-  )
+  );
+
+export const authRoutes = new Elysia({ prefix: '/v1/auth' })
+  .use(credentialRoutes)
   .use(authPlugin)
   .get('/me', async ({ user, profile, set }) => {
     if (!user) {
@@ -219,7 +225,7 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
     {
       body: t.Object({
         currentPassword: t.String({ minLength: 1 }),
-        newPassword: t.String({ minLength: 6 }),
+        newPassword: t.String({ minLength: 8, maxLength: 128 }),
         revokeOtherSessions: t.Optional(t.Boolean()),
       }),
     }

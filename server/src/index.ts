@@ -11,7 +11,8 @@ import { attendanceRoutes } from './routes/attendance';
 import { botRoutes } from './routes/bot';
 import { storageRoutes } from './routes/storage';
 import { auth } from './lib/auth';
-import { isAllowedOrigin } from './lib/origins';
+import { isAllowedOrigin, isProduction } from './lib/origins';
+import { rateLimit } from './lib/rate-limit';
 import 'dotenv/config';
 
 const port = Number(process.env.PORT) || 3001;
@@ -26,23 +27,29 @@ export const app = new Elysia()
     })
   )
   .use(
-    swagger({
-      path: '/swagger',
-      documentation: {
-        info: {
-          title: 'Belajar Koding SIAKAD & E-Learning API',
-          version: '1.0.0',
-          description: 'Backend API untuk sistem pembelajaran, SIAKAD, presensi token, dan bot Discord',
-        },
-      },
-    })
+    isProduction
+      ? new Elysia()
+      : swagger({
+          path: '/swagger',
+          documentation: {
+            info: {
+              title: 'Belajar Koding SIAKAD & E-Learning API',
+              version: '1.0.0',
+              description: 'Backend API untuk sistem pembelajaran, SIAKAD, presensi token, dan bot Discord',
+            },
+          },
+        })
   )
   .get('/health', () => ({
     status: 'ok',
     service: 'belajar-koding-server',
     timestamp: new Date().toISOString(),
   }))
-  .all('/api/auth/*', ({ request }) => auth.handler(request))
+  .use(
+    new Elysia()
+      .use(rateLimit({ name: 'better-auth', max: 60, windowMs: 60 * 1000 }))
+      .all('/api/auth/*', ({ request }) => auth.handler(request))
+  )
   .use(authRoutes)
   .use(profileRoutes)
   .use(gradeRoutes)
@@ -57,4 +64,6 @@ export const app = new Elysia()
 export type App = typeof app;
 
 console.log(`🦊 Elysia backend server is running at ${app.server?.hostname}:${app.server?.port}`);
-console.log(`📚 Swagger documentation available at http://localhost:${port}/swagger`);
+if (!isProduction) {
+  console.log(`📚 Swagger documentation available at http://localhost:${port}/swagger`);
+}

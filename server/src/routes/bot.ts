@@ -3,16 +3,17 @@ import { db } from '../db';
 import { assignments, assignmentSubmissions, profiles, user as userTable, discordPairingCodes } from '../db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
+import { attemptLimiter } from '../lib/rate-limit';
+import { safeEqual } from '../lib/security';
+
+const codeAttempts = attemptLimiter({ max: 10, windowMs: 10 * 60 * 1000 });
 
 export const botRoutes = new Elysia({ prefix: '/v1/bot' })
   // 1. Endpoint Tautan Akun Discord via Bot (/tautkan <kode>)
   .post(
     '/link-discord',
     async ({ headers, body, set }) => {
-      const secret = headers['x-bot-secret'];
-      const expectedSecret = process.env.DISCORD_BOT_SECRET;
-
-      if (!expectedSecret || secret !== expectedSecret) {
+      if (!safeEqual(headers['x-bot-secret'], process.env.DISCORD_BOT_SECRET)) {
         set.status = 401;
         return {
           success: false,
@@ -31,6 +32,10 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
           message: 'discordUserId dan discordUsername wajib diisi.',
         };
       }
+      if (codeAttempts.isBlocked('link:' + discord_user_id)) {
+        set.status = 429;
+        return { success: false, message: 'Terlalu banyak percobaan kode. Coba lagi dalam beberapa menit.' };
+      }
       const normalizedCode = code.trim().toUpperCase();
       const now = new Date();
 
@@ -47,6 +52,7 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
         .limit(1);
 
       if (!pairing) {
+        codeAttempts.fail('link:' + discord_user_id);
         set.status = 400;
         return {
           success: false,
@@ -128,10 +134,7 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
   .post(
     '/submission',
     async ({ headers, body, set }) => {
-      const secret = headers['x-bot-secret'];
-      const expectedSecret = process.env.DISCORD_BOT_SECRET;
-
-      if (!expectedSecret || secret !== expectedSecret) {
+      if (!safeEqual(headers['x-bot-secret'], process.env.DISCORD_BOT_SECRET)) {
         set.status = 401;
         return {
           success: false,
@@ -281,10 +284,7 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
   .post(
     '/attendance',
     async ({ headers, body, set }) => {
-      const secret = headers['x-bot-secret'];
-      const expectedSecret = process.env.DISCORD_BOT_SECRET;
-
-      if (!expectedSecret || secret !== expectedSecret) {
+      if (!safeEqual(headers['x-bot-secret'], process.env.DISCORD_BOT_SECRET)) {
         set.status = 401;
         return {
           success: false,
@@ -301,6 +301,10 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
           success: false,
           message: 'discordId wajib diisi.',
         };
+      }
+      if (codeAttempts.isBlocked('att:' + discord_id)) {
+        set.status = 429;
+        return { success: false, message: 'Terlalu banyak percobaan kode. Coba lagi dalam beberapa menit.' };
       }
       const normalizedCode = code.trim().toUpperCase();
       const now = new Date();
@@ -339,6 +343,7 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
         .limit(1);
 
       if (!session) {
+        codeAttempts.fail('att:' + discord_id);
         set.status = 400;
         return {
           success: false,
@@ -386,12 +391,15 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
       }
 
       // 5. Catat log presensi
-      await db.insert(attendanceLogs).values({
-        id: uuidv7(),
-        attendanceSessionId: session.id,
-        studentId: student.id,
-        channel: 'discord',
-      });
+      await db
+        .insert(attendanceLogs)
+        .values({
+          id: uuidv7(),
+          attendanceSessionId: session.id,
+          studentId: student.id,
+          channel: 'discord',
+        })
+        .onConflictDoNothing();
 
       return {
         success: true,

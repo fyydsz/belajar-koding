@@ -13,16 +13,16 @@ import { eq, and, gt, desc, asc, inArray } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
 import { canAccessBatch, isStaff } from '../lib/access';
+import { attemptLimiter } from '../lib/rate-limit';
+import { randomCode, sniffFile } from '../lib/security';
 
 // Helper pembuat kode token presensi unik (misal: "KDG-7382")
 function generateAttendanceCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 4; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `KDG-${code}`;
+  return `KDG-${randomCode('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4)}`;
 }
+
+// Batasi tebak-tebakan kode presensi per user.
+const submitAttempts = attemptLimiter({ max: 10, windowMs: 10 * 60 * 1000 });
 
 export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
   .use(authPlugin)
@@ -129,6 +129,11 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         return { success: false, message: 'Autentikasi diperlukan.' };
       }
 
+      if (submitAttempts.isBlocked(profile.id)) {
+        set.status = 429;
+        return { success: false, message: 'Terlalu banyak percobaan kode. Coba lagi dalam beberapa menit.' };
+      }
+
       const normalizedCode = body.code.trim().toUpperCase();
       const now = new Date();
 
@@ -145,6 +150,7 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         .limit(1);
 
       if (!session) {
+        submitAttempts.fail(profile.id);
         set.status = 400;
         return {
           success: false,
@@ -243,10 +249,14 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         return { success: false, message: 'Ukuran file melebihi batas maksimal 5MB.' };
       }
 
-      const fileName = file.name || 'surat-keterangan.pdf';
-      const ext = fileName.split('.').pop()?.toLowerCase();
-      const allowedExts = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
-      if (!ext || !allowedExts.includes(ext)) {
+      const buffer = await file.arrayBuffer();
+      const detected = sniffFile(new Uint8Array(buffer), [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/pdf',
+      ]);
+      if (!detected) {
         set.status = 400;
         return {
           success: false,
@@ -254,13 +264,13 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         };
       }
 
+      const ext = detected.ext;
       const uniqueFileName = `permits/${user.id}/${Date.now()}-${uuidv7().slice(0, 8)}.${ext}`;
-      const buffer = await file.arrayBuffer();
 
       const { data, error } = await supabaseAdmin.storage
         .from('submissions')
         .upload(uniqueFileName, buffer, {
-          contentType: file.type || 'application/octet-stream',
+          contentType: detected.mime,
           upsert: false,
         });
 

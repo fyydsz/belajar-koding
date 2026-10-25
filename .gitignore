@@ -42,3 +42,9 @@ Thumbs.db
 .pnp.js
 .vercel
 next-env.d.ts
+# local agent tooling
+.agents/
+server/.agents/
+skills-lock.json
+server/skills-lock.json
+anti-slop/
