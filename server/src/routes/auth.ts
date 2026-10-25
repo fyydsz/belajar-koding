@@ -127,11 +127,23 @@ const credentialRoutes = new Elysia()
           };
         }
 
-        const [profile] = await db
+        let [profile] = await db
           .select()
           .from(profiles)
           .where(eq(profiles.id, result.user.id))
           .limit(1);
+
+        if (!profile) {
+          const [createdProfile] = await db
+            .insert(profiles)
+            .values({
+              id: result.user.id,
+              fullName: result.user.name || 'Siswa',
+            })
+            .onConflictDoNothing()
+            .returning();
+          profile = createdProfile;
+        }
 
         const userRole = (result.user as { role?: string }).role || 'student';
         const maxAge = 7 * 24 * 60 * 60;
