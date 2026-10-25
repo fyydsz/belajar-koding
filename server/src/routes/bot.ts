@@ -79,16 +79,26 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
         };
       }
 
-      // 3. Update profil siswa
-      const [updatedUser] = await db
-        .update(userTable)
-        .set({
-          discordId: discord_user_id,
-          discordUsername: discord_username,
-          updatedAt: new Date(),
-        })
-        .where(eq(userTable.id, pairing.userId))
-        .returning();
+      // 3. Update profil siswa & hapus kode pairing dalam satu transaksi
+      const updatedUser = await db.transaction(async (tx) => {
+        const [userRow] = await tx
+          .update(userTable)
+          .set({
+            discordId: discord_user_id,
+            discordUsername: discord_username,
+            updatedAt: new Date(),
+          })
+          .where(eq(userTable.id, pairing.userId))
+          .returning();
+
+        if (!userRow) return null;
+
+        await tx
+          .delete(discordPairingCodes)
+          .where(eq(discordPairingCodes.id, pairing.id));
+
+        return userRow;
+      });
 
       if (!updatedUser) {
         set.status = 404;
@@ -103,11 +113,6 @@ export const botRoutes = new Elysia({ prefix: '/v1/bot' })
         .from(profiles)
         .where(eq(profiles.id, pairing.userId))
         .limit(1);
-
-      // 4. Hapus kode pairing yang sudah digunakan
-      await db
-        .delete(discordPairingCodes)
-        .where(eq(discordPairingCodes.id, pairing.id));
 
       return {
         success: true,

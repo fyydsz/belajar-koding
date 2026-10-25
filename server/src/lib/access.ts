@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db';
-import { batchEnrollments, batchMentors } from '../db/schema';
+import { assignments, batchCourses, batchEnrollments, batchMentors } from '../db/schema';
 
-type Actor = { id: string; role: string };
+export type Actor = { id: string; role: string };
 
 /**
  * Cek apakah user boleh mengakses data sebuah batch.
@@ -27,6 +27,46 @@ export async function canAccessBatch(actor: Actor, batchId: string): Promise<boo
     .where(and(eq(batchEnrollments.batchId, batchId), eq(batchEnrollments.studentId, actor.id)))
     .limit(1);
   return Boolean(row);
+}
+
+/**
+ * Daftar batchId yang boleh diakses user, atau 'all' untuk admin.
+ */
+export async function getAccessibleBatchIds(actor: Actor): Promise<string[] | 'all'> {
+  if (actor.role === 'admin') return 'all';
+
+  if (actor.role === 'mentor') {
+    const rows = await db
+      .select({ batchId: batchMentors.batchId })
+      .from(batchMentors)
+      .where(eq(batchMentors.mentorId, actor.id));
+    return rows.map((r) => r.batchId);
+  }
+
+  const rows = await db
+    .select({ batchId: batchEnrollments.batchId })
+    .from(batchEnrollments)
+    .where(and(eq(batchEnrollments.studentId, actor.id), eq(batchEnrollments.status, 'active')));
+  return rows.map((r) => r.batchId);
+}
+
+export async function getBatchIdByBatchCourse(batchCourseId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ batchId: batchCourses.batchId })
+    .from(batchCourses)
+    .where(eq(batchCourses.id, batchCourseId))
+    .limit(1);
+  return row?.batchId ?? null;
+}
+
+export async function getBatchIdByAssignment(assignmentId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ batchId: batchCourses.batchId })
+    .from(assignments)
+    .innerJoin(batchCourses, eq(assignments.batchCourseId, batchCourses.id))
+    .where(eq(assignments.id, assignmentId))
+    .limit(1);
+  return row?.batchId ?? null;
 }
 
 export function isStaff(role: string): boolean {

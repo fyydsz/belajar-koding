@@ -13,6 +13,7 @@ import {
 import { eq, and, desc, inArray } from 'drizzle-orm';
 import { evaluateStudentGrades, validateScore, getGradeLetter } from '../lib/grades';
 import { uuidv7 } from '../lib/uuid';
+import { canAccessBatch } from '../lib/access';
 
 export const gradeRoutes = new Elysia({ prefix: '/v1/grades' })
   .use(authPlugin)
@@ -95,6 +96,11 @@ export const gradeRoutes = new Elysia({ prefix: '/v1/grades' })
       if (profile.role !== 'mentor' && profile.role !== 'admin') {
         set.status = 403;
         return { success: false, message: 'Hanya Mentor atau Admin yang dapat mengakses rekap nilai.' };
+      }
+
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
       // Ambil detail batch
@@ -263,6 +269,11 @@ export const gradeRoutes = new Elysia({ prefix: '/v1/grades' })
       if (!student_id || !batch_id) {
         set.status = 400;
         return { success: false, message: 'studentId dan batchId wajib diisi.' };
+      }
+
+      if (!(await canAccessBatch(profile, batch_id))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
       // Cari enrollment siswa di batch

@@ -14,6 +14,8 @@ import {
 import { eq, and, desc, inArray, or, ilike, sql } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
+import { canAccessBatch, getAccessibleBatchIds, isStaff } from '../lib/access';
+import { sniffFile } from '../lib/security';
 
 function batchEnrollmentStatus(status: unknown) {
   return typeof status === 'string' ? status : 'active';
@@ -260,10 +262,14 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Ukuran file bukti pembayaran melebihi batas 5MB.' };
       }
 
-      const fileName = file.name || 'bukti-transfer.png';
-      const ext = fileName.split('.').pop()?.toLowerCase();
-      const allowedExts = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
-      if (!ext || !allowedExts.includes(ext)) {
+      const buffer = await file.arrayBuffer();
+      const detected = sniffFile(new Uint8Array(buffer), [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/pdf',
+      ]);
+      if (!detected) {
         set.status = 400;
         return {
           success: false,
@@ -271,13 +277,12 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         };
       }
 
-      const uniqueFileName = `payments/${user.id}/${Date.now()}-${uuidv7().slice(0, 8)}.${ext}`;
-      const buffer = await file.arrayBuffer();
+      const uniqueFileName = `payments/${user.id}/${Date.now()}-${uuidv7().slice(0, 8)}.${detected.ext}`;
 
       const { data, error } = await supabaseAdmin.storage
         .from('submissions')
         .upload(uniqueFileName, buffer, {
-          contentType: file.type || 'application/octet-stream',
+          contentType: detected.mime,
           upsert: false,
         });
 
@@ -360,40 +365,44 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
             message: 'Pendaftaran Anda untuk batch ini sedang menunggu verifikasi oleh Dosen/Admin.',
           };
         }
+      }
 
-        // Jika sebelumnya ditolak/dropped, ajukan ulang dengan bukti transfer baru
-        await db
-          .update(batchEnrollments)
-          .set({
+      await db.transaction(async (tx) => {
+        if (existing) {
+          // Jika sebelumnya ditolak/dropped, ajukan ulang dengan bukti transfer baru
+          await tx
+            .update(batchEnrollments)
+            .set({
+              status: 'pending',
+              notes: body.notes ? body.notes.trim() : null,
+              enrolledAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(batchEnrollments.id, existing.id));
+        } else {
+          enrollmentId = uuidv7();
+          await tx.insert(batchEnrollments).values({
+            id: enrollmentId,
+            batchId: params.batchId,
+            studentId: profile.id,
             status: 'pending',
             notes: body.notes ? body.notes.trim() : null,
             enrolledAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(batchEnrollments.id, existing.id));
-      } else {
-        enrollmentId = uuidv7();
-        await db.insert(batchEnrollments).values({
-          id: enrollmentId,
-          batchId: params.batchId,
-          studentId: profile.id,
-          status: 'pending',
-          notes: body.notes ? body.notes.trim() : null,
-          enrolledAt: new Date(),
-        });
-      }
+          });
+        }
 
-      // Catat histori bukti bayar di enrollmentPayments jika dilampirkan
-      if (body.paymentProofUrl && enrollmentId) {
-        await db.insert(enrollmentPayments).values({
-          id: uuidv7(),
-          enrollmentId,
-          amount: batch.price,
-          paymentMethod: 'manual_transfer',
-          proofUrl: body.paymentProofUrl,
-          status: 'pending',
-        });
-      }
+        // Catat histori bukti bayar di enrollmentPayments jika dilampirkan
+        if (body.paymentProofUrl && enrollmentId) {
+          await tx.insert(enrollmentPayments).values({
+            id: uuidv7(),
+            enrollmentId,
+            amount: batch.price,
+            paymentMethod: 'manual_transfer',
+            proofUrl: body.paymentProofUrl,
+            status: 'pending',
+          });
+        }
+      });
 
       set.status = 201;
       return {
@@ -443,23 +452,25 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Data pendaftaran tidak ditemukan.' };
       }
 
-      await db
-        .update(batchEnrollments)
-        .set({
-          status: 'pending',
-          notes: body.notes ? body.notes.trim() : existing.notes,
-          enrolledAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(batchEnrollments.id, existing.id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(batchEnrollments)
+          .set({
+            status: 'pending',
+            notes: body.notes ? body.notes.trim() : existing.notes,
+            enrolledAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(batchEnrollments.id, existing.id));
 
-      await db.insert(enrollmentPayments).values({
-        id: uuidv7(),
-        enrollmentId: existing.id,
-        amount: batch.price,
-        paymentMethod: 'manual_transfer',
-        proofUrl: body.paymentProofUrl,
-        status: 'pending',
+        await tx.insert(enrollmentPayments).values({
+          id: uuidv7(),
+          enrollmentId: existing.id,
+          amount: batch.price,
+          paymentMethod: 'manual_transfer',
+          proofUrl: body.paymentProofUrl,
+          status: 'pending',
+        });
       });
 
       return {
@@ -524,9 +535,15 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         rows = await baseQuery.where(eq(batchEnrollments.status, statusFilter as any));
       }
 
+      const accessibleBatchIds = await getAccessibleBatchIds(profile);
+      const visibleRows =
+        accessibleBatchIds === 'all'
+          ? rows
+          : rows.filter((r) => accessibleBatchIds.includes(r.batchId));
+
       return {
         success: true,
-        data: rows,
+        data: visibleRows,
       };
     },
     {
@@ -545,37 +562,52 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Akses ditolak.' };
       }
 
-      const [updated] = await db
-        .update(batchEnrollments)
-        .set({
-          status: 'active',
-          updatedAt: new Date(),
-        })
+      const [existingEnrollment] = await db
+        .select()
+        .from(batchEnrollments)
         .where(eq(batchEnrollments.id, params.enrollmentId))
-        .returning();
+        .limit(1);
 
-      if (!updated) {
+      if (!existingEnrollment) {
         set.status = 404;
         return { success: false, message: 'Data pendaftaran tidak ditemukan.' };
       }
 
-      // Update enrollment payments status
-      await db
-        .update(enrollmentPayments)
-        .set({
-          status: 'verified',
-          verifiedAt: new Date(),
-          verifiedBy: profile.id,
-        })
-        .where(eq(enrollmentPayments.enrollmentId, params.enrollmentId));
+      if (!(await canAccessBatch(profile, existingEnrollment.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
 
-      // Update counter enrolledCount di batch
-      await db
-        .update(batches)
-        .set({
-          enrolledCount: sql`${batches.enrolledCount} + 1`,
-        })
-        .where(eq(batches.id, updated.batchId));
+      const updated = await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(batchEnrollments)
+          .set({
+            status: 'active',
+            updatedAt: new Date(),
+          })
+          .where(eq(batchEnrollments.id, params.enrollmentId))
+          .returning();
+
+        await tx
+          .update(enrollmentPayments)
+          .set({
+            status: 'verified',
+            verifiedAt: new Date(),
+            verifiedBy: profile.id,
+          })
+          .where(eq(enrollmentPayments.enrollmentId, params.enrollmentId));
+
+        if (existingEnrollment.status !== 'active') {
+          await tx
+            .update(batches)
+            .set({
+              enrolledCount: sql`${batches.enrolledCount} + 1`,
+            })
+            .where(eq(batches.id, existingEnrollment.batchId));
+        }
+
+        return row;
+      });
 
       return {
         success: true,
@@ -605,29 +637,53 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Alasan penolakan pembayaran wajib dicantumkan.' };
       }
 
-      const [updated] = await db
-        .update(batchEnrollments)
-        .set({
-          status: 'rejected',
-          updatedAt: new Date(),
-        })
+      const [existingEnrollment] = await db
+        .select()
+        .from(batchEnrollments)
         .where(eq(batchEnrollments.id, params.enrollmentId))
-        .returning();
+        .limit(1);
 
-      if (!updated) {
+      if (!existingEnrollment) {
         set.status = 404;
         return { success: false, message: 'Data pendaftaran tidak ditemukan.' };
       }
 
-      await db
-        .update(enrollmentPayments)
-        .set({
-          status: 'rejected',
-          rejectionReason: reason,
-          verifiedAt: new Date(),
-          verifiedBy: profile.id,
-        })
-        .where(eq(enrollmentPayments.enrollmentId, params.enrollmentId));
+      if (!(await canAccessBatch(profile, existingEnrollment.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
+
+      const updated = await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(batchEnrollments)
+          .set({
+            status: 'rejected',
+            updatedAt: new Date(),
+          })
+          .where(eq(batchEnrollments.id, params.enrollmentId))
+          .returning();
+
+        await tx
+          .update(enrollmentPayments)
+          .set({
+            status: 'rejected',
+            rejectionReason: reason,
+            verifiedAt: new Date(),
+            verifiedBy: profile.id,
+          })
+          .where(eq(enrollmentPayments.enrollmentId, params.enrollmentId));
+
+        if (existingEnrollment.status === 'active') {
+          await tx
+            .update(batches)
+            .set({
+              enrolledCount: sql`GREATEST(0, ${batches.enrolledCount} - 1)`,
+            })
+            .where(eq(batches.id, existingEnrollment.batchId));
+        }
+
+        return row;
+      });
 
       return {
         success: true,
@@ -723,10 +779,15 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
   // 11. (Admin / Mentor) Detail Batch Lengkap beserta Seluruh Siswa Terdaftar
   .get(
     '/:batchId',
-    async ({ user, params, set }) => {
-      if (!user) {
+    async ({ user, profile, params, set }) => {
+      if (!user || !profile) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan.' };
+      }
+
+      if (!isStaff(profile.role) || !(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Akses ditolak.' };
       }
 
       const [batch] = await db
@@ -839,51 +900,55 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       const newBatchId = uuidv7();
       const batchCode = code ? code.trim().toUpperCase() : `BK-${newBatchId.slice(0, 8).toUpperCase()}`;
 
-      const [newBatch] = await db
-        .insert(batches)
-        .values({
-          id: newBatchId,
-          code: batchCode,
-          name: name.trim(),
-          description: description ? description.trim() : null,
-          price: price !== undefined ? String(price) : '0.00',
-          paymentAccountInfo: paymentAccountInfo ? paymentAccountInfo.trim() : null,
-          maxStudents: maxStudents || 30,
-          enrolledCount: 0,
-          startDate: startDate ? new Date(startDate) : null,
-          endDate: endDate ? new Date(endDate) : null,
-          status: 'open',
-        })
-        .returning();
+      const newBatch = await db.transaction(async (tx) => {
+        const [createdBatch] = await tx
+          .insert(batches)
+          .values({
+            id: newBatchId,
+            code: batchCode,
+            name: name.trim(),
+            description: description ? description.trim() : null,
+            price: price !== undefined ? String(price) : '0.00',
+            paymentAccountInfo: paymentAccountInfo ? paymentAccountInfo.trim() : null,
+            maxStudents: maxStudents || 30,
+            enrolledCount: 0,
+            startDate: startDate ? new Date(startDate) : null,
+            endDate: endDate ? new Date(endDate) : null,
+            status: 'open',
+          })
+          .returning();
 
-      await db
-        .insert(batchCourses)
-        .values(
-          resolvedCourseIds.map((cId) => ({
-            id: uuidv7(),
-            batchId: newBatch.id,
-            courseId: cId,
-            weightAttendance: '10.00',
-            weightTugas: '20.00',
-            weightQuiz: '20.00',
-            weightUts: '20.00',
-            weightUas: '30.00',
-            passingScore: '70.00',
-          }))
-        )
-        .onConflictDoNothing();
+        await tx
+          .insert(batchCourses)
+          .values(
+            resolvedCourseIds.map((cId) => ({
+              id: uuidv7(),
+              batchId: createdBatch.id,
+              courseId: cId,
+              weightAttendance: '10.00',
+              weightTugas: '20.00',
+              weightQuiz: '20.00',
+              weightUts: '20.00',
+              weightUas: '30.00',
+              passingScore: '70.00',
+            }))
+          )
+          .onConflictDoNothing();
 
-      await db
-        .insert(batchMentors)
-        .values(
-          resolvedMentorIds.map((mId, index) => ({
-            id: uuidv7(),
-            batchId: newBatch.id,
-            mentorId: mId,
-            isLead: index === 0,
-          }))
-        )
-        .onConflictDoNothing();
+        await tx
+          .insert(batchMentors)
+          .values(
+            resolvedMentorIds.map((mId, index) => ({
+              id: uuidv7(),
+              batchId: createdBatch.id,
+              mentorId: mId,
+              isLead: index === 0,
+            }))
+          )
+          .onConflictDoNothing();
+
+        return createdBatch;
+      });
 
       set.status = 201;
       return {
@@ -919,6 +984,11 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Hanya Admin atau Mentor yang dapat mendaftarkan siswa.' };
       }
 
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
+
       const { studentIds } = body;
 
       if (!studentIds || studentIds.length === 0) {
@@ -935,17 +1005,22 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         updatedAt: new Date(),
       }));
 
-      await db
-        .insert(batchEnrollments)
-        .values(records)
-        .onConflictDoNothing();
+      await db.transaction(async (tx) => {
+        const inserted = await tx
+          .insert(batchEnrollments)
+          .values(records)
+          .onConflictDoNothing()
+          .returning({ id: batchEnrollments.id });
 
-      await db
-        .update(batches)
-        .set({
-          enrolledCount: sql`${batches.enrolledCount} + ${records.length}`,
-        })
-        .where(eq(batches.id, params.batchId));
+        if (inserted.length > 0) {
+          await tx
+            .update(batches)
+            .set({
+              enrolledCount: sql`${batches.enrolledCount} + ${inserted.length}`,
+            })
+            .where(eq(batches.id, params.batchId));
+        }
+      });
 
       return {
         success: true,
@@ -971,21 +1046,31 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         return { success: false, message: 'Akses ditolak.' };
       }
 
-      await db
-        .delete(batchEnrollments)
-        .where(
-          and(
-            eq(batchEnrollments.batchId, params.batchId),
-            eq(batchEnrollments.studentId, params.studentId)
-          )
-        );
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
 
-      await db
-        .update(batches)
-        .set({
-          enrolledCount: sql`GREATEST(0, ${batches.enrolledCount} - 1)`,
-        })
-        .where(eq(batches.id, params.batchId));
+      await db.transaction(async (tx) => {
+        const deleted = await tx
+          .delete(batchEnrollments)
+          .where(
+            and(
+              eq(batchEnrollments.batchId, params.batchId),
+              eq(batchEnrollments.studentId, params.studentId)
+            )
+          )
+          .returning({ status: batchEnrollments.status });
+
+        if (deleted.some((d) => d.status === 'active')) {
+          await tx
+            .update(batches)
+            .set({
+              enrolledCount: sql`GREATEST(0, ${batches.enrolledCount} - 1)`,
+            })
+            .where(eq(batches.id, params.batchId));
+        }
+      });
 
       return {
         success: true,
@@ -1007,6 +1092,11 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       if (!user || !profile || (profile.role !== 'admin' && profile.role !== 'mentor')) {
         set.status = 403;
         return { success: false, message: 'Hanya Admin atau Mentor yang dapat mengubah data batch.' };
+      }
+
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
       const [existing] = await db
@@ -1052,60 +1142,64 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
 
       const resolvedStatus = status === 'active' ? 'open' : (status as any) || existing.status;
 
-      const [updatedBatch] = await db
-        .update(batches)
-        .set({
-          code: code ? code.trim().toUpperCase() : existing.code,
-          name: name ? name.trim() : existing.name,
-          description: description !== undefined ? (description.trim() || null) : existing.description,
-          price: price !== undefined ? String(price) : existing.price,
-          paymentAccountInfo:
-            paymentAccountInfo !== undefined
-              ? paymentAccountInfo.trim() || null
-              : existing.paymentAccountInfo,
-          maxStudents: maxStudents !== undefined ? Number(maxStudents) : existing.maxStudents,
-          startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : existing.startDate,
-          endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.endDate,
-          status: resolvedStatus,
-          updatedAt: new Date(),
-        })
-        .where(eq(batches.id, params.batchId))
-        .returning();
+      const updatedBatch = await db.transaction(async (tx) => {
+        const [updated] = await tx
+          .update(batches)
+          .set({
+            code: code ? code.trim().toUpperCase() : existing.code,
+            name: name ? name.trim() : existing.name,
+            description: description !== undefined ? (description.trim() || null) : existing.description,
+            price: price !== undefined ? String(price) : existing.price,
+            paymentAccountInfo:
+              paymentAccountInfo !== undefined
+                ? paymentAccountInfo.trim() || null
+                : existing.paymentAccountInfo,
+            maxStudents: maxStudents !== undefined ? Number(maxStudents) : existing.maxStudents,
+            startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : existing.startDate,
+            endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.endDate,
+            status: resolvedStatus,
+            updatedAt: new Date(),
+          })
+          .where(eq(batches.id, params.batchId))
+          .returning();
 
-      if (resolvedCourseIds && resolvedCourseIds.length > 0) {
-        await db.delete(batchCourses).where(eq(batchCourses.batchId, params.batchId));
-        await db
-          .insert(batchCourses)
-          .values(
-            resolvedCourseIds.map((cId) => ({
-              id: uuidv7(),
-              batchId: params.batchId,
-              courseId: cId,
-              weightAttendance: '10.00',
-              weightTugas: '20.00',
-              weightQuiz: '20.00',
-              weightUts: '20.00',
-              weightUas: '30.00',
-              passingScore: '70.00',
-            }))
-          )
-          .onConflictDoNothing();
-      }
+        if (resolvedCourseIds && resolvedCourseIds.length > 0) {
+          await tx.delete(batchCourses).where(eq(batchCourses.batchId, params.batchId));
+          await tx
+            .insert(batchCourses)
+            .values(
+              resolvedCourseIds.map((cId) => ({
+                id: uuidv7(),
+                batchId: params.batchId,
+                courseId: cId,
+                weightAttendance: '10.00',
+                weightTugas: '20.00',
+                weightQuiz: '20.00',
+                weightUts: '20.00',
+                weightUas: '30.00',
+                passingScore: '70.00',
+              }))
+            )
+            .onConflictDoNothing();
+        }
 
-      if (resolvedMentorIds !== null) {
-        await db.delete(batchMentors).where(eq(batchMentors.batchId, params.batchId));
-        await db
-          .insert(batchMentors)
-          .values(
-            resolvedMentorIds.map((mId, index) => ({
-              id: uuidv7(),
-              batchId: params.batchId,
-              mentorId: mId,
-              isLead: index === 0,
-            }))
-          )
-          .onConflictDoNothing();
-      }
+        if (resolvedMentorIds !== null) {
+          await tx.delete(batchMentors).where(eq(batchMentors.batchId, params.batchId));
+          await tx
+            .insert(batchMentors)
+            .values(
+              resolvedMentorIds.map((mId, index) => ({
+                id: uuidv7(),
+                batchId: params.batchId,
+                mentorId: mId,
+                isLead: index === 0,
+              }))
+            )
+            .onConflictDoNothing();
+        }
+
+        return updated;
+      });
 
       return {
         success: true,
@@ -1142,6 +1236,11 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
       if (!user || !profile || (profile.role !== 'admin' && profile.role !== 'mentor')) {
         set.status = 403;
         return { success: false, message: 'Hanya Admin atau Mentor yang dapat menghapus batch.' };
+      }
+
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
       const [existing] = await db

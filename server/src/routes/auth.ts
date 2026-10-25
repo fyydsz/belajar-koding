@@ -5,6 +5,18 @@ import { db } from '../db';
 import { profiles } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { rateLimit } from '../lib/rate-limit';
+import { isProduction } from '../lib/origins';
+
+function buildSessionCookie(token: string, maxAgeSeconds: number): string {
+  const flags = [
+    `bk_session=${encodeURIComponent(token)}`,
+    'Path=/',
+    `Max-Age=${maxAgeSeconds}`,
+    'HttpOnly',
+    isProduction ? 'SameSite=None; Secure' : 'SameSite=Lax',
+  ];
+  return flags.join('; ');
+}
 
 // Tanpa prefix sendiri: prefix '/v1/auth' diwarisi dari authRoutes.
 const credentialRoutes = new Elysia()
@@ -52,6 +64,11 @@ const credentialRoutes = new Elysia()
 
         const userRole = (result.user as { role?: string }).role || 'student';
 
+        const maxAge = 7 * 24 * 60 * 60;
+        if (result.token) {
+          set.headers['set-cookie'] = buildSessionCookie(result.token, maxAge);
+        }
+
         set.status = 201;
         return {
           success: true,
@@ -66,7 +83,7 @@ const credentialRoutes = new Elysia()
             session: result.token
               ? {
                   accessToken: result.token,
-                  expiresIn: 7 * 24 * 60 * 60,
+                  expiresIn: maxAge,
                 }
               : null,
           },
@@ -117,6 +134,10 @@ const credentialRoutes = new Elysia()
           .limit(1);
 
         const userRole = (result.user as { role?: string }).role || 'student';
+        const maxAge = 7 * 24 * 60 * 60;
+        if (result.token) {
+          set.headers['set-cookie'] = buildSessionCookie(result.token, maxAge);
+        }
 
         return {
           success: true,
@@ -132,7 +153,7 @@ const credentialRoutes = new Elysia()
             profile: profile || null,
             session: {
               accessToken: result.token,
-              expiresIn: 7 * 24 * 60 * 60,
+              expiresIn: maxAge,
             },
           },
         };
@@ -179,7 +200,7 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
       },
     };
   })
-  .post('/logout', async ({ request }) => {
+  .post('/logout', async ({ request, set }) => {
     try {
       await auth.api.signOut({
         headers: request.headers,
@@ -187,6 +208,8 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
     } catch {
       // ignore
     }
+
+    set.headers['set-cookie'] = buildSessionCookie('', 0);
 
     return {
       success: true,

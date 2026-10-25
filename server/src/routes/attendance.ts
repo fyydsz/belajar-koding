@@ -201,7 +201,7 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         };
       }
 
-      // Simpan log presensi
+      // Simpan log presensi (idempotent terhadap race condition)
       const [log] = await db
         .insert(attendanceLogs)
         .values({
@@ -210,6 +210,7 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
           studentId: profile.id,
           channel: 'web',
         })
+        .onConflictDoNothing()
         .returning();
 
       return {
@@ -217,7 +218,7 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         message: `Presensi Pertemuan ${session.sessionNumber} berhasil! Kehadiran Anda telah dicatat.`,
         data: {
           sessionNumber: session.sessionNumber,
-          checkedInAt: log.checkedInAt,
+          checkedInAt: log?.checkedInAt ?? new Date(),
         },
       };
     },

@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
+  const token =
+    request.cookies.get('bk_session')?.value || request.cookies.get('auth_token')?.value;
   const pathname = request.nextUrl.pathname;
 
   const role = request.cookies.get('auth_role')?.value;

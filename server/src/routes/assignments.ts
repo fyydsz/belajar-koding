@@ -17,6 +17,12 @@ import { eq, desc, and } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
 import { evaluateStudentGrades } from '../lib/grades';
+import {
+  canAccessBatch,
+  getAccessibleBatchIds,
+  getBatchIdByAssignment,
+  getBatchIdByBatchCourse,
+} from '../lib/access';
 
 // Helper sinkronisasi nilai otomatis ke SIAKAD (studentGrades)
 async function recalculateAndSyncStudentGrade(
@@ -229,13 +235,14 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
   )
 
   // 2. Ambil Semua Penugasan (dengan info batch, tipe, dan status submission siswa)
-  .get('/', async ({ user, query, set }) => {
-    if (!user) {
+  .get('/', async ({ user, profile, query, set }) => {
+    if (!user || !profile) {
       set.status = 401;
       return { success: false, message: 'Autentikasi diperlukan. Silakan login terlebih dahulu.' };
     }
 
     const { batch_id, type } = query;
+    const accessibleBatchIds = await getAccessibleBatchIds(profile);
 
     const queryBuilder = db
       .select({
@@ -264,8 +271,11 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
 
     const rows = await queryBuilder;
 
-    // Filter tambahan jika diberikan parameter
-    let filteredRows = rows;
+    // Filter hanya batch yang boleh diakses user
+    let filteredRows =
+      accessibleBatchIds === 'all'
+        ? rows
+        : rows.filter((r) => accessibleBatchIds.includes(r.batchId));
     if (batch_id) {
       filteredRows = filteredRows.filter((r) => r.batchId === batch_id);
     }
@@ -340,6 +350,14 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
       if (isNaN(expiredDate.getTime())) {
         set.status = 400;
         return { success: false, message: 'Format tanggal expired_at tidak valid.' };
+      }
+
+      const resolvedBatchId =
+        batch_id || (batch_course_id ? await getBatchIdByBatchCourse(batch_course_id) : null);
+
+      if (!resolvedBatchId || !(await canAccessBatch(profile, resolvedBatchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
       let targetBatchCourseId = batch_course_id;
@@ -435,6 +453,12 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
         return { success: false, message: 'Tugas tidak ditemukan.' };
       }
 
+      const batchId = await getBatchIdByBatchCourse(existing[0].batchCourseId);
+      if (!batchId || !(await canAccessBatch(profile, batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
+
       const updateData: Partial<typeof assignments.$inferInsert> = {};
       if (body.title !== undefined) updateData.title = body.title.trim();
       if (body.description !== undefined) updateData.description = body.description.trim() || null;
@@ -482,6 +506,16 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
       return { success: false, message: 'Akses ditolak.' };
     }
 
+    const batchId = await getBatchIdByAssignment(params.id);
+    if (!batchId) {
+      set.status = 404;
+      return { success: false, message: 'Tugas tidak ditemukan.' };
+    }
+    if (!(await canAccessBatch(profile, batchId))) {
+      set.status = 403;
+      return { success: false, message: 'Anda bukan mentor di batch ini.' };
+    }
+
     const [deleted] = await db
       .delete(assignments)
       .where(eq(assignments.id, params.id))
@@ -501,8 +535,8 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
   // 6. (Siswa) Kumpulkan Tugas (Submit / Re-submit)
   .post(
     '/:id/submit',
-    async ({ user, params, body, set }) => {
-      if (!user) {
+    async ({ user, profile, params, body, set }) => {
+      if (!user || !profile) {
         set.status = 401;
         return { success: false, message: 'Autentikasi diperlukan. Silakan login terlebih dahulu.' };
       }
@@ -516,6 +550,12 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
       if (!assignment) {
         set.status = 404;
         return { success: false, message: 'Tugas tidak ditemukan.' };
+      }
+
+      const batchId = await getBatchIdByBatchCourse(assignment.batchCourseId);
+      if (!batchId || !(await canAccessBatch(profile, batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda tidak terdaftar pada batch tugas ini.' };
       }
 
       if (new Date() > new Date(assignment.expiredAt)) {
@@ -607,6 +647,12 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
       return { success: false, message: 'Akses terbatas untuk mentor atau admin.' };
     }
 
+    const batchId = await getBatchIdByAssignment(params.assignmentId);
+    if (!batchId || !(await canAccessBatch(profile, batchId))) {
+      set.status = 403;
+      return { success: false, message: 'Anda bukan mentor di batch ini.' };
+    }
+
     const rows = await db
       .select({
         id: assignmentSubmissions.id,
@@ -641,6 +687,12 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
     if (!user || !profile || (profile.role !== 'mentor' && profile.role !== 'admin')) {
       set.status = 403;
       return { success: false, message: 'Akses terbatas untuk mentor atau admin.' };
+    }
+
+    const batchId = await getBatchIdByAssignment(params.assignmentId);
+    if (!batchId || !(await canAccessBatch(profile, batchId))) {
+      set.status = 403;
+      return { success: false, message: 'Anda bukan mentor di batch ini.' };
     }
 
     const rows = await db
@@ -684,6 +736,26 @@ export const assignmentRoutes = new Elysia({ prefix: '/v1/assignments' })
       }
 
       const { grade, feedback } = body;
+
+      const [targetSub] = await db
+        .select({
+          id: assignmentSubmissions.id,
+          assignmentId: assignmentSubmissions.assignmentId,
+        })
+        .from(assignmentSubmissions)
+        .where(eq(assignmentSubmissions.id, params.id))
+        .limit(1);
+
+      if (!targetSub) {
+        set.status = 404;
+        return { success: false, message: 'Submission tidak ditemukan.' };
+      }
+
+      const batchId = await getBatchIdByAssignment(targetSub.assignmentId);
+      if (!batchId || !(await canAccessBatch(profile, batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
 
       const [updated] = await db
         .update(assignmentSubmissions)
