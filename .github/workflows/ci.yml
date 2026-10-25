@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           bun install
-          bun --cwd server install
+          bun install --cwd server
 
       - name: Typecheck backend
         run: bun --cwd server x tsc --noEmit
