@@ -191,6 +191,7 @@ export const authRoutes = new Elysia({ prefix: '/v1/auth' })
   .get('/me', async ({ user, profile, set }) => {
     if (!user) {
       set.status = 401;
+      set.headers['set-cookie'] = buildSessionCookie('', 0);
       return {
         success: false,
         message: 'Autentikasi diperlukan. Sesi login telah berakhir.',

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { getAuthToken, type AuthUser } from '@/lib/auth';
+import { getAuthToken, handleUnauthorizedRedirect, type AuthUser } from '@/lib/auth';
 import { useMounted } from '@/lib/use-mounted';
 import {
   dashboardCache,
@@ -134,11 +134,15 @@ export default function SiswaDashboardPage() {
     try {
       const token = getAuthToken();
       if (!token) {
-        setStudentError('Sesi login telah berakhir. Silakan masuk kembali.');
+        handleUnauthorizedRedirect();
         return;
       }
 
       const data = await loadSiswaOverviewCache();
+      if (!data.user) {
+        handleUnauthorizedRedirect();
+        return;
+      }
       setCurrentUser(data.user);
       setGrades(data.grades);
       setStudentBatches(data.studentBatches);

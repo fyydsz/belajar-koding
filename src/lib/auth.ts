@@ -88,7 +88,21 @@ export function clearAuthSession(): void {
   setCachedUser(null);
 
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('auth-changed', { detail: null }));
+    window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: null } }));
+  }
+}
+
+let isRedirectingToLogin = false;
+
+export function handleUnauthorizedRedirect(): void {
+  clearAuthSession();
+  if (typeof window === 'undefined') return;
+
+  const pathname = window.location.pathname;
+  if (pathname.startsWith('/dashboard') && !isRedirectingToLogin) {
+    isRedirectingToLogin = true;
+    const redirectTarget = encodeURIComponent(pathname + window.location.search);
+    window.location.replace(`/login?redirect=${redirectTarget}`);
   }
 }
 
@@ -139,7 +153,10 @@ export async function registerUser(
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
   const token = getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    clearAuthSession();
+    return null;
+  }
 
   const apiUrl = getApiUrl();
   try {
@@ -150,7 +167,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
 
     if (!res.ok) {
       if (res.status === 401) {
-        clearAuthSession();
+        handleUnauthorizedRedirect();
       }
       return null;
     }

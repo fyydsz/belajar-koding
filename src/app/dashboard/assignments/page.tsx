@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { getAuthToken } from '@/lib/auth';
+import { getAuthToken, handleUnauthorizedRedirect } from '@/lib/auth';
 import { useMounted } from '@/lib/use-mounted';
 import {
   dashboardCache,
@@ -122,7 +122,7 @@ export default function AssignmentsDashboardPage() {
   const fetchData = useCallback(async (isSilent = false) => {
     const token = getAuthToken();
     if (!token) {
-      setError('Sesi login telah berakhir. Silakan masuk kembali.');
+      handleUnauthorizedRedirect();
       setIsLoading(false);
       return;
     }

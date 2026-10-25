@@ -208,6 +208,29 @@ export const dashboardCache: {
   adminOverview: null,
 };
 
+export function clearDashboardCache(): void {
+  dashboardCache.siswaOverview = null;
+  dashboardCache.batchCatalog = null;
+  dashboardCache.presensiIndex = null;
+  dashboardCache.presensiDetail = {};
+  dashboardCache.assignments = null;
+  dashboardCache.khs = null;
+  dashboardCache.kelasList = null;
+  dashboardCache.kelasDetail = {};
+  dashboardCache.kelasSession = {};
+  dashboardCache.profil = null;
+  dashboardCache.adminOverview = null;
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth-changed', (e: Event) => {
+    const customEvent = e as CustomEvent<{ user: AuthUser | null } | null>;
+    if (!customEvent.detail || customEvent.detail.user === null) {
+      clearDashboardCache();
+    }
+  });
+}
+
 export async function loadSiswaOverviewCache(): Promise<SiswaOverviewCache> {
   const token = getAuthToken();
   const apiUrl = getApiUrl();

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getAuthToken, fetchCurrentUser, type AuthUser } from '@/lib/auth';
+import { getAuthToken, fetchCurrentUser, handleUnauthorizedRedirect, type AuthUser } from '@/lib/auth';
 import { topProgress } from '@/lib/dashboard-navigation';
 import {
   BookOpen,
@@ -114,7 +114,7 @@ export default function MentorDashboardPage() {
     try {
       const token = getAuthToken();
       if (!token) {
-        setDosenError('Sesi login telah berakhir. Silakan masuk kembali.');
+        handleUnauthorizedRedirect();
         return;
       }
 

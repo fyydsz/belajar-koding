@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getAuthToken, fetchCurrentUser, type AuthUser } from '@/lib/auth';
+import { getAuthToken, fetchCurrentUser, handleUnauthorizedRedirect, type AuthUser } from '@/lib/auth';
 import {
   BookOpen,
   RefreshCw,
@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
     try {
       const token = getAuthToken();
       if (!token) {
-        setErrorMessage('Sesi login telah berakhir. Silakan masuk kembali.');
+        handleUnauthorizedRedirect();
         return;
       }
 
