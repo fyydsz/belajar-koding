@@ -28,7 +28,7 @@ jobs:
           bun install --cwd server
 
       - name: Typecheck backend
-        run: bun --cwd server x tsc --noEmit
+        run: bun run tsc --project server/tsconfig.json --noEmit
 
       - name: Run backend tests
         env:
