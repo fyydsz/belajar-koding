@@ -1,5 +1,6 @@
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
+import { remarkMdxMermaid } from 'fumadocs-mermaid';
 import { visit } from 'unist-util-visit';
 import type { Root, Heading } from 'mdast';
 import { defineConfig } from 'fumadocs-mdx/config';
@@ -89,9 +90,8 @@ function remarkTagSteps({ steps = 'fd-steps', step = 'fd-step' } = {}) {
 
 export default defineConfig({
     mdxOptions: {
-        remarkPlugins: [remarkMath, remarkTagSteps],
+        remarkPlugins: [remarkMath, remarkTagSteps, remarkMdxMermaid],
         // Place it at first, it should be executed before the syntax highlighter
         rehypePlugins: (v) => [rehypeKatex, ...v],
     },
 });
-

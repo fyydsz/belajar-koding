@@ -112,114 +112,27 @@ Bagi pengguna baru atau non-teknis, ikon-ikon ini menuntut proses coba-coba (*tr
 
 Untuk mengatasi permasalahan di atas, berikut adalah visualisasi pemetaan masalah usability dan rekomendasi solusi desain yang berfokus pada prinsip *heuristic evaluation* serta penghematan beban kognitif pengguna:
 
-<div className="my-8 rounded-2xl border border-fd-border bg-fd-card/60 p-5 sm:p-6 shadow-2xs">
-  <div className="mb-4 flex items-center gap-2 border-b border-fd-border/70 pb-3">
-    <span className="flex size-6 items-center justify-center rounded-full bg-fd-primary/15 text-xs font-bold text-fd-primary">
-      ⇄
-    </span>
-    <span className="text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">
-      Pemetaan Masalah Usability &amp; Rekomendasi Solusi Desain
-    </span>
-  </div>
+```mermaid
+flowchart TD
+    subgraph Masalah["Masalah Usability"]
+        M1["1. Panel tengah terhimpit 3 kolom"]
+        M2["2. Pop-up Add to Playlist menutup layar"]
+        M3["3. Ruang kosong di Full Screen"]
+        M4["4. Ikon kontrol tanpa teks pembantu"]
+    end
 
-  <div className="grid grid-cols-1 gap-3.5 sm:gap-4">
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-fd-border/80 bg-fd-card p-4 transition-all hover:border-fd-primary/40">
-      <div className="flex-1">
-        <span className="inline-block text-[11px] font-semibold text-red-500 dark:text-red-400 mb-1">
-          Masalah 1
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Panel Tengah Terhimpit 3 Kolom
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Tampilan sempit &amp; konten berdesakan jika Library, Home, dan Info dibuka bersamaan.</div>
-      </div>
-      <div className="hidden md:flex items-center justify-center px-2 text-fd-muted-foreground font-bold">
-        →
-      </div>
-      <div className="flex-1 md:border-l md:border-fd-border/60 md:pl-4">
-        <span className="inline-block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-          Solusi 1
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Auto-Collapse Panel Kanan
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Panel info tertutup/mengecil otomatis saat pengguna menelusuri halaman Browse atau Home.</div>
-      </div>
-    </div>
+    subgraph Solusi["Rekomendasi Solusi"]
+        S1["1. Auto-Collapse Panel Kanan saat eksplorasi"]
+        S2["2. Modal Dialog Terpusat dengan Pin Favorit"]
+        S3["3. Tampilkan Lirik Interaktif di sisi kosong"]
+        S4["4. Label mikro atau tooltip instan"]
+    end
 
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-fd-border/80 bg-fd-card p-4 transition-all hover:border-fd-primary/40">
-      <div className="flex-1">
-        <span className="inline-block text-[11px] font-semibold text-red-500 dark:text-red-400 mb-1">
-          Masalah 2
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Menu Pop-up "Add to Playlist" Menutup Layar
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Dua kotak bertingkat besar memakan setengah layar dan rawan tertutup jika kursor meleset.</div>
-      </div>
-      <div className="hidden md:flex items-center justify-center px-2 text-fd-muted-foreground font-bold">
-        →
-      </div>
-      <div className="flex-1 md:border-l md:border-fd-border/60 md:pl-4">
-        <span className="inline-block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-          Solusi 2
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Modal Terpusat &amp; Pin Playlist Favorit
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Satu kotak dialog ringkas di tengah layar dengan opsi pin playlist yang sering digunakan.</div>
-      </div>
-    </div>
-
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-fd-border/80 bg-fd-card p-4 transition-all hover:border-fd-primary/40">
-      <div className="flex-1">
-        <span className="inline-block text-[11px] font-semibold text-red-500 dark:text-red-400 mb-1">
-          Masalah 3
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Ruang Kosong Terbuang di Mode Layar Penuh
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Sisi kiri-kanan sampul album kosong dengan ukuran judul lagu yang terlalu kecil di sudut.</div>
-      </div>
-      <div className="hidden md:flex items-center justify-center px-2 text-fd-muted-foreground font-bold">
-        →
-      </div>
-      <div className="flex-1 md:border-l md:border-fd-border/60 md:pl-4">
-        <span className="inline-block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-          Solusi 3
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Tipografi Proporsional &amp; Integrasi Lirik
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Memperbesar skala judul lagu dan memanfaatkan bidang kosong untuk lirik sinkron (*synced lyrics*).</div>
-      </div>
-    </div>
-
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-fd-border/80 bg-fd-card p-4 transition-all hover:border-fd-primary/40">
-      <div className="flex-1">
-        <span className="inline-block text-[11px] font-semibold text-red-500 dark:text-red-400 mb-1">
-          Masalah 4
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Banyak Ikon Kecil Tanpa Keterangan Teks
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Ikon lirik, antrean, dan koneksi perangkat di bilah bawah membingungkan pengguna baru.</div>
-      </div>
-      <div className="hidden md:flex items-center justify-center px-2 text-fd-muted-foreground font-bold">
-        →
-      </div>
-      <div className="flex-1 md:border-l md:border-fd-border/60 md:pl-4">
-        <span className="inline-block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-          Solusi 4
-        </span>
-        <div className="text-sm font-semibold text-fd-foreground">
-          Label Mikro &amp; Tooltip Tanpa Jeda
-        </div>
-        <div className="text-xs text-fd-muted-foreground mt-0.5">Menyertakan teks penjelas mini atau tooltip instan agar fungsinya langsung dipahami tanpa menebak.</div>
-      </div>
-    </div>
-  </div>
-</div>
+    M1 --> S1
+    M2 --> S2
+    M3 --> S3
+    M4 --> S4
+```
 
 ### 1. Merancang Menu "Add to Playlist" Menjadi Modal Dialog Ringkas
 Alih-alih menggunakan dua flyout menu bertingkat yang rawan tertutup oleh pergerakan mouse, Spotify disarankan menerapkan jendela dialog modal kecil yang muncul di tengah layar (*centered modal*) atau popover vertikal tunggal. 

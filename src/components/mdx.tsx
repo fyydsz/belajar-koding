@@ -1,6 +1,7 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Heading as OriginalHeading } from 'fumadocs-ui/components/heading';
+import { Mermaid } from 'fumadocs-mermaid/ui';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps } from 'react';
 
@@ -35,6 +36,7 @@ function createHeading(as: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    Mermaid,
     h1: createHeading('h1'),
     h2: createHeading('h2'),
     h3: createHeading('h3'),
