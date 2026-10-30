@@ -82,22 +82,22 @@ Mengukur kenyamanan emosional dan visual pengguna selama berinteraksi dengan sis
 
 Berdasarkan hasil pengujian antarmuka pada layar laptop beresolusi standar (1366x768 hingga 1920x1080 piksel), ditemukan 4 kendala utama:
 
-### 1. Tampilan Beranda Terlihat Sempit dan Penuh Jika Semua Panel Dibuka
+### 4.1 Tampilan Beranda Terlihat Sempit dan Penuh Jika Semua Panel Dibuka
 Spotify Web membagi layar menjadi 3 panel: **Panel Kiri** (*Your Library*), **Panel Tengah** (*Home / Browse*), dan **Panel Kanan** (*Now Playing Information & Queue*). Ketika pengguna membuka panel informasi lagu di sebelah kanan bersamaan dengan panel koleksi di sebelah kiri, porsi lebar untuk panel tengah menyempit secara drastis. 
 
 Akibatnya, kartu album rekomendasi pada menu Beranda terlihat berdesakan, gambar sampul mengecil, dan ruang baca judul lagu menjadi terpotong tanda elipsis (`...`).
 
-### 2. Menu Pop-up "Add to Playlist" Terlalu Besar dan Menutupi Layar
+### 4.2 Menu Pop-up "Add to Playlist" Terlalu Besar dan Menutupi Layar
 Saat pengguna menekan tombol opsi (titik tiga `...`) pada baris lagu lalu memilih submenu **Add to playlist**, Spotify memunculkan dua kotak menu bertingkat (*cascading menu*) yang saling berdampingan ke arah samping. 
 
 Kedua kotak ini memakan hampir separuh lebar layar sisi kanan dan menutupi informasi penting seperti kredit lagu dan antrean putar. Lebih rentan lagi, submenu ini mudah tertutup secara tidak sengaja apabila kursor tetikus sedikit saja meleset dari area batas kotak.
 
-### 3. Banyak Ruang Kosong yang Terbuang Saat Mode Layar Penuh
+### 4.3 Banyak Ruang Kosong yang Terbuang Saat Mode Layar Penuh
 Pada mode *Full Screen Player* (ketika pengguna memperbesar tampilan pemutar lagu menjadi layar penuh), antarmuka hanya meletakkan gambar sampul album kecil di tengah dengan latar belakang warna gradien. 
 
 Bidang luas di sisi kiri dan kanan sampul album dibiarkan kosong tanpa fungsi (*unused negative space*). Sebaliknya, informasi judul lagu dan nama artis justru diletakkan di sudut kiri bawah dengan ukuran huruf yang relatif kecil sehingga sulit terbaca dari kejauhan.
 
-### 4. Banyak Ikon Kecil Tanpa Keterangan Teks (*Icon Ambiguity*)
+### 4.4 Banyak Ikon Kecil Tanpa Keterangan Teks (*Icon Ambiguity*)
 Di pojok kanan bawah bilah pemutar (area *Now Playing bar*) dan sudut kanan atas, terdapat deretan tombol ikonik tanpa teks label penyerta, antara lain:
 - Ikon mikrofon (Lirik)
 - Ikon garis bersusun (Antrean lagu / *Queue*)
@@ -110,46 +110,31 @@ Bagi pengguna baru atau non-teknis, ikon-ikon ini menuntut proses coba-coba (*tr
 
 ## 5. Saran Perbaikan (Solusi Usability)
 
-Untuk mengatasi permasalahan di atas, berikut adalah visualisasi pemetaan masalah usability dan rekomendasi solusi desain yang berfokus pada prinsip *heuristic evaluation* serta penghematan beban kognitif pengguna:
+Untuk menghubungkan temuan masalah usability di atas dengan tindakan perbaikan nyata, berikut adalah matriks pemetaan masalah dan rekomendasi solusi desain berdasarkan evaluasi heuristik (*heuristic evaluation*):
 
-```mermaid
-flowchart TD
-    subgraph Masalah["Masalah Usability"]
-        M1["1. Panel tengah terhimpit 3 kolom"]
-        M2["2. Pop-up Add to Playlist menutup layar"]
-        M3["3. Ruang kosong di Full Screen"]
-        M4["4. Ikon kontrol tanpa teks pembantu"]
-    end
+| No. | Area & Temuan Masalah | Prinsip Heuristik Terkait | Rekomendasi Solusi Desain | Target Dampak UX |
+| :---: | :--- | :--- | :--- | :--- |
+| **5.1** | **[4.1] Panel Tengah Terhimpit 3 Kolom**<br /><span className="text-xs text-fd-muted-foreground">Sidebar Library, Main View, dan Info Panel aktif bersamaan di layar laptop standar (13–15").</span> | *Aesthetic and Minimalist Design* | **Fitur Auto-Collapse Panel Kanan**<br />Panel informasi artis/kredit melipat otomatis saat pengguna mulai bernavigasi atau scroll daftar lagu di halaman utama. | Mengembalikan ~40% ruang pandang konten dan mengurangi rasa sesak visual. |
+| **5.2** | **[4.2] Menu Pop-up "Add to Playlist" Menutup Layar**<br /><span className="text-xs text-fd-muted-foreground">Dua flyout menu bertingkat melintang di tengah layar dan langsung tertutup jika kursor sedikit meleset.</span> | *Flexibility and Efficiency of Use* | **Modal Dialog Terpusat & Pin Playlist**<br />Mengganti flyout bertingkat dengan modal dialog satu langkah di tengah layar, dilengkapi fitur pin playlist favorit. | Mempercepat alur simpan lagu, mencegah *click-away error* secara drastis. |
+| **5.3** | **[4.3] Ruang Kosong Terbuang di Mode Layar Penuh**<br /><span className="text-xs text-fd-muted-foreground">Area luas di sisi kiri-kanan sampul album kosong tanpa fungsi, sementara judul lagu terlalu kecil di sudut.</span> | *Recognition rather than Recall* | **Tipografi Proporsional & Integrasi Lirik**<br />Perbesar ukuran tipografi judul lagu dan integrasikan tampilan lirik sinkron (*synced lyrics*) pada bidang kosong. | Tampilan imersif & fungsional, memanfaatkan layar monitor secara proporsional. |
+| **5.4** | **[4.4] Ikon Kontrol Tanpa Keterangan Teks**<br /><span className="text-xs text-fd-muted-foreground">Deretan ikon kontrol pemutar di bar bawah hanya berupa simbol abstrak tanpa teks pembantu (*Icon Ambiguity*).</span> | *Visibility of System Status* | **Label Mikro & Tooltip Reaktif**<br />Sematkan label mikro pada menu utama dan tooltip instan tanpa jeda waktu *hover* agar fungsinya terbaca seketika. | Menghilangkan kebingungan bagi pengguna baru tanpa perlu proses *trial-and-error*. |
 
-    subgraph Solusi["Rekomendasi Solusi"]
-        S1["1. Auto-Collapse Panel Kanan saat eksplorasi"]
-        S2["2. Modal Dialog Terpusat dengan Pin Favorit"]
-        S3["3. Tampilkan Lirik Interaktif di sisi kosong"]
-        S4["4. Label mikro atau tooltip instan"]
-    end
-
-    M1 --> S1
-    M2 --> S2
-    M3 --> S3
-    M4 --> S4
-```
-
-### 1. Merancang Menu "Add to Playlist" Menjadi Modal Dialog Ringkas
-Alih-alih menggunakan dua flyout menu bertingkat yang rawan tertutup oleh pergerakan mouse, Spotify disarankan menerapkan jendela dialog modal kecil yang muncul di tengah layar (*centered modal*) atau popover vertikal tunggal. 
-
-Di dalam dialog tersebut, sediakan fitur **"Pin / Playlist Favorit"** di urutan teratas agar pengguna yang rutin memasukkan lagu ke satu atau dua playlist utama dapat menyelesaikannya dalam satu klik cepat.
-
-### 2. Fitur Sembunyi Otomatis (*Auto-Collapse*) untuk Panel Kanan
+### 5.1 Fitur Sembunyi Otomatis (*Auto-Collapse*) untuk Panel Kanan
 Panel informasi artis dan lagu di sebelah kanan sebaiknya memiliki mode adaptif:
 - Saat pengguna sedang aktif menelusuri halaman *Browse* atau menggulir beranda, panel kanan secara otomatis menciut (*auto-collapse*) menjadi bilah tipis atau tertutup sementara.
 - Hal ini memberikan ruang pandang yang lega (*breathing room*) bagi panel tengah untuk menampilkan kisi-kisi kartu rekomendasi lagu tanpa terasa sesak.
 
-### 3. Memperbesar Tipografi Judul dan Mengintegrasikan Lirik pada Mode Layar Penuh
+### 5.2 Merancang Menu "Add to Playlist" Menjadi Modal Dialog Ringkas
+Alih-alih menggunakan dua flyout menu bertingkat yang rawan tertutup oleh pergerakan mouse, Spotify disarankan menerapkan jendela dialog modal kecil yang muncul di tengah layar (*centered modal*) atau popover vertikal tunggal. 
+
+Di dalam dialog tersebut, sediakan fitur **"Pin / Playlist Favorit"** di urutan teratas agar pengguna yang rutin memasukkan lagu ke satu atau dua playlist utama dapat menyelesaikannya dalam satu klik cepat.
+
+### 5.3 Memperbesar Tipografi Judul dan Mengintegrasikan Lirik pada Mode Layar Penuh
 Ruang kosong di sebelah kiri dan kanan gambar album pada mode layar penuh dapat dimanfaatkan secara produktif:
 - Menempatkan tampilan **lirik lagu berjalan (*synced lyrics*)** langsung di samping sampul album.
 - Meningkatkan skala tipografi judul lagu dan nama artis menjadi lebih besar dan proporsional terhadap ukuran monitor, sehingga pengguna dapat melihat informasi lagu dengan nyaman meski sedang berada beberapa meter dari meja komputer.
 
-### 4. Merapikan Ikon Kontrol dan Menambahkan Penanda Fungsional yang Jelas
+### 5.4 Merapikan Ikon Kontrol dan Menambahkan Penanda Fungsional yang Jelas
 Mengelompokkan kontrol pemutar sekunder ke dalam satu tombol menu titik tiga atau menambahkan label teks ringkas di bawah ikon. Alternatif lain adalah mengaktifkan *instant micro-tooltip* yang muncul seketika tanpa jeda milidetik saat kursor menyentuh ikon, membantu memangkas ketidakpastian fungsi bagi pengguna pemula.
 
 ---
