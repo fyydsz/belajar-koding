@@ -49,6 +49,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from '@/components/ui/breadcrumb';
+import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb';
 import {
   Empty,
   EmptyMedia,
@@ -460,24 +461,12 @@ function SiswaPresensiContent() {
     return (
       <div className="space-y-8 pb-16 max-w-5xl">
         {/* Standard Breadcrumb */}
-        <div className="pt-1">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/dashboard/siswa/presensi" className="inline-flex items-center gap-1.5 text-xs text-fd-muted-foreground hover:text-fd-foreground">
-                  <ArrowLeft className="size-3.5 shrink-0" />
-                  <span>Semua Kelas</span>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-xs truncate max-w-[240px]">
-                  {selectedEnrollment.courseTitle}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
+        <DashboardBreadcrumb
+          items={[
+            { label: 'Semua Kelas', href: '/dashboard/siswa/presensi' },
+            { label: selectedEnrollment.courseTitle },
+          ]}
+        />
 
         {/* Minimalist Editorial Header */}
         <header className="space-y-3 pb-6 border-b border-fd-border/50">

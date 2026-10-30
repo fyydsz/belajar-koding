@@ -207,6 +207,8 @@ export const batches = pgTable('batches', {
   maxStudents: integer('max_students').default(30).notNull(),
   enrolledCount: integer('enrolled_count').default(0).notNull(),
   status: batchStatusEnum('status').default('draft').notNull(),
+  registrationStartDate: timestamp('registration_start_date', { withTimezone: true }),
+  registrationEndDate: timestamp('registration_end_date', { withTimezone: true }),
   startDate: timestamp('start_date', { withTimezone: true }),
   endDate: timestamp('end_date', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

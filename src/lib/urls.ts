@@ -47,6 +47,6 @@ export function isNodeActive(
     return currentP === null;
   }
 
-  // Case 3: Regular pages without query parameters (/dashboard/assignments, etc.)
-  return !currentP;
+  // Case 3: Regular pages without session parameters (/dashboard/assignments, /dashboard/mentor/presensi, etc.)
+  return true;
 }

@@ -1,7 +1,6 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import Image from 'next/image';
 import { appName, gitConfig } from './shared';
-import { UserMenu } from '@/components/auth/user-menu';
 
 export function baseOptions(): BaseLayoutProps {
   return {
@@ -30,11 +29,6 @@ export function baseOptions(): BaseLayoutProps {
         text: 'Blog',
         url: '/blog',
         active: 'nested-url',
-      },
-      {
-        type: 'custom',
-        secondary: true,
-        children: <UserMenu />,
       },
     ],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,

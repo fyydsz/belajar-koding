@@ -11,7 +11,7 @@ import {
   profiles,
   user as userTable,
 } from '../db/schema';
-import { eq, and, desc, inArray, or, ilike, sql } from 'drizzle-orm';
+import { eq, ne, and, desc, inArray, or, ilike, sql } from 'drizzle-orm';
 import { uuidv7 } from '../lib/uuid';
 import { supabaseAdmin } from '../lib/supabase';
 import { canAccessBatch, getAccessibleBatchIds, isStaff } from '../lib/access';
@@ -31,6 +31,8 @@ async function enrichBatchesWithRelations<
     paymentAccountInfo?: string | null;
     maxStudents: number;
     enrolledCount?: number;
+    registrationStartDate?: Date | null;
+    registrationEndDate?: Date | null;
     startDate?: Date | null;
     endDate?: Date | null;
     status: string;
@@ -125,11 +127,13 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
   .use(authPlugin)
 
   // 1. Ambil semua batch (dengan info kursus, mentor, harga, rekening, dan jumlah siswa aktif)
-  .get('/', async ({ user, set }) => {
+  .get('/', async ({ user, profile, set }) => {
     if (!user) {
       set.status = 401;
       return { success: false, message: 'Autentikasi diperlukan.' };
     }
+
+    const isAdmin = profile?.role === 'admin';
 
     const allBatches = await db
       .select({
@@ -141,13 +145,19 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         paymentAccountInfo: batches.paymentAccountInfo,
         maxStudents: batches.maxStudents,
         enrolledCount: batches.enrolledCount,
+        registrationStartDate: batches.registrationStartDate,
+        registrationEndDate: batches.registrationEndDate,
         startDate: batches.startDate,
         endDate: batches.endDate,
         status: batches.status,
         createdAt: batches.createdAt,
       })
       .from(batches)
-      .where(sql`${batches.deletedAt} IS NULL`)
+      .where(
+        isAdmin
+          ? sql`${batches.deletedAt} IS NULL`
+          : and(sql`${batches.deletedAt} IS NULL`, ne(batches.status, 'draft'))
+      )
       .orderBy(desc(batches.createdAt));
 
     const enrichedBatches = await enrichBatchesWithRelations(allBatches);
@@ -185,6 +195,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
           paymentAccountInfo: batches.paymentAccountInfo,
           maxStudents: batches.maxStudents,
           enrolledCount: batches.enrolledCount,
+          registrationStartDate: batches.registrationStartDate,
+          registrationEndDate: batches.registrationEndDate,
           startDate: batches.startDate,
           endDate: batches.endDate,
           status: batches.status,
@@ -888,6 +900,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
           paymentAccountInfo: batches.paymentAccountInfo,
           maxStudents: batches.maxStudents,
           enrolledCount: batches.enrolledCount,
+          registrationStartDate: batches.registrationStartDate,
+          registrationEndDate: batches.registrationEndDate,
           startDate: batches.startDate,
           endDate: batches.endDate,
           status: batches.status,
@@ -956,6 +970,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         maxStudents,
         mentorId,
         mentorIds,
+        registrationStartDate,
+        registrationEndDate,
         startDate,
         endDate,
       } = body;
@@ -1000,6 +1016,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
             paymentAccountInfo: paymentAccountInfo ? paymentAccountInfo.trim() : null,
             maxStudents: maxStudents || 30,
             enrolledCount: 0,
+            registrationStartDate: registrationStartDate ? new Date(registrationStartDate) : null,
+            registrationEndDate: registrationEndDate ? new Date(registrationEndDate) : null,
             startDate: startDate ? new Date(startDate) : null,
             endDate: endDate ? new Date(endDate) : null,
             status: 'open',
@@ -1057,6 +1075,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         maxStudents: t.Optional(t.Integer({ minimum: 1, maximum: 500 })),
         mentorId: t.Optional(t.String()),
         mentorIds: t.Optional(t.Array(t.String())),
+        registrationStartDate: t.Optional(t.String()),
+        registrationEndDate: t.Optional(t.String()),
         startDate: t.Optional(t.String()),
         endDate: t.Optional(t.String()),
       }),
@@ -1209,6 +1229,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         maxStudents,
         mentorId,
         mentorIds,
+        registrationStartDate,
+        registrationEndDate,
         startDate,
         endDate,
         status,
@@ -1243,6 +1265,18 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
                 ? paymentAccountInfo.trim() || null
                 : existing.paymentAccountInfo,
             maxStudents: maxStudents !== undefined ? Number(maxStudents) : existing.maxStudents,
+            registrationStartDate:
+              registrationStartDate !== undefined
+                ? registrationStartDate
+                  ? new Date(registrationStartDate)
+                  : null
+                : existing.registrationStartDate,
+            registrationEndDate:
+              registrationEndDate !== undefined
+                ? registrationEndDate
+                  ? new Date(registrationEndDate)
+                  : null
+                : existing.registrationEndDate,
             startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : existing.startDate,
             endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.endDate,
             status: resolvedStatus,
@@ -1310,6 +1344,8 @@ export const batchRoutes = new Elysia({ prefix: '/v1/batches' })
         maxStudents: t.Optional(t.Integer({ minimum: 1, maximum: 500 })),
         mentorId: t.Optional(t.String()),
         mentorIds: t.Optional(t.Array(t.String())),
+        registrationStartDate: t.Optional(t.Union([t.String(), t.Null()])),
+        registrationEndDate: t.Optional(t.Union([t.String(), t.Null()])),
         startDate: t.Optional(t.Union([t.String(), t.Null()])),
         endDate: t.Optional(t.Union([t.String(), t.Null()])),
         status: t.Optional(t.Union([t.Literal('draft'), t.Literal('open'), t.Literal('active'), t.Literal('ongoing'), t.Literal('completed'), t.Literal('archived')])),

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, use, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getAuthToken } from '@/lib/auth';
+import { getAuthToken, fetchCurrentUser, type AuthUser } from '@/lib/auth';
 import {
   dashboardCache,
   loadKelasDetailCache,
@@ -34,10 +34,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { cn } from '@/lib/cn';
 
 function formatSubmissionDate(dateStr?: string | null): string {
   if (!dateStr) return '';
@@ -148,6 +150,17 @@ function StudentModularClassroomContent({ slug }: { slug: string }) {
   const [isEnrollmentRequired, setIsEnrollmentRequired] = useState(
     Boolean(cachedCourse?.isEnrollmentRequired),
   );
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchCurrentUser().then((u) => {
+      if (mounted) setCurrentUser(u);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Modal Submission Dialog State
   const [activeTaskForModal, setActiveTaskForModal] = useState<AssignmentItem | null>(null);
@@ -365,25 +378,16 @@ function StudentModularClassroomContent({ slug }: { slug: string }) {
       {!isViewingSpecificSession ? (
         /* ================= MODE 1: RINGKASAN KELAS & DAFTAR PERTEMUAN (OVERVIEW) ================= */
         <>
-          {/* Top Navigation Bar / Breadcrumb */}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-fd-muted-foreground">
-              <Link
-                href="/dashboard/kelas"
-                className="hover:text-fd-foreground transition-colors inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:underline"
-              >
-                <ArrowLeft className="size-3.5 shrink-0" />
-                <span>Semua Kelas</span>
-              </Link>
-              <span className="text-fd-border">/</span>
-              <span className="text-fd-foreground font-medium truncate max-w-[200px] sm:max-w-xs">
-                {course?.title || 'Detail Kelas'}
-              </span>
-            </nav>
-          </div>
+          {/* Top Breadcrumb */}
+          <DashboardBreadcrumb
+            items={[
+              { label: 'Semua Kelas', href: '/dashboard/kelas' },
+              { label: course?.title || 'Detail Kelas' },
+            ]}
+          />
 
           {/* Course Overview Header */}
-          <header className="space-y-2 pb-5 border-b border-fd-border">
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-fd-border">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-fd-muted-foreground">
                 <span className="font-medium text-fd-primary">
@@ -404,6 +408,20 @@ function StudentModularClassroomContent({ slug }: { slug: string }) {
                   'Pelajari kurikulum pembelajaran, modul materi berbasis MDX, dan kumpulkan tugas praktikum untuk kelas ini.'}
               </p>
             </div>
+
+            {currentUser?.role === 'admin' && (
+              <Link
+                href={`/dashboard/dosen/kelas/${course?.slug || slug}`}
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'gap-1.5 shrink-0 text-xs shadow-2xs self-start sm:self-auto font-medium'
+                )}
+                title="Kelola & Edit Materi Kelas (Admin)"
+              >
+                <Pencil className="size-3.5" />
+                <span>Edit Materi (Admin)</span>
+              </Link>
+            )}
           </header>
 
           {error ? (
@@ -523,28 +541,38 @@ function StudentModularClassroomContent({ slug }: { slug: string }) {
             <>
               {/* Top Breadcrumb & Header */}
               <div className="space-y-4">
-                <div className="pt-1">
-                  <Link
-                    href={`/dashboard/kelas/${slug}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-fd-muted-foreground hover:text-fd-foreground transition-colors group"
-                  >
-                    <ArrowLeft className="size-3.5 shrink-0 transition-transform group-hover:-translate-x-0.5" />
-                    <span>Semua Pertemuan</span>
-                    <span className="text-fd-border mx-1">/</span>
-                    <span className="text-fd-foreground font-medium truncate max-w-[200px] sm:max-w-md">
-                      {course?.title || 'Kelas'}
-                    </span>
-                  </Link>
-                </div>
+                <DashboardBreadcrumb
+                  items={[
+                    { label: 'Semua Kelas', href: '/dashboard/kelas' },
+                    { label: course?.title || 'Kelas', href: `/dashboard/kelas/${slug}` },
+                    { label: activeSessionInfo?.title || `Pertemuan ${urlSessionNumber}` },
+                  ]}
+                />
 
-                <header className="space-y-2 pb-6 border-b border-fd-border/50">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-fd-foreground leading-tight">
-                    {activeSessionInfo?.title || `Pertemuan ${urlSessionNumber}`}
-                  </h1>
-                  {activeSessionInfo?.description && (
-                    <p className="text-sm sm:text-base text-fd-muted-foreground leading-relaxed max-w-3xl">
-                      {activeSessionInfo.description}
-                    </p>
+                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-fd-border/50">
+                  <div className="space-y-2">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-fd-foreground leading-tight">
+                      {activeSessionInfo?.title || `Pertemuan ${urlSessionNumber}`}
+                    </h1>
+                    {activeSessionInfo?.description && (
+                      <p className="text-sm sm:text-base text-fd-muted-foreground leading-relaxed max-w-3xl">
+                        {activeSessionInfo.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {currentUser?.role === 'admin' && (
+                    <Link
+                      href={`/dashboard/dosen/kelas/${slug}?p=${urlSessionNumber}`}
+                      className={cn(
+                        buttonVariants({ variant: 'outline', size: 'sm' }),
+                        'gap-1.5 shrink-0 text-xs shadow-2xs self-start sm:self-auto font-medium'
+                      )}
+                      title="Edit Sesi & Materi di Studio Dosen"
+                    >
+                      <Pencil className="size-3.5" />
+                      <span>Edit di Studio Dosen</span>
+                    </Link>
                   )}
                 </header>
               </div>

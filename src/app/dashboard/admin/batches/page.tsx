@@ -79,6 +79,8 @@ interface BatchItem {
   mentorIds?: string[];
   mentors?: Array<{ id: string; fullName: string; email: string }>;
   mentorName: string;
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
   startDate: string | null;
   endDate: string | null;
   status: 'draft' | 'active' | 'completed';
@@ -298,6 +300,8 @@ export default function AdminBatchesPage() {
   const [newBatchPrice, setNewBatchPrice] = useState('0');
   const [newBatchPaymentInfo, setNewBatchPaymentInfo] = useState('');
   const [newBatchDescription, setNewBatchDescription] = useState('');
+  const [newBatchRegStartDate, setNewBatchRegStartDate] = useState('');
+  const [newBatchRegEndDate, setNewBatchRegEndDate] = useState('');
   const [newBatchStartDate, setNewBatchStartDate] = useState('');
   const [newBatchEndDate, setNewBatchEndDate] = useState('');
   const [isSubmittingBatch, setIsSubmittingBatch] = useState(false);
@@ -312,6 +316,8 @@ export default function AdminBatchesPage() {
   const [editBatchPrice, setEditBatchPrice] = useState('0');
   const [editBatchPaymentInfo, setEditBatchPaymentInfo] = useState('');
   const [editBatchDescription, setEditBatchDescription] = useState('');
+  const [editBatchRegStartDate, setEditBatchRegStartDate] = useState('');
+  const [editBatchRegEndDate, setEditBatchRegEndDate] = useState('');
   const [editBatchStartDate, setEditBatchStartDate] = useState('');
   const [editBatchEndDate, setEditBatchEndDate] = useState('');
   const [isUpdatingBatch, setIsUpdatingBatch] = useState(false);
@@ -395,6 +401,8 @@ export default function AdminBatchesPage() {
           price: Number(newBatchPrice) || 0,
           paymentAccountInfo: newBatchPaymentInfo.trim() || undefined,
           description: newBatchDescription.trim() || undefined,
+          registrationStartDate: newBatchRegStartDate || undefined,
+          registrationEndDate: newBatchRegEndDate || undefined,
           startDate: newBatchStartDate || undefined,
           endDate: newBatchEndDate || undefined,
         }),
@@ -414,6 +422,8 @@ export default function AdminBatchesPage() {
       setNewBatchPrice('0');
       setNewBatchPaymentInfo('');
       setNewBatchDescription('');
+      setNewBatchRegStartDate('');
+      setNewBatchRegEndDate('');
       setNewBatchStartDate('');
       setNewBatchEndDate('');
       loadData();
@@ -448,6 +458,8 @@ export default function AdminBatchesPage() {
     setEditBatchPrice(String(parseFloat(String(batch.price || '0'))));
     setEditBatchPaymentInfo(batch.paymentAccountInfo || '');
     setEditBatchDescription(batch.description || '');
+    setEditBatchRegStartDate(toDateInputValue(batch.registrationStartDate));
+    setEditBatchRegEndDate(toDateInputValue(batch.registrationEndDate));
     setEditBatchStartDate(toDateInputValue(batch.startDate));
     setEditBatchEndDate(toDateInputValue(batch.endDate));
   }
@@ -482,6 +494,8 @@ export default function AdminBatchesPage() {
           price: Number(editBatchPrice) || 0,
           paymentAccountInfo: editBatchPaymentInfo.trim(),
           description: editBatchDescription.trim(),
+          registrationStartDate: editBatchRegStartDate || null,
+          registrationEndDate: editBatchRegEndDate || null,
           startDate: editBatchStartDate || null,
           endDate: editBatchEndDate || null,
         }),
@@ -850,14 +864,29 @@ export default function AdminBatchesPage() {
 
                       {/* Kolom 3: Periode */}
                       <td className="px-5 py-3.5 align-middle">
-                        {b.startDate ? (
-                          <span className="font-mono text-[11px] text-fd-muted-foreground whitespace-nowrap">
-                            {new Date(b.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                            {b.endDate && ` – ${new Date(b.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`}
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-fd-muted-foreground/70 font-mono">—</span>
-                        )}
+                        <div className="space-y-1">
+                          {b.startDate ? (
+                            <div className="flex items-center gap-1.5 font-mono text-[11px] text-fd-foreground">
+                              <span className="text-[10px] font-sans font-medium text-fd-muted-foreground uppercase tracking-wider">Kelas:</span>
+                              <span className="whitespace-nowrap">
+                                {new Date(b.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                {b.endDate && ` – ${new Date(b.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="font-mono text-[11px] text-fd-muted-foreground/70">—</div>
+                          )}
+
+                          {b.registrationStartDate && (
+                            <div className="flex items-center gap-1.5 font-mono text-[10px] text-fd-muted-foreground">
+                              <span className="text-[9px] font-sans font-medium text-fd-muted-foreground/80 uppercase tracking-wider">Daftar:</span>
+                              <span className="whitespace-nowrap">
+                                {new Date(b.registrationStartDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                {b.registrationEndDate && ` – ${new Date(b.registrationEndDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       {/* Kolom 4: Plotting Kuota */}
@@ -1086,30 +1115,69 @@ export default function AdminBatchesPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="space-y-1">
-                    <label htmlFor="batchStartDate" className="text-xs font-medium text-fd-foreground">
-                      Tanggal Mulai
-                    </label>
-                    <Input
-                      id="batchStartDate"
-                      type="date"
-                      value={newBatchStartDate}
-                      onChange={(e) => setNewBatchStartDate(e.target.value)}
-                      className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
-                    />
+                {/* Periode Pendaftaran */}
+                <div className="space-y-1.5 pt-1 border-t border-fd-border/50">
+                  <span className="text-[11px] font-semibold text-fd-foreground/80 uppercase tracking-wider block">
+                    Periode Pendaftaran
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label htmlFor="batchRegStartDate" className="text-xs font-medium text-fd-foreground">
+                        Mulai Pendaftaran
+                      </label>
+                      <Input
+                        id="batchRegStartDate"
+                        type="date"
+                        value={newBatchRegStartDate}
+                        onChange={(e) => setNewBatchRegStartDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="batchRegEndDate" className="text-xs font-medium text-fd-foreground">
+                        Selesai Pendaftaran
+                      </label>
+                      <Input
+                        id="batchRegEndDate"
+                        type="date"
+                        value={newBatchRegEndDate}
+                        onChange={(e) => setNewBatchRegEndDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label htmlFor="batchEndDate" className="text-xs font-medium text-fd-foreground">
-                      Tanggal Selesai
-                    </label>
-                    <Input
-                      id="batchEndDate"
-                      type="date"
-                      value={newBatchEndDate}
-                      onChange={(e) => setNewBatchEndDate(e.target.value)}
-                      className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
-                    />
+                </div>
+
+                {/* Periode Kelas */}
+                <div className="space-y-1.5 pt-1 border-t border-fd-border/50">
+                  <span className="text-[11px] font-semibold text-fd-foreground/80 uppercase tracking-wider block">
+                    Periode Batch / Kelas
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label htmlFor="batchStartDate" className="text-xs font-medium text-fd-foreground">
+                        Batch Dimulai
+                      </label>
+                      <Input
+                        id="batchStartDate"
+                        type="date"
+                        value={newBatchStartDate}
+                        onChange={(e) => setNewBatchStartDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="batchEndDate" className="text-xs font-medium text-fd-foreground">
+                        Batch Selesai
+                      </label>
+                      <Input
+                        id="batchEndDate"
+                        type="date"
+                        value={newBatchEndDate}
+                        onChange={(e) => setNewBatchEndDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1332,30 +1400,69 @@ export default function AdminBatchesPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="space-y-1">
-                    <label htmlFor="editBatchStartDate" className="text-xs font-medium text-fd-foreground">
-                      Tanggal Mulai
-                    </label>
-                    <Input
-                      id="editBatchStartDate"
-                      type="date"
-                      value={editBatchStartDate}
-                      onChange={(e) => setEditBatchStartDate(e.target.value)}
-                      className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
-                    />
+                {/* Periode Pendaftaran */}
+                <div className="space-y-1.5 pt-1 border-t border-fd-border/50">
+                  <span className="text-[11px] font-semibold text-fd-foreground/80 uppercase tracking-wider block">
+                    Periode Pendaftaran
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label htmlFor="editBatchRegStartDate" className="text-xs font-medium text-fd-foreground">
+                        Mulai Pendaftaran
+                      </label>
+                      <Input
+                        id="editBatchRegStartDate"
+                        type="date"
+                        value={editBatchRegStartDate}
+                        onChange={(e) => setEditBatchRegStartDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="editBatchRegEndDate" className="text-xs font-medium text-fd-foreground">
+                        Selesai Pendaftaran
+                      </label>
+                      <Input
+                        id="editBatchRegEndDate"
+                        type="date"
+                        value={editBatchRegEndDate}
+                        onChange={(e) => setEditBatchRegEndDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label htmlFor="editBatchEndDate" className="text-xs font-medium text-fd-foreground">
-                      Tanggal Selesai
-                    </label>
-                    <Input
-                      id="editBatchEndDate"
-                      type="date"
-                      value={editBatchEndDate}
-                      onChange={(e) => setEditBatchEndDate(e.target.value)}
-                      className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
-                    />
+                </div>
+
+                {/* Periode Kelas */}
+                <div className="space-y-1.5 pt-1 border-t border-fd-border/50">
+                  <span className="text-[11px] font-semibold text-fd-foreground/80 uppercase tracking-wider block">
+                    Periode Batch / Kelas
+                  </span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label htmlFor="editBatchStartDate" className="text-xs font-medium text-fd-foreground">
+                        Batch Dimulai
+                      </label>
+                      <Input
+                        id="editBatchStartDate"
+                        type="date"
+                        value={editBatchStartDate}
+                        onChange={(e) => setEditBatchStartDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="editBatchEndDate" className="text-xs font-medium text-fd-foreground">
+                        Batch Selesai
+                      </label>
+                      <Input
+                        id="editBatchEndDate"
+                        type="date"
+                        value={editBatchEndDate}
+                        onChange={(e) => setEditBatchEndDate(e.target.value)}
+                        className="text-xs h-8 bg-fd-muted/20 border-fd-border/70"
+                      />
+                    </div>
                   </div>
                 </div>
 

@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -172,6 +173,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
   const [courseBatches, setCourseBatches] = useState<BatchOption[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
   const [activeAttendance, setActiveAttendance] = useState<AttendanceActiveData | null>(null);
+  const [pastAttendance, setPastAttendance] = useState<{ id: string; sessionNumber: number } | null>(null);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
   const [attendanceDuration, setAttendanceDuration] = useState<number>(30);
   const [isOpeningAttendance, setIsOpeningAttendance] = useState(false);
@@ -331,17 +333,31 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
       if (!batchId || !sessNum) return;
       try {
         const token = getAuthToken();
-        const res = await fetch(`${apiUrl}/v1/attendance/active/${batchId}?sessionNumber=${sessNum}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const json = await res.json();
-        if (res.ok && json.success && json.data) {
-          setActiveAttendance(json.data);
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        const [resActive, resBatch] = await Promise.all([
+          fetch(`${apiUrl}/v1/attendance/active/${batchId}?sessionNumber=${sessNum}`, { headers }),
+          fetch(`${apiUrl}/v1/attendance/batch/${batchId}`, { headers }),
+        ]);
+
+        const [jsonActive, jsonBatch] = await Promise.all([
+          resActive.json().catch(() => null),
+          resBatch.json().catch(() => null),
+        ]);
+
+        if (resActive.ok && jsonActive?.success && jsonActive?.data) {
+          setActiveAttendance(jsonActive.data);
         } else {
           setActiveAttendance(null);
         }
+
+        if (resBatch.ok && jsonBatch?.success && Array.isArray(jsonBatch?.data)) {
+          const foundPast = jsonBatch.data.find((s: any) => s.sessionNumber === sessNum);
+          setPastAttendance(foundPast || null);
+        } else {
+          setPastAttendance(null);
+        }
       } catch (err) {
-        console.error('Gagal cek presensi aktif:', err);
+        console.error('Gagal cek presensi:', err);
       }
     },
     [apiUrl]
@@ -429,6 +445,9 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
       if (res.ok && json.success) {
         toast.success(json.message || 'Sesi presensi ditutup.');
         setActiveAttendance(null);
+        if (selectedBatchId && urlSessionNumber) {
+          checkActiveAttendance(selectedBatchId, urlSessionNumber);
+        }
       } else {
         toast.error(json.message || 'Gagal menutup presensi.');
       }
@@ -832,35 +851,16 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
       {!isViewingSpecificSession ? (
         /* ================= MODE 1: RINGKASAN KELAS & DAFTAR PERTEMUAN (OVERVIEW) ================= */
         <>
-          {/* Top Navigation Bar / Breadcrumb */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-1">
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-fd-muted-foreground">
-              <Link
-                href="/dashboard/dosen/kelas"
-                className="hover:text-fd-foreground transition-colors inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:underline"
-              >
-                <ArrowLeft className="size-3.5 shrink-0" />
-                <span>Kelola Kelas</span>
-              </Link>
-              <span className="text-fd-border">/</span>
-              <span className="text-fd-foreground font-medium truncate max-w-[200px] sm:max-w-xs">
-                {course?.title || 'Detail Kelas'}
-              </span>
-            </nav>
-
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setIsNewSessionModalOpen(true)}
-              className="self-start sm:self-auto shrink-0"
-            >
-              <PlusCircle className="size-3.5 shrink-0" />
-              <span>Tambah Sesi Baru</span>
-            </Button>
-          </div>
+          {/* Top Breadcrumb */}
+          <DashboardBreadcrumb
+            items={[
+              { label: 'Kelola Kelas', href: '/dashboard/dosen/kelas' },
+              { label: course?.title || 'Detail Kelas' },
+            ]}
+          />
 
           {/* Course Overview Header */}
-          <header className="space-y-2 pb-5 border-b border-fd-border">
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-fd-border">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-fd-muted-foreground">
                 <span className="font-medium text-fd-primary">
@@ -881,6 +881,16 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                   'Kelola kurikulum, sesi pertemuan, materi pembelajaran MDX, dan tugas siswa untuk kelas ini.'}
               </p>
             </div>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsNewSessionModalOpen(true)}
+              className="self-start sm:self-auto shrink-0 gap-1.5"
+            >
+              <PlusCircle className="size-3.5 shrink-0" />
+              <span>Tambah Sesi Baru</span>
+            </Button>
           </header>
 
           {error ? (
@@ -936,7 +946,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           Pertemuan {sess.sessionNumber.toString().padStart(2, '0')}
                         </span>
 
-                        <ButtonGroup className="relative z-20">
+                        <div className="flex items-center gap-1.5 relative z-20">
                           <Button
                             type="button"
                             variant="outline"
@@ -967,7 +977,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           >
                             <Trash2 className="size-3.5 shrink-0" />
                           </Button>
-                        </ButtonGroup>
+                        </div>
                       </div>
 
                       {/* Session Title (Whole-card clickable link) */}
@@ -1014,20 +1024,14 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
       ) : (
         /* ================= MODE 2: DETAIL SESI PERTEMUAN SPESIFIK (?p=...) ================= */
         <>
-          {/* Top Breadcrumb & Clean Navigation */}
-          <div className="pt-1">
-            <Link
-              href={`/dashboard/dosen/kelas/${slug}`}
-              className="inline-flex items-center gap-1.5 text-xs text-fd-muted-foreground hover:text-fd-foreground transition-colors group"
-            >
-              <ArrowLeft className="size-3.5 shrink-0 transition-transform group-hover:-translate-x-0.5" />
-              <span>Semua Pertemuan</span>
-              <span className="text-fd-border mx-1">/</span>
-              <span className="text-fd-foreground font-medium truncate max-w-[200px] sm:max-w-md">
-                {course?.title || 'Kelas'}
-              </span>
-            </Link>
-          </div>
+          {/* Top Breadcrumb */}
+          <DashboardBreadcrumb
+            items={[
+              { label: 'Kelola Kelas', href: '/dashboard/dosen/kelas' },
+              { label: course?.title || 'Kelas', href: `/dashboard/dosen/kelas/${slug}` },
+              { label: activeSessionInfo?.title || `Pertemuan ${urlSessionNumber}` },
+            ]}
+          />
 
           {/* Session Header & Content */}
           {!activeSessionInfo ? (
@@ -1091,45 +1095,52 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                       <span>Tambah Materi</span>
                     </Button>
 
-                    <ButtonGroup>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenAddAssignment}
+                    >
+                      <ClipboardList className="size-3.5 shrink-0 text-fd-muted-foreground" />
+                      <span>Tambah Tugas</span>
+                    </Button>
+
+                    {activeAttendance ? (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={handleOpenAddAssignment}
+                        onClick={() => setIsAttendanceModalOpen(true)}
+                        className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
+                        title="Lihat kode dan status presensi aktif"
                       >
-                        <ClipboardList className="size-3.5 shrink-0 text-fd-muted-foreground" />
-                        <span>Tambah Tugas</span>
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                        <span>Presensi: <span className="font-mono font-bold tracking-wider">{activeAttendance.tokenCode}</span></span>
                       </Button>
-
-                      {activeAttendance ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsAttendanceModalOpen(true)}
-                          className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
-                          title="Lihat kode dan status presensi aktif"
-                        >
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                          </span>
-                          <span>Presensi: <span className="font-mono font-bold tracking-wider">{activeAttendance.tokenCode}</span></span>
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsAttendanceModalOpen(true)}
-                          title="Buka sesi presensi untuk pertemuan ini"
-                        >
-                          <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
-                          <span>Buka Presensi</span>
-                        </Button>
-                      )}
-                    </ButtonGroup>
+                    ) : pastAttendance ? (
+                      <Link
+                        href={`/dashboard/mentor/presensi?course=${slug}${selectedBatchId ? `&batch=${selectedBatchId}` : ''}${urlSessionNumber ? `&p=${urlSessionNumber}` : ''}`}
+                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5')}
+                        title="Lihat data absensi pertemuan ini di menu presensi"
+                      >
+                        <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
+                        <span>Absensi Pertemuan</span>
+                      </Link>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsAttendanceModalOpen(true)}
+                        title="Buka sesi presensi untuk pertemuan ini"
+                      >
+                        <CalendarCheck className="size-3.5 shrink-0 text-fd-primary" />
+                        <span>Buka Presensi</span>
+                      </Button>
+                    )}
                   </div>
 
                   <Button
@@ -1179,7 +1190,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           </p>
                         </div>
 
-                        <ButtonGroup>
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <Button
                             type="button"
                             variant="outline"
@@ -1199,7 +1210,7 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
-                        </ButtonGroup>
+                        </div>
                       </div>
 
                       {mat.fileUrl && (
@@ -1274,30 +1285,28 @@ function DosenClassroomDetailContent({ slug }: { slug: string }) {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          <ButtonGroup>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenEditAssignment(task)}
-                              title="Edit Tugas"
-                            >
-                              <Edit className="size-3.5" />
-                              <span>Edit Tugas</span>
-                            </Button>
+                        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditAssignment(task)}
+                            title="Edit Tugas"
+                          >
+                            <Edit className="size-3.5" />
+                            <span>Edit Tugas</span>
+                          </Button>
 
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => handleDeleteAssignment(task.id)}
-                              title="Hapus Tugas"
-                              aria-label="Hapus Tugas"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          </ButtonGroup>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleDeleteAssignment(task.id)}
+                            title="Hapus Tugas"
+                            aria-label="Hapus Tugas"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
 
                           <Link
                             href="/dashboard/dosen/tugas"

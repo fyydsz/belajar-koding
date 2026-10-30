@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { fetchCurrentUser, type AuthUser } from '@/lib/auth';
 import {
   dashboardCache,
   loadKelasListCache,
@@ -12,7 +13,10 @@ import {
   Layers,
   GraduationCap,
   AlertCircle,
+  Pencil,
 } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/cn';
 
 interface CourseItem {
   id: string;
@@ -28,12 +32,17 @@ export default function StudentClassroomListPage() {
   const [courses, setCourses] = useState<CourseItem[]>(
     (cached?.courses as CourseItem[]) || [],
   );
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (dashboardCache.kelasList) return;
     let mounted = true;
+    fetchCurrentUser().then((u) => {
+      if (mounted) setCurrentUser(u);
+    });
+
+    if (dashboardCache.kelasList) return;
     const fetchCourses = async () => {
       topProgress.start();
       try {
@@ -111,9 +120,8 @@ export default function StudentClassroomListPage() {
       {!isLoading && !error && courses.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {courses.map((course) => (
-            <Link
+            <div
               key={course.id}
-              href={`/dashboard/kelas/${course.slug}`}
               className="group relative flex flex-col justify-between p-5 rounded-xl border border-fd-border bg-fd-card hover:border-fd-primary/40 transition-colors shadow-2xs"
             >
               <div>
@@ -121,25 +129,48 @@ export default function StudentClassroomListPage() {
                   <div className="size-10 rounded-xl bg-fd-primary/10 text-fd-primary flex items-center justify-center border border-fd-primary/20">
                     <GraduationCap className="size-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-fd-muted text-fd-foreground font-medium text-xs border border-fd-border">
-                    <Layers className="size-3 text-fd-primary" />
-                    <span>{course.totalSessions} Pertemuan</span>
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-fd-muted text-fd-foreground font-medium text-xs border border-fd-border">
+                      <Layers className="size-3 text-fd-primary" />
+                      <span>{course.totalSessions} Pertemuan</span>
+                    </span>
+                    {currentUser?.role === 'admin' && (
+                      <Link
+                        href={`/dashboard/dosen/kelas/${course.slug}`}
+                        className={cn(
+                          buttonVariants({ variant: 'outline', size: 'sm' }),
+                          'h-7 px-2.5 text-xs gap-1 font-medium shadow-2xs'
+                        )}
+                        title="Edit Modul & Materi Kelas (Admin)"
+                      >
+                        <Pencil className="size-3" />
+                        <span>Edit</span>
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
-                <h3 className="font-semibold text-base text-fd-foreground group-hover:text-fd-primary transition-colors">
+                <Link
+                  href={`/dashboard/kelas/${course.slug}`}
+                  className="font-semibold text-base text-fd-foreground group-hover:text-fd-primary transition-colors block"
+                >
                   {course.title}
-                </h3>
+                </Link>
                 <p className="text-fd-muted-foreground text-xs leading-relaxed mt-1.5 line-clamp-3">
                   {course.description || 'Pelajari kurikulum, materi, dan tugas praktikum untuk kelas ini.'}
                 </p>
               </div>
 
               <div className="mt-5 pt-3.5 border-t border-fd-border/60 flex items-center justify-between text-xs font-semibold text-fd-primary">
-                <span>Buka Materi Sesi</span>
-                <ChevronRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                <Link
+                  href={`/dashboard/kelas/${course.slug}`}
+                  className="flex items-center justify-between w-full group/link hover:underline"
+                >
+                  <span>Buka Materi Sesi</span>
+                  <ChevronRight className="size-4 group-hover/link:translate-x-0.5 transition-transform" />
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

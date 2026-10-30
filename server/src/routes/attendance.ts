@@ -798,7 +798,10 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
           email: std.email,
           avatarUrl: std.avatarUrl,
           discordUsername: std.discordUsername,
-          attended: !!log,
+          attended: !!log && log.status === 'present',
+          status: log?.status || null,
+          note: log?.note || null,
+          attachmentUrl: log?.attachmentUrl || null,
           checkedInAt: log?.checkedInAt || null,
           channel: log?.channel || null,
           logId: log?.id || null,
@@ -814,7 +817,7 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
           },
           roster,
           totalStudents: enrolledStudents.length,
-          attendedCount: logs.length,
+          attendedCount: logs.filter((l) => l.status === 'present').length,
         },
       };
     },
@@ -850,7 +853,12 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         return { success: false, message: 'Anda bukan mentor di batch ini.' };
       }
 
-      const { studentId, attended } = body;
+      const { studentId, attended, status, note } = body as {
+        studentId: string;
+        attended?: boolean;
+        status?: string;
+        note?: string;
+      };
 
       const relatedSessions = await db
         .select({ id: attendanceSessions.id })
@@ -863,8 +871,18 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
         );
       const relatedSessionIds = relatedSessions.map((s) => s.id);
 
-      if (attended) {
-        // Cek apakah sudah pernah log hadir
+      let targetStatus: string | null = null;
+      if (status !== undefined) {
+        if (status === 'none' || status === 'unrecorded' || status === '' || status === null) {
+          targetStatus = null;
+        } else {
+          targetStatus = status;
+        }
+      } else if (attended !== undefined) {
+        targetStatus = attended ? 'present' : null;
+      }
+
+      if (targetStatus) {
         const [existingLog] = await db
           .select()
           .from(attendanceLogs)
@@ -876,21 +894,34 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
           )
           .limit(1);
 
-        if (!existingLog) {
+        if (existingLog) {
+          await db
+            .update(attendanceLogs)
+            .set({
+              status: targetStatus,
+              channel: 'manual',
+              note: note !== undefined ? note : existingLog.note,
+              checkedInAt: new Date(),
+            })
+            .where(eq(attendanceLogs.id, existingLog.id));
+        } else {
           await db.insert(attendanceLogs).values({
             id: uuidv7(),
             attendanceSessionId: session.id,
             studentId,
             checkedInAt: new Date(),
             channel: 'manual',
+            status: targetStatus,
+            note: note || null,
           });
         }
         return {
           success: true,
-          message: 'Status siswa diperbarui menjadi Hadir (Manual).',
+          message: `Status siswa diperbarui menjadi ${targetStatus}.`,
+          data: { status: targetStatus },
         };
       } else {
-        // Hapus log kehadiran
+        // Hapus log kehadiran (kosongkan status)
         await db
           .delete(attendanceLogs)
           .where(
@@ -901,7 +932,8 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
           );
         return {
           success: true,
-          message: 'Status kehadiran siswa diubah menjadi Tidak Hadir.',
+          message: 'Status kehadiran siswa dikosongkan.',
+          data: { status: null },
         };
       }
     },
@@ -911,7 +943,247 @@ export const attendanceRoutes = new Elysia({ prefix: '/v1/attendance' })
       }),
       body: t.Object({
         studentId: t.String(),
-        attended: t.Boolean(),
+        attended: t.Optional(t.Boolean()),
+        status: t.Optional(t.String()),
+        note: t.Optional(t.String()),
+      }),
+    }
+  )
+
+  // 4e. (Mentor/Admin) Ambil Roster & Status Kehadiran berdasarkan batchId dan sessionNumber
+  .get(
+    '/batch/:batchId/session/:sessionNumber/roster',
+    async ({ user, profile, params, set }) => {
+      if (!user || !profile || (profile.role !== 'mentor' && profile.role !== 'admin')) {
+        set.status = 403;
+        return { success: false, message: 'Akses ditolak.' };
+      }
+
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
+
+      const sessionNumber = parseInt(params.sessionNumber, 10);
+      if (Number.isNaN(sessionNumber)) {
+        set.status = 400;
+        return { success: false, message: 'Nomor pertemuan tidak valid.' };
+      }
+
+      const sessions = await db
+        .select()
+        .from(attendanceSessions)
+        .where(
+          and(
+            eq(attendanceSessions.batchId, params.batchId),
+            eq(attendanceSessions.sessionNumber, sessionNumber)
+          )
+        )
+        .orderBy(desc(attendanceSessions.createdAt));
+
+      const now = new Date();
+      const activeSession = sessions.find((s) => new Date(s.expiresAt) > now);
+      const primarySession = activeSession || sessions[0] || null;
+      const sessionIds = sessions.map((s) => s.id);
+
+      // Ambil seluruh siswa aktif di batch ini
+      const enrolledStudents = await db
+        .select({
+          studentId: profiles.id,
+          fullName: profiles.fullName,
+          email: userTable.email,
+          avatarUrl: profiles.avatarUrl,
+          discordUsername: userTable.discordUsername,
+          enrollmentStatus: batchEnrollments.status,
+        })
+        .from(batchEnrollments)
+        .innerJoin(profiles, eq(batchEnrollments.studentId, profiles.id))
+        .leftJoin(userTable, eq(batchEnrollments.studentId, userTable.id))
+        .where(
+          and(
+            eq(batchEnrollments.batchId, params.batchId),
+            eq(batchEnrollments.status, 'active')
+          )
+        )
+        .orderBy(asc(profiles.fullName));
+
+      let logs: (typeof attendanceLogs.$inferSelect)[] = [];
+      if (sessionIds.length > 0) {
+        logs = await db
+          .select()
+          .from(attendanceLogs)
+          .where(inArray(attendanceLogs.attendanceSessionId, sessionIds));
+      }
+
+      const logMap = new Map(logs.map((l) => [l.studentId, l]));
+      const isExpired = primarySession ? new Date(primarySession.expiresAt) <= now : false;
+
+      const roster = enrolledStudents.map((std) => {
+        const log = logMap.get(std.studentId);
+        return {
+          studentId: std.studentId,
+          fullName: std.fullName,
+          email: std.email,
+          avatarUrl: std.avatarUrl,
+          discordUsername: std.discordUsername,
+          attended: !!log && log.status === 'present',
+          status: log?.status || null,
+          note: log?.note || null,
+          attachmentUrl: log?.attachmentUrl || null,
+          checkedInAt: log?.checkedInAt || null,
+          channel: log?.channel || null,
+          logId: log?.id || null,
+        };
+      });
+
+      return {
+        success: true,
+        data: {
+          session: primarySession
+            ? {
+                ...primarySession,
+                isExpired,
+              }
+            : null,
+          roster,
+          totalStudents: enrolledStudents.length,
+          attendedCount: logs.filter((l) => l.status === 'present').length,
+        },
+      };
+    },
+    {
+      params: t.Object({
+        batchId: t.String(),
+        sessionNumber: t.String(),
+      }),
+    }
+  )
+
+  // 4f. (Mentor/Admin) Edit / Set Status Kehadiran Siswa via Batch & SessionNumber
+  .post(
+    '/batch/:batchId/session/:sessionNumber/manual-status',
+    async ({ user, profile, params, body, set }) => {
+      if (!user || !profile || (profile.role !== 'mentor' && profile.role !== 'admin')) {
+        set.status = 403;
+        return { success: false, message: 'Akses ditolak.' };
+      }
+
+      if (!(await canAccessBatch(profile, params.batchId))) {
+        set.status = 403;
+        return { success: false, message: 'Anda bukan mentor di batch ini.' };
+      }
+
+      const sessionNumber = parseInt(params.sessionNumber, 10);
+      if (Number.isNaN(sessionNumber)) {
+        set.status = 400;
+        return { success: false, message: 'Nomor pertemuan tidak valid.' };
+      }
+
+      const { studentId, status, note } = body;
+
+      // Cari atau buat session jika belum ada
+      let [session] = await db
+        .select()
+        .from(attendanceSessions)
+        .where(
+          and(
+            eq(attendanceSessions.batchId, params.batchId),
+            eq(attendanceSessions.sessionNumber, sessionNumber)
+          )
+        )
+        .orderBy(desc(attendanceSessions.createdAt))
+        .limit(1);
+
+      if (!session) {
+        const [newSess] = await db
+          .insert(attendanceSessions)
+          .values({
+            id: uuidv7(),
+            batchId: params.batchId,
+            sessionNumber,
+            tokenCode: generateAttendanceCode(),
+            expiresAt: new Date(),
+            openedBy: profile.id,
+          })
+          .returning();
+        session = newSess;
+      }
+
+      const relatedSessions = await db
+        .select({ id: attendanceSessions.id })
+        .from(attendanceSessions)
+        .where(
+          and(
+            eq(attendanceSessions.batchId, session.batchId),
+            eq(attendanceSessions.sessionNumber, session.sessionNumber)
+          )
+        );
+      const relatedSessionIds = relatedSessions.map((s) => s.id);
+
+      if (status === 'none' || status === 'unrecorded' || status === '' || status === null) {
+        await db
+          .delete(attendanceLogs)
+          .where(
+            and(
+              inArray(attendanceLogs.attendanceSessionId, relatedSessionIds),
+              eq(attendanceLogs.studentId, studentId)
+            )
+          );
+        return {
+          success: true,
+          message: 'Status kehadiran siswa dikosongkan.',
+          data: { status: null },
+        };
+      }
+
+      const [existingLog] = await db
+        .select()
+        .from(attendanceLogs)
+        .where(
+          and(
+            inArray(attendanceLogs.attendanceSessionId, relatedSessionIds),
+            eq(attendanceLogs.studentId, studentId)
+          )
+        )
+        .limit(1);
+
+      if (existingLog) {
+        await db
+          .update(attendanceLogs)
+          .set({
+            status,
+            channel: 'manual',
+            note: note !== undefined ? note : existingLog.note,
+            checkedInAt: new Date(),
+          })
+          .where(eq(attendanceLogs.id, existingLog.id));
+      } else {
+        await db.insert(attendanceLogs).values({
+          id: uuidv7(),
+          attendanceSessionId: session.id,
+          studentId,
+          checkedInAt: new Date(),
+          channel: 'manual',
+          status,
+          note: note || null,
+        });
+      }
+
+      return {
+        success: true,
+        message: 'Status kehadiran siswa diperbarui.',
+        data: { status, sessionId: session.id },
+      };
+    },
+    {
+      params: t.Object({
+        batchId: t.String(),
+        sessionNumber: t.String(),
+      }),
+      body: t.Object({
+        studentId: t.String(),
+        status: t.String(),
+        note: t.Optional(t.String()),
       }),
     }
   )
