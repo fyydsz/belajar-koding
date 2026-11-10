@@ -1,0 +1,110 @@
+---
+title: "Analisis Usability pada Magic Chess GoGo: Evaluasi Efektivitas, Efisiensi, dan Kepuasan Antarmuka"
+description: Evaluasi aspek usability pada game mobile Magic Chess GoGo berdasarkan efektivitas, efisiensi, dan kepuasan antarmuka pengguna.
+date: 2026-11-10
+author: Iqbal Prasetyo
+---
+
+> **Identitas Tugas Praktikum 2 Usability UI/UX**  
+> **Nama**: Iqbal Prasetyo  
+> **NIM**: 8020250255  
+> **Kelas**: 04PT5  
+> **Aplikasi yang Dianalisis**: Magic Chess GoGo (Versi Mobile)
+
+---
+
+## 1. Pendahuluan
+
+Dalam ranah pengembangan produk digital, istilah **usability** (keterpakaian) merujuk pada sejauh mana suatu sistem dapat digunakan oleh penggunanya untuk mencapai target spesifik secara **efektif**, **efisien**, dan memberikan **kepuasan** yang optimal (berdasarkan standar **ISO 9241-11**).
+
+Evaluasi usability berbeda dengan *user testing*:
+- **User Testing**: Mencari tahu apakah pengguna benar-benar membutuhkan aplikasinya (*problem & value validation*).
+- **Usability Testing**: Berfokus pada seberapa mulus antarmuka aplikasi tersebut dioperasikan (*execution & interaction validation*).
+
+Artikel ini menyajikan evaluasi usability pada antarmuka game *auto-battler* **Magic Chess GoGo**, menganalisis bagaimana tata letaknya mendukung pemain dalam menyusun strategi dan merespons situasi pertempuran secara *real-time* di layar sentuh.
+
+---
+
+## 2. Deskripsi Aplikasi
+
+- **Nama Aplikasi**: Magic Chess GoGo
+- **Pengembang**: Moonton
+- **Platform**: Mobile (Android & iOS)
+- **Tujuan Aplikasi**: Menyajikan permainan strategi *auto-battler* di mana 8 pemain saling beradu taktik menyusun formasi hero di atas papan catur untuk bertahan hidup hingga akhir.
+- **Karakteristik Pengguna Sasaran**: Gamer seluler (*casual* dan *hardcore*) yang menyukai genre strategi, manajemen sumber daya, dan membutuhkan tempo permainan yang sedikit lebih santai dibanding game MOBA tradisional.
+
+---
+
+## 3. Analisis Usability
+
+Analisis usability aplikasi Magic Chess GoGo difokuskan pada tiga pilar utama standar ISO 9241-11:
+
+### 3.1 Tiga Pilar Usability
+
+#### A. Efektivitas
+Tingkat keberhasilan pemain dalam membeli dan menempatkan hero sangat tinggi. Sistem *highlight* otomatis di dalam Shop untuk hero yang memiliki sinergi sama dengan formasi saat ini terbukti sangat efektif mencegah kesalahan pembelian pemain.
+
+#### B. Efisiensi
+Kehadiran fitur **"Auto-Combine"** membuat aplikasi sangat efisien. Pemain tidak perlu menyeret hero satu per satu untuk menaikkan level bintang; sistem akan langsung menggabungkannya secara otomatis saat terkumpul 3 hero yang sama.
+
+#### C. Kepuasan (*Satisfaction*)
+Grafis karakter yang di-*render* dalam 3D secara apik dipadukan dengan efek suara kemenangan yang memuaskan memberikan umpan balik emosional (*reward*) yang kuat bagi pengguna.
+
+---
+
+### 3.2 Pertanyaan Inti Evaluasi Antarmuka
+
+| Pertanyaan Evaluasi | Hasil & Catatan Temuan |
+| :--- | :--- |
+| **Apakah aplikasi mudah digunakan?** | **Ya.** Proses adaptasi (*onboarding*) bagi pengguna baru dibantu dengan tutorial yang runut dan jelas. |
+| **Apakah navigasi jelas?** | **Ya.** Elemen menu utama (Shop, Sinergi, Formasi) diletakkan di tepi layar yang ergonomis untuk sentuhan ibu jari. |
+| **Apakah user flow sederhana?** | **Sangat sederhana.** Proses dari layar utama menuju pencarian pertandingan (*matchmaking*) berlangsung instan tanpa banyak transisi layar. |
+| **Apakah user merasa nyaman?** | **Nyaman secara umum.** Didukung kode warna yang jelas untuk indikator kesehatan dan batas waktu, meski ada kendala minor pada *late game*. |
+| **Apa kekurangan aplikasi?** | Terdapat penumpukan informasi visual (*visual clutter*) ketika banyak efek *ultimate* hero yang keluar bersamaan di *late game*. |
+| **Apa saran perbaikannya?** | Menambahkan opsi pengaturan UI untuk mengurangi intensitas efek visual (*low VFX mode*) agar indikator darah/mana hero tidak tertutupi. |
+
+---
+
+## 4. Kekurangan Sistem (Masalah Usability)
+
+Dari hasil pengamatan lapangan, ditemukan beberapa celah usability yang memengaruhi pengalaman bermain:
+
+1. **Kekacauan Visual (*Visual Clutter*) di Fase Late Game**  
+   Saat papan dipenuhi hero level tinggi yang mengeluarkan jurus secara masif, tampilan layar menjadi sangat padat. Efek partikel dari *skill* menutupi *bar* HP (darah) dan Mana hero, sehingga pemain kesulitan membaca status pertarungan dengan cepat.
+
+2. **Keterbacaan Panel Sinergi pada Layar Kecil**  
+   Untuk pengguna *smartphone* berlayar di bawah 6 inci, ikon dan teks pada panel daftar sinergi di kiri layar tampak terlalu kecil sehingga butuh usaha ekstra untuk membacanya secara sekilas.
+
+3. **Risiko Menjual Hero Tanpa Sengaja (*Miss-click*)**  
+   Karena letak hero di area tunggu (*bench*) berdekatan dengan tombol jual/shop, pemain rentan tidak sengaja membuang hero penting di tengah kepanikan manajemen waktu. Saat ini belum ada fitur pembatalan (*undo*).
+
+---
+
+## 5. Saran Perbaikan (Solusi Usability)
+
+Untuk mengatasi permasalahan di atas, berikut rekomendasi solusi interaksi yang dapat diterapkan:
+
+- **Implementasi Mode Penyederhanaan Visual (*Reduce VFX*)**  
+  Menyediakan *toggle* khusus di menu pengaturan untuk meredam efek partikel berlebihan, sehingga hierarki visual tetap memprioritaskan indikator status karakter (HP dan Mana).
+- **Optimasi Ukuran Hitbox dan Tipografi Sinergi**  
+  Membuat panel sinergi lebih responsif, di mana area panel bisa diperluas sedikit (*expand*) saat diketuk, dengan ukuran *font* yang disesuaikan (*scaling*) untuk keterbacaan yang lebih baik di layar kecil.
+- **Fitur Batal Jual (*Undo Feature*)**  
+  Menambahkan tombol *"Undo"* yang muncul selama 2–3 detik setelah pemain menjual hero, untuk memberi toleransi terhadap *human error* akibat sentuhan yang tidak sengaja (*slip*).
+
+---
+
+## 6. Kesimpulan
+
+Magic Chess GoGo sukses mentransformasikan kerumitan mekanik *auto-battler* ke dalam format *mobile* yang ergonomis dan *user-friendly*. Pengalaman pengguna secara umum sangat efektif dan efisien.
+
+Namun, dengan melakukan penyesuaian pada manajemen kepadatan visual (*clutter*) dan memberikan toleransi kesalahan (*error prevention*) melalui fitur *undo*, antarmuka game ini akan menjadi jauh lebih optimal dan meminimalkan rasa frustrasi pemain.
+
+---
+
+## 7. Tangkapan Layar (Screenshot)
+
+> *(Sisipkan tangkapan layar / screenshot aplikasi pada bagian ini)*
+
+- **Gambar 1**: Tampilan Halaman Lobi / Beranda *(Menunjukkan efisiensi tata letak menu utama)*.
+- **Gambar 2**: Tampilan Gameplay di Fase Persiapan *(Menunjukkan tata letak Shop dan Hero di bench)*.
+- **Gambar 3**: Tampilan Kekacauan Visual saat Late Game *(Sebagai bukti temuan masalah kekurangan sistem)*.
